@@ -1,0 +1,20 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class errorLog extends Model
+{
+    use HasFactory;
+    protected $table = 'error_logs';
+    protected $fillable = [
+         'username',
+         'error_code',
+         'error_message',
+         'error_severity',   
+         'method',   
+    ];
+    public $timestamps = false;
+}
