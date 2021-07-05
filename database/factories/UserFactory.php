@@ -23,13 +23,23 @@ class UserFactory extends Factory
      */
     public function definition()
     {
-        return [
-            'name' => $this->faker->name,
-            'email' => $this->faker->unique()->safeEmail,
-            'email_verified_at' => now(),
-            'password' => Hash::make('12345678'), // password
-            'remember_token' => Str::random(10),
-        ];
+          return [
+                'first_name' => $this->faker->firstName,
+                'last_name' => $this->faker->lastName,
+                'name' => $this->faker->name,
+                'username' => $this->faker->unique()->lastName,
+                'gender' => $this->faker->randomElement(['Female', 'Male']),
+                'email' => $this->faker->unique()->safeEmail,
+                'user_role' => $this->faker->randomElement([1,2,3]),
+                'tel_no' => $this->faker->e164phoneNumber,
+                'alt_telno' => $this->faker->e164phoneNumber,
+                'address' => $this->faker->state,
+                'nationalID_no' => strtoupper(Str::random(14)),
+                'email_verified_at' => now(),
+                'image' => NULL,
+                'password' => Hash::make('12345678'),
+                'remember_token' => Str::random(10),
+  ];
     }
 
     /**
@@ -46,3 +56,4 @@ class UserFactory extends Factory
         });
     }
 }
+

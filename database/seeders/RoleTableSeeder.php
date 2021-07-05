@@ -4,7 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 
-class UserTableSeeder extends Seeder
+class RoleTableSeeder extends Seeder
 {
     /**
      * Run the database seeds.
@@ -13,6 +13,6 @@ class UserTableSeeder extends Seeder
      */
     public function run()
     {
-        \App\Models\User::factory()->count(50)->create();
+       \App\Models\Role::factory()->count(3)->create();
     }
 }

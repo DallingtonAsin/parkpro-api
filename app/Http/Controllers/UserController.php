@@ -3,6 +3,10 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\User;
+use App\Helpers\Globals;
+use App\Helpers\ApiResponse;
+use Helper;
 
 class UserController extends Controller
 {
@@ -13,7 +17,21 @@ class UserController extends Controller
      */
     public function index()
     {
-          return view('pages.users.index');
+           $resp = new ApiResponse();
+         try {
+
+                $parking_requests = User::all();
+                $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                $resp->message  = Globals::$STATUS_DESC_SUCCESS;
+                $resp->data = $parking_requests;
+
+            } catch (\Exception $ex) {
+                $resp->statusCode = Globals::$STATUS_CODE_ERROR;
+                $resp->message = $ex->getMessage();
+                $resp->data = $ex->getMessage();
+            }
+
+            return response()->json($resp);
     }
 
     /**
