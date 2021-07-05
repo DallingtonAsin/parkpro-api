@@ -10,6 +10,13 @@ use App\Http\Controllers\PaymentsController;
 use App\Http\Controllers\InvoicesController;
 use App\Http\Controllers\Reports\ReportsController;
 
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\MapController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\ParkingRequestController;
+
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -70,3 +77,11 @@ Route::get('invoice/recent', [InvoicesController::class, 'recentPayments']);
 
 //REPORTS API METHODS
 Route::get('reports/statistics', [ReportsController::class, 'GetStats']);
+
+Route::resources([
+	'notifications' => NotificationController::class,
+	'settings' => SettingsController::class,
+    'users' => UserController::class,
+	'map'=> MapController::class,
+    'requests' => ParkingRequestController::class,
+]);
