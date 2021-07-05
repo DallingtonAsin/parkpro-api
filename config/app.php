@@ -229,6 +229,7 @@ return [
         'Validator' => Illuminate\Support\Facades\Validator::class,
         'View' => Illuminate\Support\Facades\View::class,
         'Helper' => App\Helpers\SharedCommon::class,
+        'TokenAuth' => App\Helpers\TokenAuth::class,
         'Constant' => App\Helpers\Constants::class,
 
     ],

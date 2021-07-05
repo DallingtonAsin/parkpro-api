@@ -7,6 +7,7 @@ use App\Models\ParkingRequest;
 use App\Helpers\Globals;
 use App\Helpers\ApiResponse;
 use Helper;
+use TokenAuth;
 
 class ParkingRequestController extends Controller
 {
@@ -15,24 +16,33 @@ class ParkingRequestController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-         $resp = new ApiResponse();
-         try {
 
-                $parking_requests = ParkingRequest::all();
-                $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                $resp->message  = Globals::$STATUS_DESC_SUCCESS;
-                $resp->data = $parking_requests;
+       $resp = new ApiResponse();
+       try {
+        $authToken   =   $request->header('AuthToken');
+        if (!empty($authToken) && TokenAuth::validate($authToken)) {
+            $parking_requests = ParkingRequest::all();
+            $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
+            $resp->message  = Globals::$STATUS_DESC_SUCCESS;
+            $resp->data = $parking_requests;
 
-            } catch (\Exception $ex) {
-                $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-                $resp->message = $ex->getMessage();
-                $resp->data = $ex->getMessage();
-            }
+        }else{
+            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
+            $resp->message = "Unauthorized access";
+            $resp->data = "Unauthorized access";
 
-            return response()->json($resp);
+        }
+
+    } catch (\Exception $ex) {
+        $resp->statusCode = Globals::$STATUS_CODE_ERROR;
+        $resp->message = $ex->getMessage();
+        $resp->data = $ex->getMessage();
     }
+
+    return response()->json($resp);
+}
 
     /**
      * Show the form for creating a new resource.
