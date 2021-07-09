@@ -32,7 +32,7 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-
+Route::post('/login', [UserController::class, 'login']);
 Route::get('/home', [HomeController::class, 'index'])->name('home');
 Route::get('/reports/tenants/defaulters', [ReportsController::class, 'GetDefaulters'])->name('tenants.defaulters');
 
