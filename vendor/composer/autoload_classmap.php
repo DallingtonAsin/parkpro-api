@@ -45,6 +45,7 @@ return array(
     'App\\Models\\Invoice' => $baseDir . '/app/Models/Invoice.php',
     'App\\Models\\ParkingRequest' => $baseDir . '/app/Models/ParkingRequest.php',
     'App\\Models\\Payment' => $baseDir . '/app/Models/Payment.php',
+    'App\\Models\\RequestResponse' => $baseDir . '/app/Models/RequestResponse.php',
     'App\\Models\\Role' => $baseDir . '/app/Models/Role.php',
     'App\\Models\\Tenant' => $baseDir . '/app/Models/Tenant.php',
     'App\\Models\\User' => $baseDir . '/app/Models/User.php',

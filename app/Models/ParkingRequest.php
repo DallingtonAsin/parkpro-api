@@ -8,6 +8,6 @@ use Illuminate\Database\Eloquent\Model;
 class ParkingRequest extends Model
 {
     use HasFactory;
-    protected $table = 'requests';
+    protected $table = 'parking_requests';
     public $timestamps = true;
 }

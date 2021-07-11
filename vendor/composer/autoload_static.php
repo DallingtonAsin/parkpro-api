@@ -547,6 +547,7 @@ class ComposerStaticInitb4e83dd425a8c855f480f938ea59714b
         'App\\Models\\Invoice' => __DIR__ . '/../..' . '/app/Models/Invoice.php',
         'App\\Models\\ParkingRequest' => __DIR__ . '/../..' . '/app/Models/ParkingRequest.php',
         'App\\Models\\Payment' => __DIR__ . '/../..' . '/app/Models/Payment.php',
+        'App\\Models\\RequestResponse' => __DIR__ . '/../..' . '/app/Models/RequestResponse.php',
         'App\\Models\\Role' => __DIR__ . '/../..' . '/app/Models/Role.php',
         'App\\Models\\Tenant' => __DIR__ . '/../..' . '/app/Models/Tenant.php',
         'App\\Models\\User' => __DIR__ . '/../..' . '/app/Models/User.php',

@@ -14,14 +14,13 @@ class CreateRequestsTable extends Migration
     public function up()
     {
         Schema::create('requests', function (Blueprint $table) {
-            $table->id();
-            $table->string('username', 255)->unique();
-            $table->string('telephone', 15)->unique();
-            $table->string('car_number')->unique();
-            $table->string('status')->default('PENDING');
-            $table->date('request_date');
-            $table->date('approval_date')->nullable();
-            $table->timestamps();
+            $table->bigIncrements('id');
+            $table->text('request');
+            $table->text('response');
+            $table->string('method');
+            $table->string('url');
+            $table->ipAddress('ip_address');
+            $table->timestamp('date')->default(DB::raw('CURRENT_TIMESTAMP'));
         });
     }
 

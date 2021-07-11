@@ -78,6 +78,10 @@ Route::get('invoice/recent', [InvoicesController::class, 'recentPayments']);
 //REPORTS API METHODS
 Route::get('reports/statistics', [ReportsController::class, 'GetStats']);
 
+
+// USER API METHODS
+Route::delete('users', [UserController::class, 'destroy']);  
+
 Route::resources([
 	'notifications' => NotificationController::class,
 	'settings' => SettingsController::class,
