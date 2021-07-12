@@ -157,68 +157,82 @@ class UserController extends Controller
                     else
                     {
                         
-                        $user->first_name = $fname;
-                        $user->last_name = $lname;
-                        $user->name = $name;
-                        $user->username = $username;
-                        $user->gender = $gender;
-                        $user->email = $email;
-                        $user->user_role = $role;
-                        $user->mobile_no = $telno;
-                        $user->address = $address;
-                        $user->national_id_no = $nin;
-                        $user->password = $password;
-                        $user->is_active = 1;
-                        $user->changed_by = $registra;
-                        
-                        $save_status = $user->save();
-                        if($save_status){
+                        $count = User::where('email', '=', $email)->count();
+                        if($count == 0){
                             
-                            $subject = 'User Registration';
-                            $registraPosition = 'Client';
-                            $registraEmail = 'codesolutionug@gmail.com'; //$request->user()->email;
-                            $default_password = $defaultPwd;
-                            $now = now();
-                            $action =  "registered user ".$name."";
-                            $sendAction = "You have been registered as a client at parksmart today at ".$now."";
-                            Helper::logActivity($request, ['name' => $name, 'role' => $role, 'action' => $action]);
-                            $data = array(
-                                'name' => $name,
-                                'username' => $username,
-                                'password' => $default_password,
-                                'user_position' => 'user',
-                                'registra' => $registra,
-                                'registraPosition' => $registraPosition,
-                                'registraEmail' => $registraEmail,
-                                'email' => $email,
-                                'subject' => $subject,
-                                'created_at' => $now,
-                                'details' => $sendAction,
-                                'activity' => 'registration',
-                            );
+                            $user->first_name = $fname;
+                            $user->last_name = $lname;
+                            $user->name = $name;
+                            $user->username = $username;
+                            $user->gender = $gender;
+                            $user->email = $email;
+                            $user->user_role = $role;
+                            $user->mobile_no = $telno;
+                            $user->address = $address;
+                            $user->national_id_no = $nin;
+                            $user->password = $password;
+                            $user->is_active = 1;
+                            $user->changed_by = $registra;
                             
-                            if(Helper::is_connectedToInternet() == 1){
-                                \Mail::to($email)->send(new RegistrationMailSender($data));
-                                $message = "User ".$name." has been registered successfully and email has been sent";
+                            $save_status = $user->save();
+                            if($save_status){
                                 
-                            }else{
-                                $message = "User ".$name." has been registered successfully";
+                                $subject = 'User Registration';
+                                $registraPosition = 'Client';
+                                $registraEmail = 'codesolutionug@gmail.com'; //$request->user()->email;
+                                $default_password = $defaultPwd;
+                                $now = now();
+                                $action =  "registered user ".$name."";
+                                $sendAction = "You have been registered as a client at parksmart today at ".$now."";
+                                Helper::logActivity($request, ['name' => $name, 'role' => $role, 'action' => $action]);
+                                $data = array(
+                                    'name' => $name,
+                                    'username' => $username,
+                                    'password' => $default_password,
+                                    'user_position' => 'user',
+                                    'registra' => $registra,
+                                    'registraPosition' => $registraPosition,
+                                    'registraEmail' => $registraEmail,
+                                    'email' => $email,
+                                    'subject' => $subject,
+                                    'created_at' => $now,
+                                    'details' => $sendAction,
+                                    'activity' => 'registration',
+                                );
+                                
+                                if(Helper::is_connectedToInternet() == 1){
+                                    \Mail::to($email)->send(new RegistrationMailSender($data));
+                                    $message = "User ".$name." has been registered successfully and email has been sent";
+                                    
+                                }else{
+                                    $message = "User ".$name." has been registered successfully";
+                                }
+                                $dataArr = array("code" => Globals::$STATUS_CODE_SUCCESS,
+                                "message" => $message,
+                                "method" => $method);
+                                Helper::LogRequest($request, $dataArr);
+                                $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                                $resp->data = User::count();
                             }
-                            $dataArr = array("code" => Globals::$STATUS_CODE_SUCCESS,
-                            "message" => $message,
-                            "method" => $method);
-                            Helper::LogRequest($request, $dataArr);
-                            $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                            $resp->data = User::count();
-                        }
-                        else
-                        {
-                            $message = "User registration failed!";
+                            else
+                            {
+                                $message = "User registration failed!";
+                                $dataArr = array("code" => Globals::$STATUS_CODE_FAILED,
+                                "message" => $message,
+                                "method" => $method);
+                                Helper::LogRequest($request, $dataArr);
+                                $resp->statusCode = Globals::$STATUS_CODE_FAILED;
+                            }
+                            
+                        }else{
+                            $message = "User with email ".$email." has been added registered";
                             $dataArr = array("code" => Globals::$STATUS_CODE_FAILED,
                             "message" => $message,
                             "method" => $method);
-                            Helper::LogRequest($request, $dataArr);
+                            $responseInfo = Helper::getMessage('error', $message);
                             $resp->statusCode = Globals::$STATUS_CODE_FAILED;
+                            $resp->message  = $responseInfo;
+                            
                         }
                     }
                 } catch (\Exception $ex) {
@@ -235,9 +249,7 @@ class UserController extends Controller
                 
             }
             
-            
-            
-            
+        
             /**
             * Display the specified resource.
             *

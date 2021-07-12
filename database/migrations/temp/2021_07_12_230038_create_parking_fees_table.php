@@ -1,0 +1,34 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+class CreateParkingFeesTable extends Migration
+{
+    /**
+     * Run the migrations.
+     *
+     * @return void
+     */
+    public function up()
+    {
+        Schema::create('parking_fees', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('vehicle_cat_id')->default(1);
+            $table->double('fee');
+            $table->timestamps();
+            $table->foreign('vehicle_cat_id')->references('id')->on('vehicle_categories');
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
+    public function down()
+    {
+        Schema::dropIfExists('parking_fees');
+    }
+}

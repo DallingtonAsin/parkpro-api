@@ -15,6 +15,8 @@ use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\MapController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ParkingRequestController;
+use App\Http\Controllers\VehicleCategoryController;
+use App\Http\Controllers\ParkingFeeController;
 
 
 /*
@@ -88,4 +90,6 @@ Route::resources([
     'users' => UserController::class,
 	'map'=> MapController::class,
     'requests' => ParkingRequestController::class,
+    'vehicle_category' => VehicleCategoryController::class,
+    'parking_fees' => ParkingFeeController::class,
 ]);

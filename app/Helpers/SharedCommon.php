@@ -81,6 +81,15 @@ class SharedCommon
 
    }
 
+   public static function Numberize($input){
+    try{
+        $result = floatval(preg_replace('/[^\d.]/','', $input));
+        return $result;
+    }catch(\Exception $ex){
+        dd($ex->getMessage());
+    }
+}
+
    public static function getMessage($status, $activity)
    {
        $status == 'error'
