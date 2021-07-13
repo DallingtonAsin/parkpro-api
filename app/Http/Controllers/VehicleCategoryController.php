@@ -19,10 +19,10 @@ class VehicleCategoryController extends Controller
     {
         $resp = new ApiResponse();
         try {
-            $tenants = VehicleCategory::all();
+            $vehicle_categories = VehicleCategory::all();
             $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
             $resp->message  = Globals::$STATUS_DESC_SUCCESS;
-            $resp->data = $tenants;
+            $resp->data = $vehicle_categories;
         } catch (\Exception $ex) {
             $resp->statusCode = Globals::$STATUS_CODE_ERROR;
             $resp->message = Globals::$STATUS_DESC_ERROR;

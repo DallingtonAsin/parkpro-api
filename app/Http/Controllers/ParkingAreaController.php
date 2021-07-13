@@ -5,10 +5,11 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Helpers\Globals;
 use App\Helpers\ApiResponse;
+use App\Models\ParkingArea;
 use App\Models\Client;
 use Helper;
 
-class ClientController extends Controller
+class ParkingAreaController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -19,10 +20,10 @@ class ClientController extends Controller
     {
         $resp = new ApiResponse();
         try {
-            $clients = Client::all();
+            $parking_areas = ParkingArea::all();
             $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
             $resp->message  = Globals::$STATUS_DESC_SUCCESS;
-            $resp->data = $clients;
+            $resp->data = $parking_areas;
         } catch (\Exception $ex) {
             $resp->statusCode = Globals::$STATUS_CODE_ERROR;
             $resp->message = Globals::$STATUS_DESC_ERROR;
@@ -54,38 +55,45 @@ class ClientController extends Controller
         
         try{
             
-            if($request->has('client_name') && $request->filled('client_name')){
-                $client_name = $request->input('client_name');
-                $mobile_number = $request->input('mobile_number');
-                $email = $request->input('email');
-                $count = Client::where('name', '=', $client_name)->count();
+            if(($request->has('client_name') && $request->filled('client_name')) && ($request->has('parking_area') && $request->filled('parking_area'))){
+               
+                $client_id = $request->input('client_name');
+                $parking_area = $request->input('parking_area');
+
+                $client = Client::find($client_id);
+                $client_name = $client->name;
+
+                $count = ParkingArea::where('client_id', '=', $client_id)->where('area', '=', $parking_area)->count();
                 if($count == 0){
-                    
-                    $client = new Client();
-                    $client->name = $client_name;
-                    $client->mobile_number = $mobile_number;
-                    $client->email = $email;
-                    if ($client->save()) {
-                        $action = "registered client ".$client_name."";
+                    $fee = $request->input('fee');
+
+                    $parkingArea = new ParkingArea();
+
+                    $parkingArea->client_id = $client_id;
+                    $parkingArea->area = $parking_area;
+
+
+                    if ($parkingArea->save()) {
+                        $action = "added parking area ".$parking_area." for client ".$client_name."";
                         $responseInfo = Helper::getMessage('success', $action);
                         Helper::logActivity($request, ['name' => 'Dallington', 'role' => 'admin', 'action' => $action]);
                         $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
                         $resp->message = $responseInfo; 
                     } else {
-                        $messageErr = "registering client failed!";
+                        $messageErr = "Adding parking area ".$parking_area." for client '.$client_name.' failed!";
                         $responseInfo = Helper::getMessage('error', $messageErr);
                         $resp->statusCode = Globals::$STATUS_CODE_FAILED;
                         $resp->message = $responseInfo;
                     }
-                } else {
-                    $messageErr = "Client ".$client_name." has already been registered";
+                    
+                }else{
+                    $messageErr = "Parking area ".$parking_area." for client ".$client_name." has been already added";
                     $responseInfo = Helper::getMessage('error', $messageErr);
                     $resp->statusCode = Globals::$STATUS_CODE_FAILED;
                     $resp->message = $responseInfo;
                 }
-                
-            }else{
-                $messageErr = "Failed to get client from request";
+            } else {
+                $messageErr = "Failed to get client name and parking area from request";
                 $responseInfo = Helper::getMessage('error', $messageErr);
                 $resp->statusCode = Globals::$STATUS_CODE_FAILED;
                 $resp->message = $responseInfo;
@@ -94,7 +102,7 @@ class ClientController extends Controller
             $resp->statusCode = Globals::$STATUS_CODE_ERROR;
             $resp->message = $ex->getMessage();
         }
-        $resp->data = Client::count();
+        $resp->data = ParkingArea::count();
         return response()->json($resp);
     }
 

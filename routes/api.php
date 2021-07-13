@@ -18,6 +18,7 @@ use App\Http\Controllers\ParkingRequestController;
 use App\Http\Controllers\VehicleCategoryController;
 use App\Http\Controllers\ParkingFeeController;
 use App\Http\Controllers\ClientController;
+use App\Http\Controllers\ParkingAreaController;
 
 
 
@@ -95,4 +96,6 @@ Route::resources([
     'vehicle_category' => VehicleCategoryController::class,
     'parking_fees' => ParkingFeeController::class,
     'clients' => ClientController::class,
+    'parking_areas' => ParkingAreaController::class,
+
 ]);

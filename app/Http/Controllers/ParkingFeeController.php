@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Helpers\Globals;
 use App\Helpers\ApiResponse;
 use App\Models\ParkingFee;
+use App\Models\ParkingArea;
+use App\Models\Client;
 use App\Models\VehicleCategory;
 use Helper;
 
@@ -20,10 +22,10 @@ class ParkingFeeController extends Controller
     {
         $resp = new ApiResponse();
         try {
-            $tenants = ParkingFee::all();
+            $parking_fees = ParkingFee::all();
             $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
             $resp->message  = Globals::$STATUS_DESC_SUCCESS;
-            $resp->data = $tenants;
+            $resp->data = $parking_fees;
         } catch (\Exception $ex) {
             $resp->statusCode = Globals::$STATUS_CODE_ERROR;
             $resp->message = Globals::$STATUS_DESC_ERROR;
@@ -56,36 +58,49 @@ class ParkingFeeController extends Controller
         try{
             
             if(($request->has('vehicle_category') && $request->filled('vehicle_category')) && ($request->has('fee') && $request->filled('fee'))){
+                $client_id = $request->input('client');
+                $parking_area_id = $request->input('parking_area');
                 $vehicle_category_id = $request->input('vehicle_category');
-                $item = VehicleCategory::find($vehicle_category_id);
-                $name = $item->name;
-                $count = ParkingFee::where('vehicle_cat_id', '=', $vehicle_category_id)->count();
+                
+                $clientName = Client::where('id', $client_id)->value('name');
+                $parkingAreaName = ParkingArea::where('id', $parking_area_id)->value('area');
+                $vehicleCatName = VehicleCategory::where('id', $vehicle_category_id)->value('name');
+
+                $count = ParkingFee::where('client_id', '=', $client_id)
+                ->where('parking_area_id', '=', $parking_area_id)
+                ->where('vehicle_cat_id', '=', $vehicle_category_id)
+                ->count();
+                
                 if($count == 0){
                     $fee = $request->input('fee');
                     $parkingFee = new ParkingFee();
+                    
+                    $parkingFee->client_id = $client_id;
+                    $parkingFee->parking_area_id = $parking_area_id;
                     $parkingFee->vehicle_cat_id = $vehicle_category_id;
                     $parkingFee->fee = Helper::Numberize($fee);
+                    
                     if ($parkingFee->save()) {
-                        $action = "added parking fee for vehicle category ".$name."";
+                        $action = "added parking fee for vehicle category ".$vehicleCatName." for ".$clientName."'s parking area ".$parkingAreaName." ";
                         $responseInfo = Helper::getMessage('success', $action);
                         Helper::logActivity($request, ['name' => 'Dallington', 'role' => 'admin', 'action' => $action]);
                         $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
                         $resp->message = $responseInfo; 
                     } else {
-                        $messageErr = "Adding parking fee for vehicle category '.$name.' failed!";
+                        $messageErr = "Failed to add parking fee for vehicle category '.$vehicleCatName.' for ".$clientName."'s parking area ".$parkingAreaName."!";
                         $responseInfo = Helper::getMessage('error', $messageErr);
                         $resp->statusCode = Globals::$STATUS_CODE_FAILED;
                         $resp->message = $responseInfo;
                     }
                     
                 }else{
-                    $messageErr = "Fee for category ".$name." has been added already";
+                    $messageErr = "Fee for vehicle category ".$vehicleCatName." for ".$clientName."'s parking area ".$parkingAreaName." has been already added";
                     $responseInfo = Helper::getMessage('error', $messageErr);
                     $resp->statusCode = Globals::$STATUS_CODE_FAILED;
                     $resp->message = $responseInfo;
                 }
             } else {
-                $messageErr = "Failed to get vehicle category and fee from request";
+                $messageErr = "Failed to get details from request for adding fee";
                 $responseInfo = Helper::getMessage('error', $messageErr);
                 $resp->statusCode = Globals::$STATUS_CODE_FAILED;
                 $resp->message = $responseInfo;

@@ -75,10 +75,10 @@ class UserController extends Controller
                 try {
                     $authToken   =   $request->header('AuthToken');
                     if (!empty($authToken) && TokenAuth::validate($authToken)) {
-                        $parking_requests = User::all();
+                        $users = User::all();
                         $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
                         $resp->message  = Globals::$STATUS_DESC_SUCCESS;
-                        $resp->data = $parking_requests;
+                        $resp->data = $users;
                         
                     }else{
                         $resp->statusCode = Globals::$STATUS_CODE_ERROR;

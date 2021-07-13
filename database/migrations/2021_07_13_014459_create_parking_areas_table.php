@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateParkingFeesTable extends Migration
+class CreateParkingAreasTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,12 +13,12 @@ class CreateParkingFeesTable extends Migration
      */
     public function up()
     {
-        Schema::create('parking_fees', function (Blueprint $table) {
+        Schema::create('parking_areas', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('vehicle_cat_id')->default(1);
-            $table->double('fee');
+            $table->unsignedBigInteger('client_id')->default(1);
+            $table->string('area');
             $table->timestamps();
-            $table->foreign('vehicle_cat_id')->references('id')->on('vehicle_categories');
+            $table->foreign('client_id')->references('id')->on('clients');
         });
     }
 
@@ -29,6 +29,6 @@ class CreateParkingFeesTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('parking_fees');
+        Schema::dropIfExists('parking_areas');
     }
 }
