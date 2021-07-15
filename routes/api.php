@@ -10,6 +10,8 @@ use App\Http\Controllers\PaymentsController;
 use App\Http\Controllers\InvoicesController;
 use App\Http\Controllers\Reports\ReportsController;
 
+
+
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\MapController;
@@ -37,7 +39,8 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::post('/login', [UserController::class, 'login']);
+
+Route::post('/login', [UserController::class, 'authenticate']);
 Route::get('/home', [HomeController::class, 'index'])->name('home');
 Route::get('/reports/tenants/defaulters', [ReportsController::class, 'GetDefaulters'])->name('tenants.defaulters');
 
