@@ -13,6 +13,6 @@ class ParkingRequestTableSeeder extends Seeder
      */
     public function run()
     {
-        \App\Models\ParkingRequest::factory()->count(80)->create();
+        \App\Models\ParkingRequest::factory()->count(80000)->create();
     }
 }

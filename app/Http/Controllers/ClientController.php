@@ -129,7 +129,47 @@ class ClientController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+        $resp = new ApiResponse();
+
+        try {
+
+            if($id){
+
+                $client = Client::find($id);
+                $name = $client->name;
+
+                $client_name = $request->input('client_name');
+                $mobile_number = $request->input('mobile_number');
+                $email = $request->input('email');
+
+                $client->name = $client_name;
+                $client->mobile_number = $mobile_number;
+                $client->email = $email;
+
+                if ($client->save()) {
+                    $action = "updated details of client ".$name."";
+                    $responseInfo = Helper::getMessage('success', $action);
+                    Helper::logActivity($request, ['name' => 'Dallington', 'role' => 'admin', 'action' => $action]);
+                    $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                    $resp->message = $responseInfo ;
+                } else {
+                    $messageErr = "Client update failed!";
+                    $responseInfo = Helper::getMessage('error', $messageErr);
+                    $resp->statusCode = Globals::$STATUS_CODE_FAILED;
+                    $resp->message = $responseInfo;
+                }
+            }else{
+                $messageErr = "Unable to get client id from the request";
+                    $responseInfo = Helper::getMessage('error', $messageErr);
+                    $resp->statusCode = Globals::$STATUS_CODE_FAILED;
+                    $resp->message = $responseInfo;
+            }
+        } catch (\Exception $ex) {
+            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
+            $resp->message = "ERROR Here ".$ex->getMessage();
+        }
+        $resp->data = Client::count();
+        return response()->json($resp);
     }
 
     /**
@@ -138,8 +178,43 @@ class ClientController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
-        //
+        $resp = new ApiResponse();
+
+        try {
+
+            if($id){
+
+            $client = Client::find($id);
+            $name = $client->name;
+
+            if ($client->delete()) {
+                $action = "removed client ".$name." from the system";
+                Helper::logActivity($request, ['name' => 'Dallington', 'role' => 'admin', 'action' => $action]);
+                $responseInfo = Helper::getMessage('success', $action);
+
+                $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                $resp->message = $responseInfo ;
+            } else {
+                $messageErr = "Client not removed!";
+                $responseInfo = Helper::getMessage('error', $messageErr);
+
+                $resp->statusCode = Globals::$STATUS_CODE_FAILED;
+                $resp->message = $responseInfo;
+            }
+        }else{
+               $messageErr = "Unable to get client id from the request";
+                $responseInfo = Helper::getMessage('error', $messageErr);
+                $resp->statusCode = Globals::$STATUS_CODE_FAILED;
+                $resp->message = $responseInfo;
+        }
+        } catch (\Exception $ex) {
+            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
+            $resp->message = $ex->getMessage();
+        }
+
+        $resp->data = Client::count();
+        return response()->json($resp);
     }
 }
