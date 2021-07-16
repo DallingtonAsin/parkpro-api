@@ -21,10 +21,9 @@ class CreateParkingRequestsTable extends Migration
             $table->double('parking_hours');
             $table->double('amount');
             $table->string('status')->default('PENDING');
-            $table->date('request_date');
-            $table->date('approval_date')->nullable();
-            $table->date('reject_date')->nullable();
-            $table->timestamps();
+            $table->timestamp('request_date')->default(DB::raw('CURRENT_TIMESTAMP'));
+            $table->timestamp('approval_date')->nullable();
+            $table->timestamp('reject_date')->nullable();
         });
     }
 

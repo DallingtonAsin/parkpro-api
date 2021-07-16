@@ -9,5 +9,5 @@ class ParkingRequest extends Model
 {
     use HasFactory;
     protected $table = 'parking_requests';
-    public $timestamps = true;
+    public $timestamps = false;
 }
