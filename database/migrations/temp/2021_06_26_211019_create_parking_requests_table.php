@@ -18,9 +18,12 @@ class CreateParkingRequestsTable extends Migration
             $table->string('username', 255);
             $table->string('telephone', 15);
             $table->string('car_number');
+            $table->double('parking_hours');
+            $table->double('amount');
             $table->string('status')->default('PENDING');
             $table->date('request_date');
             $table->date('approval_date')->nullable();
+            $table->date('reject_date')->nullable();
             $table->timestamps();
         });
     }

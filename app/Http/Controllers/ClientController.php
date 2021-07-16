@@ -68,7 +68,7 @@ class ClientController extends Controller
                     if ($client->save()) {
                         $action = "registered client ".$client_name."";
                         $responseInfo = Helper::getMessage('success', $action);
-                        Helper::logActivity($request, ['name' => 'Dallington', 'role' => 'admin', 'action' => $action]);
+                        Helper::logActivity($request, ['name' => $request->input('creator'), 'role' => 'admin', 'action' => $action]);
                         $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
                         $resp->message = $responseInfo; 
                     } else {
@@ -149,7 +149,7 @@ class ClientController extends Controller
                 if ($client->save()) {
                     $action = "updated details of client ".$name."";
                     $responseInfo = Helper::getMessage('success', $action);
-                    Helper::logActivity($request, ['name' => 'Dallington', 'role' => 'admin', 'action' => $action]);
+                    Helper::logActivity($request, ['name' => $request->user()->name, 'role' => 'admin', 'action' => $action]);
                     $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
                     $resp->message = $responseInfo ;
                 } else {
