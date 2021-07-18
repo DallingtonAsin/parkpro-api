@@ -3,13 +3,14 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Helpers\Globals;
 use App\Helpers\ApiResponse;
 use App\Models\ParkingFee;
 use App\Models\ParkingArea;
 use App\Models\Client;
 use App\Models\VehicleCategory;
 use Helper;
+use Globals;
+
 
 class ParkingFeeController extends Controller
 {
@@ -22,7 +23,7 @@ class ParkingFeeController extends Controller
     {
         $resp = new ApiResponse();
         try {
-            $parking_fees = ParkingFee::all();
+            $parking_fees = ParkingFee::orderBy('id', 'desc')->get();
             $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
             $resp->message  = Globals::$STATUS_DESC_SUCCESS;
             $resp->data = $parking_fees;
@@ -111,6 +112,47 @@ class ParkingFeeController extends Controller
         }
         $resp->data = ParkingFee::count();
         return response()->json($resp);
+    }
+
+
+    public function getParkingFee($client_id, $parking_area_id, $vehicle_category_id){
+        $resp = new ApiResponse();
+        try{
+
+            $doesRequestExist = ParkingFee::where('client_id', $client_id)
+            ->where('parking_area_id', $parking_area_id)
+            ->where('vehicle_cat_id', $vehicle_category_id)
+            ->exists();
+
+            if($doesRequestExist){
+                $parking_fee = ParkingFee::where('client_id', $client_id)
+                ->where('parking_area_id', $parking_area_id)
+                ->where('vehicle_cat_id', $vehicle_category_id)
+                ->value('fee');
+                $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                $resp->message  = Globals::$STATUS_DESC_SUCCESS;
+                $data = array(
+                    'client' => Helper::getClientName($client_id)->data,
+                    'parking_area' => Helper::getParkingAreaName($parking_area_id)->data,
+                    'vehicle_type' => Helper::getVehicleTypeName($vehicle_category_id)->data,
+                    'statusCode' => $resp->statusCode,
+                    'message' => $resp->message,
+                    'fee' => $parking_fee,
+                );
+                $resp->data = $data;
+                
+            }else{
+                $resp->statusCode = Globals::$STATUS_CODE_FAILED;
+                $resp->message = "No results found";
+            }
+          
+        }catch(Exception $ex){
+                $resp->statusCode = Globals::$STATUS_CODE_ERROR;
+                $resp->message = $ex->getMessage();
+        }
+
+        return response()->json($resp);
+        
     }
     
     /**

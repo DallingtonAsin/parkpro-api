@@ -13,6 +13,6 @@ class RoleTableSeeder extends Seeder
      */
     public function run()
     {
-       \App\Models\Role::factory()->count(3)->create();
+       \App\Models\Role::factory()->count(2)->create();
     }
 }

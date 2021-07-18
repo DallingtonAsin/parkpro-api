@@ -3,10 +3,11 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Helpers\Globals;
 use App\Helpers\ApiResponse;
 use App\Models\Client;
 use Helper;
+use Globals;
+
 
 class ClientController extends Controller
 {
@@ -19,7 +20,7 @@ class ClientController extends Controller
     {
         $resp = new ApiResponse();
         try {
-            $clients = Client::all();
+            $clients = Client::orderBy('id', 'desc')->get();
             $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
             $resp->message  = Globals::$STATUS_DESC_SUCCESS;
             $resp->data = $clients;

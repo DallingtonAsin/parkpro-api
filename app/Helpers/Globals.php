@@ -14,5 +14,9 @@ class Globals {
     public static $STATUS_CODE_ERROR = "200";
     public static $STATUS_DESC_ERROR = "ERROR";
 
+    public static $PENDING_STATUS = "PENDING";
+    public static $APPROVED_STATUS = "APPROVED";
+    public static $REJECTED_STATUS = "REJECTED";
+
 
 }

@@ -3,10 +3,10 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Helpers\Globals;
 use App\Helpers\ApiResponse;
 use App\Models\VehicleCategory;
 use Helper;
+use Globals;
 
 class VehicleCategoryController extends Controller
 {

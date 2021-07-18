@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class errorLog extends Model
+class ErrorLog extends Model
 {
     use HasFactory;
     protected $table = 'error_logs';

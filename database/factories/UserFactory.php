@@ -30,7 +30,7 @@ class UserFactory extends Factory
                 'username' => $this->faker->unique()->lastName,
                 'gender' => $this->faker->randomElement(['Female', 'Male']),
                 'email' => $this->faker->unique()->safeEmail,
-                'user_role' => $this->faker->randomElement([1,2,3]),
+                'role' => $this->faker->randomElement([1,2,3]),
                 'mobile_no' => $this->faker->e164phoneNumber,
                 'address' => $this->faker->state,
                 'national_id_no' => strtoupper(Str::random(14)),

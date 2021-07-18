@@ -2,17 +2,17 @@
 
 namespace Database\Factories;
 
-use App\Models\Role;
+use App\Models\Client;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-class RoleFactory extends Factory
+class ClientFactory extends Factory
 {
     /**
      * The name of the factory's corresponding model.
      *
      * @var string
      */
-    protected $model = Role::class;
+    protected $model = Client::class;
 
     /**
      * Define the model's default state.
@@ -22,8 +22,9 @@ class RoleFactory extends Factory
     public function definition()
     {
         return [
-                'name' => $this->faker->randomElement(['Client', 'Admin', 'Master']),
-                'created_by' => $this->faker->firstName,
-        ];
+            'name' => $this->faker->name,
+            'mobile_number' => $this->faker->e164phoneNumber,
+            'email' => $this->faker->unique()->safeEmail,
+    ];
     }
 }

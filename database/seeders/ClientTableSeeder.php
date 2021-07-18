@@ -4,7 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 
-class UserTableSeeder extends Seeder
+class ClientTableSeeder extends Seeder
 {
     /**
      * Run the database seeds.
@@ -13,6 +13,7 @@ class UserTableSeeder extends Seeder
      */
     public function run()
     {
-        \App\Models\User::factory()->count(25)->create();
+        \App\Models\Client::factory()->count(4)->create();
+
     }
 }

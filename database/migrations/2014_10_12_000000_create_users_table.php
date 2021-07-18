@@ -21,12 +21,13 @@ class CreateUsersTable extends Migration
                 $table->string('username')->unique();
                 $table->string('gender');
                 $table->string('email')->nullable();
-                $table->unsignedBigInteger('user_role')->default(1);
+                $table->unsignedBigInteger('role')->default(1);
                 $table->string('mobile_no')->unique();
                 $table->string('address');
                 $table->string('national_id_no')->nullable();
                 $table->timestamp('email_verified_at')->nullable();
-                $table->string('image')->nullable();
+                $table->string('photo_path')->nullable();
+                $table->string('photo_name')->nullable();
                 $table->string('password', 255)->default(Hash::make('12345678'));
                 $table->string('otp_code')->nullable();
                 $table->integer('login_attempts')->default(0);
@@ -36,7 +37,7 @@ class CreateUsersTable extends Migration
                 $table->string('changed_by')->nullable();
                 $table->rememberToken()->nullable();
                 $table->timestamps();
-                $table->foreign('user_role')->references('role_id')->on('roles');
+                $table->foreign('role')->references('id')->on('roles');
         });
     }
 

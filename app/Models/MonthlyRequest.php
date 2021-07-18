@@ -5,9 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class ActivityLog extends Model
+class MonthlyRequest extends Model
 {
     use HasFactory;
-    protected $table = 'activity_logs';
-    public $timestamps = false;
+    protected $table = "monthly_requests";
 }

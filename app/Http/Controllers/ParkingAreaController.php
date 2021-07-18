@@ -3,11 +3,11 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Helpers\Globals;
 use App\Helpers\ApiResponse;
 use App\Models\ParkingArea;
 use App\Models\Client;
 use Helper;
+use Globals;
 
 class ParkingAreaController extends Controller
 {
@@ -20,7 +20,7 @@ class ParkingAreaController extends Controller
     {
         $resp = new ApiResponse();
         try {
-            $parking_areas = ParkingArea::all();
+            $parking_areas = ParkingArea::orderBy('id', 'desc')->get();
             $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
             $resp->message  = Globals::$STATUS_DESC_SUCCESS;
             $resp->data = $parking_areas;

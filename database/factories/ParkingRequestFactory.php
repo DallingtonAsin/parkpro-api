@@ -23,9 +23,14 @@ class ParkingRequestFactory extends Factory
     public function definition()
     {
         return [
-                'username' => $this->faker->unique()->username, // lastName
-                'telephone' => $this->faker->e164phoneNumber,
-                'car_number' => Str::random(6),
+                'ticket_no' => str::random(10),
+                'telephone_no' => $this->faker->e164phoneNumber,
+                'vehicle_number' => Str::random(6),
+                'vehicle_type_id' => $this->faker->randomElement([1,2,3]),
+                'client_id' => $this->faker->randomElement([1,2,3]),
+                'parking_area_id' => $this->faker->randomElement([1,2,3,4,5,6]),
+                'start_time' => '03:00',
+                'end_time' => '06:00',
                 'parking_hours' => $this->faker->numberBetween($min=1, $max=10),
                 'amount' => $this->faker->numberBetween($min=10000, $max=100000),
                 'request_date' => $this->faker->date($format = 'Y-m-d', $max = 'now'),
