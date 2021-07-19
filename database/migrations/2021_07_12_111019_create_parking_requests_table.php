@@ -14,7 +14,7 @@ class CreateParkingRequestsTable extends Migration
     public function up()
     {
         Schema::create('parking_requests', function (Blueprint $table) {
-            $table->id();
+            $table->bigIncrements('id');
             $table->string('ticket_no')->nullable();
             $table->string('telephone_no', 15);
             $table->string('vehicle_number');
@@ -29,10 +29,16 @@ class CreateParkingRequestsTable extends Migration
             $table->timestamp('request_date')->default(DB::raw('CURRENT_TIMESTAMP'));
             $table->timestamp('approval_date')->nullable();
             $table->timestamp('reject_date')->nullable();
-            $table->foreign('client_id')->references('id')->on('clients');
-            $table->foreign('vehicle_type_id')->references('id')->on('vehicle_categories');
-            $table->foreign('parking_area_id')->references('id')->on('parking_areas');
         });
+
+        Schema::table('parking_requests', function (Blueprint $table) {
+            $table->foreign('client_id')->references('id')->on('clients')->onDelete('cascade');
+            $table->foreign('vehicle_type_id')->references('id')->on('vehicle_categories')->onDelete('cascade');
+            $table->foreign('parking_area_id')->references('id')->on('parking_areas')->onDelete('cascade');
+        });
+
+
+
     }
 
     /**

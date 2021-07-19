@@ -28,7 +28,7 @@ class ParkingRequestFactory extends Factory
                 'vehicle_number' => Str::random(6),
                 'vehicle_type_id' => $this->faker->randomElement([1,2,3]),
                 'client_id' => $this->faker->randomElement([1,2,3]),
-                'parking_area_id' => $this->faker->randomElement([1,2,3,4,5,6]),
+                'parking_area_id' => $this->faker->randomElement([1,2,3]),
                 'start_time' => '03:00',
                 'end_time' => '06:00',
                 'parking_hours' => $this->faker->numberBetween($min=1, $max=10),

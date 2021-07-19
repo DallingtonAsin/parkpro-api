@@ -12,6 +12,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Hash;
 use App\Mail\RegistrationMailSender;
 use Illuminate\Support\Facades\Auth;
+use Validator;
 use Helper;
 use Globals;
 use TokenAuth;
@@ -170,24 +171,14 @@ public function create()
 }
 
 public function createOrReturnPath($dir){
+    try{
     if(!file_exists($dir)){
         mkdir($dir, 0777, true);
     }
     return $dir;
-}
-
-public function saveFile($file, $userRole){
-    try{
-        $dir = "uploads/images";
-        $path = $dir."/".$userRole."";
-        $file_path = $this->createOrReturnPath($path);
-        $extension = $file->getClientOriginalExtension();
-        $filename = time().'.'.$extension;
-        $file->move($storePath, $filename);
-        return array("file_path" => $file_path, "filename" => $filename);
-    }catch(Exception $ex){
-        throw $ex;
-    }
+   }catch (\Exception $ex) {
+       throw $ex;
+   }
 }
 
 protected function getUsernamesArr()
@@ -235,6 +226,25 @@ public function validateUsername($old_username, $new_username){
         return $bool;
 }
 
+public function saveFile($file, $userRole){
+    try{
+        $dir = "uploads/images";
+        $path = $dir."/".ucfirst($userRole)."";
+        $file_path = $this->createOrReturnPath($path);
+        $extension = $file->getClientOriginalExtension();
+        $filename = time().'.'.$extension;
+        $file->move($file_path, $filename);
+        return array("file_path" => $file_path, "filename" => $filename);
+    }catch(Exception $ex){
+        throw $ex;
+    }
+}
+
+public function getImageStoragePath(){
+    $path = public_path();
+    return response()->json($path);
+}
+
 /**
 * Store a newly created resource in storage.
 *
@@ -246,43 +256,57 @@ public function store(Request $request)
 {
     $resp = new ApiResponse();
     $method = "UserController@store";
-    
+
     try{
         
         $authToken   =   $request->header('AuthToken');
         if (!empty($authToken) && TokenAuth::validate($authToken)) {
+
+            $formData = $request->input('form-params');
+            $formData = json_decode($formData); // json object to array
+
+            // return response()->json($formData->first_name);
             
-            if($request->filled(['user_id', 'first_name', 'last_name', 'address',
-            'email', 'mobile_no', 'nin', 'gender', 'user_role'])){
-                
-                $fname = trim($request->input('first_name'));
-                $lname = trim($request->input('last_name'));
-                $address = trim($request->input('address'));
-                $email = trim($request->input('email'));
-                $telno = trim($request->input('mobile_no'));
-                $nin = trim($request->input('nin'));
-                $gender = trim($request->input('gender'));
-                $role = $request->input('user_role');
-                $registra = User::where('id', $request->input('user_id'))->value('name');
-                $registra_id = User::where('id', $request->input('user_id'))->value('role');
+            if(
+                isset($formData->user_id) &&
+                isset($formData->first_name) &&
+                isset($formData->last_name) &&
+                isset($formData->address) &&
+                isset($formData->email) &&
+                isset($formData->mobile_no) &&
+                isset($formData->nin) &&
+                isset($formData->gender) &&
+                isset($formData->user_role)
+            ){
+
+               
+                $fname = trim($formData->first_name);
+                $lname = trim($formData->last_name);
+                $address = trim($formData->address);
+                $email = trim($formData->email);
+                $telno = trim($formData->mobile_no);
+                $nin = trim($formData->nin);
+                $gender = trim($formData->gender);
+                $role = $formData->user_role;
+                $registra = User::where('id', $formData->user_id)->value('name');
+                $registra_id = User::where('id', $formData->user_id)->value('role');
                 $name = $fname." ".$lname;
                 $defaultPwd = '12345678';
                 
-                if($request->has('id') && $request->filled('id')) {
-                    $userId = $request->input('id');
+                if(isset($formData->id)) {
+                    $userId = $formData->id;
                     $user = User::find($userId);
-                    $username = $request->input('username');
-                    $user_role_id = $request->input('user_role');
+                    $username = $formData->username;
                     $changed_by = $user->name;
                     $bool_userExists = $this->validateUsername($user->username, $username); // User::where('username' ,$username)->exists();
                     
                     if(!$bool_userExists){
-                        if($request->has('photo')){
-                            $photo = $request->file('photo')->getRealPath();
-                            $k = $this->saveFile($photo, Helper::getUserRole($user_role_id));
+
+                        if($request->hasFile('photo')){
+                            $photo = $request->file('photo');
+                            $k = $this->saveFile($photo, Helper::getUserRole($role));
                             $photo_path = $k['file_path'];
                             $photo_name = $k['filename'];
-                            $resp->message = $photo;
                         }else{
                             $photo_path = null;
                             $photo_name = null;
@@ -296,7 +320,7 @@ public function store(Request $request)
                             'username' => $username,
                             'gender' => $gender,
                             'email' => $email,
-                            'role' => $user_role_id,
+                            'role' => $role,
                             'mobile_no' => $telno,
                             'national_id_no' => $nin,
                             'photo_path' => $photo_path,
@@ -329,7 +353,7 @@ public function store(Request $request)
                     
                     else{
                         $statusCode = Globals::$STATUS_CODE_FAILED;
-                        $message =  "username ".$request->input('username')." has already been taken, choose another one";
+                        $message =  "username ".$formData->username." has already been taken, choose another one";
                         $dataArr = array("code" => $statusCode,
                                          "message" => $message,
                                          "method" =>  $method);
@@ -347,17 +371,14 @@ public function store(Request $request)
                         $password = Hash::make($defaultPwd, ['rounds' => 12]);
                         $count = User::where('email', '=', $email)->count();
                         if($count == 0){
-                            if($request->has('photo')){
-                                $photo = $request->file('photo')->getRealPath();
-                                $resp->message = $photo;
-                                // $imagePath = $request->file('business_logo')->getRealPath();
-                                // $arr = $this->uploadFile2Cloudinary($request, $imagePath);
-                                $k = $this->saveFile($photo, Helper::getUserRole($role));
-                                $user->photo_path = $k['file_path'];
-                                $user->photo_name = $k['filename'];
+                            if($request->hasFile('photo')){
+                            $photo = $request->file('photo');
+                            $k = $this->saveFile($photo, Helper::getUserRole($role));
+                            $photo_path = $k['file_path'];
+                            $photo_name = $k['filename'];
                             }else{
-                                $user->photo_path = null;
-                                $user->photo_name = null;
+                                $photo_path = null;
+                                $photo_name = null;
                             }
                             
                             $user->first_name = $fname;
@@ -370,6 +391,8 @@ public function store(Request $request)
                             $user->mobile_no = $telno;
                             $user->address = $address;
                             $user->national_id_no = $nin;
+                            $user->photo_path = $photo_path;
+                            $user->photo_name = $photo_name;
                             $user->password = $password;
                             $user->is_active = 1;
                             $user->changed_by = $registra;
@@ -436,7 +459,7 @@ public function store(Request $request)
                         
                         
                     }else{
-                        $message =  "username ".$name." has already been taken, choose another one";
+                        $message =  "username ".$username." has already been taken, choose another one";
                         $dataArr = array("code" => Globals::$STATUS_CODE_FAILED,
                         "message" => $message,
                         "method" =>  $method);

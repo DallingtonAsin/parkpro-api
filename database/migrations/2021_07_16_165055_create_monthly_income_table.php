@@ -14,7 +14,7 @@ class CreateMonthlyIncomeTable extends Migration
      */
     public function up()
     {
-        DB::statement("CREATE VIEW monthly_income AS
+        DB::statement("CREATE OR REPLACE VIEW monthly_income AS
                 select 
                 date_format(`approval_date`,'%m-%Y') AS `period`, 
                 year(`approval_date`) AS year,

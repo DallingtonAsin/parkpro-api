@@ -55,10 +55,11 @@ class ParkingAreaController extends Controller
         
         try{
             
-            if(($request->has('client_name') && $request->filled('client_name')) && ($request->has('parking_area') && $request->filled('parking_area'))){
+            if($request->filled(['client_name', 'parking_area', 'total_space'])){
                
                 $client_id = $request->input('client_name');
                 $parking_area = $request->input('parking_area');
+                $total_space = $request->input('total_space');
 
                 $client = Client::find($client_id);
                 $client_name = $client->name;
@@ -71,6 +72,9 @@ class ParkingAreaController extends Controller
 
                     $parkingArea->client_id = $client_id;
                     $parkingArea->area = $parking_area;
+                    $parkingArea->total_space = $total_space;
+                    $parkingArea->current_free_space = $total_space;
+
 
 
                     if ($parkingArea->save()) {
@@ -93,7 +97,7 @@ class ParkingAreaController extends Controller
                     $resp->message = $responseInfo;
                 }
             } else {
-                $messageErr = "Failed to get client name and parking area from request";
+                $messageErr = "Unable to process request:missing parameters";
                 $responseInfo = Helper::getMessage('error', $messageErr);
                 $resp->statusCode = Globals::$STATUS_CODE_FAILED;
                 $resp->message = $responseInfo;

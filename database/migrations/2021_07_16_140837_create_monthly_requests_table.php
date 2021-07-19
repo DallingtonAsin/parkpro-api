@@ -14,7 +14,7 @@ class CreateMonthlyRequestsTable extends Migration
      */
     public function up()
     {
-        DB::statement("CREATE VIEW monthly_requests AS
+        DB::statement("CREATE OR REPLACE VIEW monthly_requests AS
                 select 
                 date_format(`approval_date`,'%m-%Y') AS `period`, 
                 year(`approval_date`) AS year,

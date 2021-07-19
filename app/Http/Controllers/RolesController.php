@@ -80,7 +80,7 @@ class RolesController extends Controller
                 if($request->filled('role_id')){
                     $role_id = $request->input('role_id');
                     $role = Role::find($role_id);
-                    $name = $role->name;
+                    $name = ucfirst($role->name);
                     $action = "updated role ".$name."";
                     $arr = $this->addUpdateRole($request, $role, $action, 'edit');
                     $resp->statusCode = $arr['statusCode'];
@@ -88,7 +88,7 @@ class RolesController extends Controller
                       
                 }else{
 
-                $name = $request->input('name');
+                $name = ucfirst($request->input('name'));
                 $count = Role::where('name', '=', $name)->count();
 
                 if($count == 0){

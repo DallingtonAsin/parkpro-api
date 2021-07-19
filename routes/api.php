@@ -58,6 +58,11 @@ Route::get('/reports/incomes/review', [ReportsController::class, 'incomeMonthlyR
 Route::get('/reports/requests/data', [ReportsController::class, 'GetMonthlyRequestsData']);
 Route::get('/reports/incomes/data', [ReportsController::class, 'GetMonthlyIncomeData']);
 
+Route::get('/image/path', [UserController::class, 'getImageStoragePath']);
+
+
+
+
 // LOGS
 Route::get('/logs', [ReportsController::class, 'fetchLogs']);
 

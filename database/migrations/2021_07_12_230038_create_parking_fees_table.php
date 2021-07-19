@@ -14,15 +14,15 @@ class CreateParkingFeesTable extends Migration
     public function up()
     {
         Schema::create('parking_fees', function (Blueprint $table) {
-            $table->id();
+            $table->bigIncrements('id');
             $table->unsignedBigInteger('client_id')->default(1);
             $table->unsignedBigInteger('parking_area_id')->default(1);
             $table->unsignedBigInteger('vehicle_cat_id')->default(1);
             $table->double('fee');
             $table->timestamps();
             $table->foreign('client_id')->references('id')->on('clients');
-            $table->foreign('parking_area_id')->references('id')->on('parking_areas');
-            $table->foreign('vehicle_cat_id')->references('id')->on('vehicle_categories');
+            $table->foreign('parking_area_id')->references('id')->on('parking_areas')->onDelete('cascade');
+            $table->foreign('vehicle_cat_id')->references('id')->on('vehicle_categories')->onDelete('cascade');
         });
     }
 

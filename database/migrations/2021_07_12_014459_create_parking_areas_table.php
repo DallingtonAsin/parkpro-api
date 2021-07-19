@@ -14,11 +14,13 @@ class CreateParkingAreasTable extends Migration
     public function up()
     {
         Schema::create('parking_areas', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('client_id')->default(1);
+            $table->bigIncrements('id');
+            $table->unsignedBigInteger('client_id');
             $table->string('area');
+            $table->integer('total_space');
+            $table->integer('current_free_space')->nullable();
             $table->timestamps();
-            $table->foreign('client_id')->references('id')->on('clients');
+            $table->foreign('client_id')->references('id')->on('clients')->onDelete('cascade');
         });
     }
 

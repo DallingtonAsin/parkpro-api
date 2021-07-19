@@ -14,7 +14,7 @@ class CreateVehicleCategories extends Migration
     public function up()
     {
         Schema::create('vehicle_categories', function (Blueprint $table) {
-            $table->id();
+            $table->bigIncrements('id');
             $table->string('name');
             $table->timestamps();
         });
