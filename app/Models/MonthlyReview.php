@@ -5,8 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class MonthlyRequest extends Model
+class MonthlyReview extends Model
 {
     use HasFactory;
-    protected $table = "monthly_requests";
+    protected $table = "monthly_review";
 }

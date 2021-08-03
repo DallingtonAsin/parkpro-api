@@ -18,7 +18,7 @@
 @endif
 
 <br>
-<a href="{{ url('/') }}">Click this link to login and start using the system</a>
+<a href="{{ config('app.domain') }}">Click this link to login and start using the system</a>
 <br>
 
 

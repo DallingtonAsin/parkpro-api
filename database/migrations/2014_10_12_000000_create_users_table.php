@@ -33,7 +33,7 @@ class CreateUsersTable extends Migration
                 $table->integer('login_attempts')->default(0);
                 $table->integer('otp_attempts')->default(0);
                 $table->string('isVerified')->default(false);
-                $table->boolean('is_active')->default(false);
+                $table->boolean('is_active')->default(true);
                 $table->string('changed_by')->nullable();
                 $table->rememberToken()->nullable();
                 $table->timestamps();

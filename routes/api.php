@@ -12,6 +12,8 @@ use App\Http\Controllers\ReportsController;
 use App\Http\Controllers\RolesController;
 use App\Http\Controllers\ParkingAreaController;
 use App\Http\Controllers\CompanySettingsController;
+use App\Http\Controllers\CustomerController;
+
 
 
 /*
@@ -31,6 +33,9 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 
 // USER ACOUNT
 Route::post('/login', [UserController::class, 'authenticate']);
+Route::post('/customer/login', [CustomerController::class, 'authenticate']);
+
+
 Route::post('/password/edit', [UserController::class, 'changePassword']);
 
 // ROLES
@@ -49,8 +54,6 @@ Route::post('/request/reject', [ParkingRequestController::class, 'rejectRequest'
 Route::get('/parking/fee/{client_id}/{parking_area_id}/{vehicle_type_id}', [ParkingFeeController::class, 'getParkingFee']);
 // Route::get('/parking/fee', [ParkingRequestController::class, 'getParkingFee']);
 
-
-
 // REPORTS
 Route::get('/reports', [ReportsController::class, 'index']);
 Route::get('/reports/requests/review', [ReportsController::class, 'requestMonthlyReview']);   
@@ -59,9 +62,6 @@ Route::get('/reports/requests/data', [ReportsController::class, 'GetMonthlyReque
 Route::get('/reports/incomes/data', [ReportsController::class, 'GetMonthlyIncomeData']);
 
 Route::get('/image/path', [UserController::class, 'getImageStoragePath']);
-
-
-
 
 // LOGS
 Route::get('/logs', [ReportsController::class, 'fetchLogs']);
@@ -77,5 +77,5 @@ Route::resources([
     'roles' => RolesController::class,
     'parking_areas' => ParkingAreaController::class,
     'company' => CompanySettingsController::class,
-
+    'customer' => CustomerController::class,
 ]);

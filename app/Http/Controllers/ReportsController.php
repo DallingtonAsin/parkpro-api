@@ -8,8 +8,7 @@ use App\Models\User;
 use App\Models\ParkingArea;
 use App\Models\ParkingFee;
 use App\Models\ParkingRequest;
-use App\Models\MonthlyRequest;
-use App\Models\MonthlyIncome;
+use App\Models\MonthlyReview;
 use App\Models\ActivityLog;
 use App\Helpers\ApiResponse;
 use Carbon\Carbon;
@@ -69,7 +68,7 @@ class ReportsController extends Controller
 
     public function requestMonthlyReview(){
         try {
-            $requests = MonthlyRequest::orderBy('month_int', 'asc')->get();
+            $requests = MonthlyReview::orderBy('month_int', 'asc')->get();
             $this->apiResponse->statusCode = Globals::$STATUS_CODE_SUCCESS;
             $this->apiResponse->message  = Globals::$STATUS_DESC_SUCCESS;
             $this->apiResponse->data = $requests;
@@ -85,7 +84,7 @@ class ReportsController extends Controller
 
     public function incomeMonthlyReview(){
         try {
-            $incomes = MonthlyIncome::orderBy('month_int', 'asc')->get();
+            $incomes = MonthlyReview::orderBy('month_int', 'asc')->get();
             $this->apiResponse->statusCode = Globals::$STATUS_CODE_SUCCESS;
             $this->apiResponse->message  = Globals::$STATUS_DESC_SUCCESS;
             $this->apiResponse->data = $incomes;
@@ -105,10 +104,10 @@ class ReportsController extends Controller
     try{
 
       $year = date('Y');
-      $result = MonthlyRequest::where('year', $year)
+      $result = MonthlyReview::where('year', $year)
                  ->orderBy('month_int','asc')
                 ->get();
-      $max_request_num = MonthlyRequest::max('total_requests');
+      $max_request_num = MonthlyReview::max('total_requests');
       $data = $months = $years = $requests = array();
       foreach($result as $row){
         array_push($months, date("F", mktime(0, 0, 0, $row->month_int, 10)));
@@ -139,10 +138,10 @@ class ReportsController extends Controller
     try{
 
       $year = date('Y');
-      $result = MonthlyIncome::where('year', $year)
+      $result = MonthlyReview::where('year', $year)
                  ->orderBy('month_int','asc')
                 ->get();
-      $max_income_value = MonthlyIncome::max('total_income');
+      $max_income_value = MonthlyReview::max('total_income');
       $data = $months = $years = $incomes = array();
       foreach($result as $row){
         array_push($months, date("F", mktime(0, 0, 0, $row->month_int, 10)));

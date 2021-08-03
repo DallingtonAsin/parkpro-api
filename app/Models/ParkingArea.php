@@ -8,4 +8,5 @@ use Illuminate\Database\Eloquent\Model;
 class ParkingArea extends Model
 {
     use HasFactory;
+    protected $table="parking_areas";
 }

@@ -55,9 +55,10 @@ class ParkingAreaController extends Controller
         
         try{
             
-            if($request->filled(['client_name', 'parking_area', 'total_space'])){
+            if($request->filled(['client_name', 'parking_area', 'address', 'total_space'])){
                
                 $client_id = $request->input('client_name');
+                $address = $request->input('address');
                 $parking_area = $request->input('parking_area');
                 $total_space = $request->input('total_space');
 
@@ -72,10 +73,9 @@ class ParkingAreaController extends Controller
 
                     $parkingArea->client_id = $client_id;
                     $parkingArea->area = $parking_area;
+                    $parkingArea->address = $address;
                     $parkingArea->total_space = $total_space;
                     $parkingArea->current_free_space = $total_space;
-
-
 
                     if ($parkingArea->save()) {
                         $action = "added parking area ".$parking_area." for client ".$client_name."";
