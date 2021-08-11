@@ -21,6 +21,11 @@ class ParkingAreaController extends Controller
         $resp = new ApiResponse();
         try {
             $parking_areas = ParkingArea::orderBy('id', 'desc')->get();
+            $num = 1000;
+            foreach($parking_areas as $parking){
+
+                $parking->image = "https://picsum.photos/".$num++."";
+            }
             $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
             $resp->message  = Globals::$STATUS_DESC_SUCCESS;
             $resp->data = $parking_areas;
@@ -65,14 +70,14 @@ class ParkingAreaController extends Controller
                 $client = Client::find($client_id);
                 $client_name = $client->name;
 
-                $count = ParkingArea::where('client_id', '=', $client_id)->where('area', '=', $parking_area)->count();
+                $count = ParkingArea::where('client_id', '=', $client_id)->where('name', '=', $parking_area)->count();
                 if($count == 0){
                     $fee = $request->input('fee');
 
                     $parkingArea = new ParkingArea();
 
                     $parkingArea->client_id = $client_id;
-                    $parkingArea->area = $parking_area;
+                    $parkingArea->name = $parking_area;
                     $parkingArea->address = $address;
                     $parkingArea->total_space = $total_space;
                     $parkingArea->current_free_space = $total_space;

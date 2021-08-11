@@ -16,7 +16,7 @@ class CreateParkingAreasTable extends Migration
         Schema::create('parking_areas', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->unsignedBigInteger('client_id');
-            $table->string('area');
+            $table->string('name');
             $table->string('address');
             $table->integer('total_space');
             $table->integer('current_free_space')->nullable();
