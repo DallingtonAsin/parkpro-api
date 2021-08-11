@@ -10,6 +10,7 @@ use App\Models\Client;
 use App\Models\VehicleCategory;
 use Helper;
 use Globals;
+use TokenAuth;
 
 
 class ParkingFeeController extends Controller
@@ -58,53 +59,62 @@ class ParkingFeeController extends Controller
         
         try{
             
-            if(($request->has('vehicle_category') && $request->filled('vehicle_category')) && ($request->has('fee') && $request->filled('fee'))){
-                $client_id = $request->input('client');
-                $parking_area_id = $request->input('parking_area');
-                $vehicle_category_id = $request->input('vehicle_category');
+            $authToken   =   $request->header('AuthToken');
+            if (!empty($authToken) && TokenAuth::validate($authToken)) {
                 
-                $clientName = Client::where('id', $client_id)->value('name');
-                $parkingAreaName = ParkingArea::where('id', $parking_area_id)->value('area');
-                $vehicleCatName = VehicleCategory::where('id', $vehicle_category_id)->value('name');
-
-                $count = ParkingFee::where('client_id', '=', $client_id)
-                ->where('parking_area_id', '=', $parking_area_id)
-                ->where('vehicle_cat_id', '=', $vehicle_category_id)
-                ->count();
-                
-                if($count == 0){
-                    $fee = $request->input('fee');
-                    $parkingFee = new ParkingFee();
+                if($request->filled(['client', 'parking_area', 'vehicle_category', 'fee'])){
+                    $client_id = $request->input('client');
+                    $parking_area_id = $request->input('parking_area');
+                    $vehicle_category_id = $request->input('vehicle_category');
                     
-                    $parkingFee->client_id = $client_id;
-                    $parkingFee->parking_area_id = $parking_area_id;
-                    $parkingFee->vehicle_cat_id = $vehicle_category_id;
-                    $parkingFee->fee = Helper::Numberize($fee);
+                    $clientName = Client::where('id', $client_id)->value('name');
+                    $parkingAreaName = ParkingArea::where('id', $parking_area_id)->value('name');
+                    $vehicleCatName = VehicleCategory::where('id', $vehicle_category_id)->value('name');
                     
-                    if ($parkingFee->save()) {
-                        $action = "added parking fee for vehicle category ".$vehicleCatName." for ".$clientName."'s parking area ".$parkingAreaName." ";
-                        $responseInfo = Helper::getMessage('success', $action);
-                        Helper::logActivity($request, ['name' => 'Dallington', 'role' => 'admin', 'action' => $action]);
-                        $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                        $resp->message = $responseInfo; 
-                    } else {
-                        $messageErr = "Failed to add parking fee for vehicle category '.$vehicleCatName.' for ".$clientName."'s parking area ".$parkingAreaName."!";
+                    $count = ParkingFee::where('client_id', '=', $client_id)
+                    ->where('parking_area_id', '=', $parking_area_id)
+                    ->where('vehicle_cat_id', '=', $vehicle_category_id)
+                    ->count();
+                    
+                    if($count == 0){
+                        $fee = $request->input('fee');
+                        $parkingFee = new ParkingFee();
+                        
+                        $parkingFee->client_id = $client_id;
+                        $parkingFee->parking_area_id = $parking_area_id;
+                        $parkingFee->vehicle_cat_id = $vehicle_category_id;
+                        $parkingFee->fee = Helper::Numberize($fee);
+                        
+                        if ($parkingFee->save()) {
+                            $action = "added parking fee for vehicle category ".$vehicleCatName." for ".$clientName."'s parking area ".$parkingAreaName." ";
+                            $responseInfo = Helper::getMessage('success', $action);
+                            Helper::logActivity($request, ['name' => 'Dallington', 'role' => 'admin', 'action' => $action]);
+                            $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                            $resp->message = $responseInfo; 
+                        } else {
+                            $messageErr = "Failed to add parking fee for vehicle category '.$vehicleCatName.' for ".$clientName."'s parking area ".$parkingAreaName."!";
+                            $responseInfo = Helper::getMessage('error', $messageErr);
+                            $resp->statusCode = Globals::$STATUS_CODE_FAILED;
+                            $resp->message = $responseInfo;
+                        }
+                        
+                    }else{
+                        $messageErr = "Fee for vehicle category ".$vehicleCatName." for ".$clientName."'s parking area ".$parkingAreaName." has been already added";
                         $responseInfo = Helper::getMessage('error', $messageErr);
                         $resp->statusCode = Globals::$STATUS_CODE_FAILED;
                         $resp->message = $responseInfo;
                     }
-                    
-                }else{
-                    $messageErr = "Fee for vehicle category ".$vehicleCatName." for ".$clientName."'s parking area ".$parkingAreaName." has been already added";
+                } else {
+                    $messageErr = "Failed to get details from request for adding fee";
                     $responseInfo = Helper::getMessage('error', $messageErr);
                     $resp->statusCode = Globals::$STATUS_CODE_FAILED;
                     $resp->message = $responseInfo;
                 }
-            } else {
-                $messageErr = "Failed to get details from request for adding fee";
-                $responseInfo = Helper::getMessage('error', $messageErr);
-                $resp->statusCode = Globals::$STATUS_CODE_FAILED;
-                $resp->message = $responseInfo;
+            }else{
+                $resp->statusCode = Globals::$STATUS_CODE_ERROR;
+                $resp->message = "Unauthorized access";
+                $resp->data = "Unauthorized access";
+                
             }
         } catch (\Exception $ex) {
             $resp->statusCode = Globals::$STATUS_CODE_ERROR;
@@ -113,17 +123,17 @@ class ParkingFeeController extends Controller
         $resp->data = ParkingFee::count();
         return response()->json($resp);
     }
-
-
+    
+    
     public function getParkingFee($client_id, $parking_area_id, $vehicle_category_id){
         $resp = new ApiResponse();
         try{
-
+            
             $doesRequestExist = ParkingFee::where('client_id', $client_id)
             ->where('parking_area_id', $parking_area_id)
             ->where('vehicle_cat_id', $vehicle_category_id)
             ->exists();
-
+            
             if($doesRequestExist){
                 $parking_fee = ParkingFee::where('client_id', $client_id)
                 ->where('parking_area_id', $parking_area_id)
@@ -145,12 +155,12 @@ class ParkingFeeController extends Controller
                 $resp->statusCode = Globals::$STATUS_CODE_FAILED;
                 $resp->message = "No results found";
             }
-          
+            
         }catch(Exception $ex){
-                $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-                $resp->message = $ex->getMessage();
+            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
+            $resp->message = $ex->getMessage();
         }
-
+        
         return response()->json($resp);
         
     }

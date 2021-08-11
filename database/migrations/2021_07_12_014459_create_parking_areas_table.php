@@ -17,7 +17,6 @@ class CreateParkingAreasTable extends Migration
             $table->bigIncrements('id');
             $table->unsignedBigInteger('client_id');
             $table->string('name');
-            $table->string('address');
             $table->integer('total_space');
             $table->integer('current_free_space')->nullable();
             $table->timestamps();

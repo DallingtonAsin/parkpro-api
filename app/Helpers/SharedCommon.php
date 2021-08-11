@@ -23,7 +23,7 @@ class SharedCommon
             try{
                 $exists = ParkingArea::where('id', '=', $areaId)->exists();
                 if($exists){
-                    $name = ParkingArea::where('id', '=', $areaId)->value('area');
+                    $name = ParkingArea::where('id', '=', $areaId)->value('name');
                     $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
                     $resp->message = "Results found";
                     $resp->data = $name;

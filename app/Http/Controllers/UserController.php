@@ -20,45 +20,54 @@ use Mail;
 
 class UserController extends Controller
 {
-  
+    
     public function authenticate(Request $request)
     {
-        
+        $resp = new ApiResponse();
         try{
-            $resp = new ApiResponse();
-            ($request->has('remember'))
-            ? $remembered = true
-            : $remembered = false;
             
-            $login = $request->input('username');
-            $password = $request->input('password');
-            
-            filter_var($login, FILTER_VALIDATE_EMAIL)
-            ? $fieldType = 'email' 
-            : $fieldType = 'username';
-            
-            $user_id = $this->getUserId($login, $password);
-            
-            if(Auth::attempt([$fieldType => $login,
-            'password' =>  $password
-        ], $remembered)){
-            
-            $userId = $this->getUserId($login);
-            $status = $this->findAccountStatus($userId);
-            if($status == 0){
+            $authToken   =   $request->header('AuthToken');
+            if (!empty($authToken) && TokenAuth::validate($authToken)) {
+                
+                ($request->has('remember'))
+                ? $remembered = true
+                : $remembered = false;
+                
+                $login = $request->input('username');
+                $password = $request->input('password');
+                
+                filter_var($login, FILTER_VALIDATE_EMAIL)
+                ? $fieldType = 'email' 
+                : $fieldType = 'username';
+                
+                $user_id = $this->getUserId($login, $password);
+                
+                if(Auth::attempt([$fieldType => $login,
+                'password' =>  $password
+            ], $remembered)){
+                
+                $userId = $this->getUserId($login);
+                $status = $this->findAccountStatus($userId);
+                if($status == 0){
+                    $statusCode = Globals::$STATUS_CODE_FAILED;
+                    $message = 'Your account is inactivated, see admin';
+                }
+                if($status == 1){
+                    $statusCode = Globals::$STATUS_CODE_SUCCESS;
+                    $action = $message =  "logged into the system";
+                    $resp->data = Auth::user();
+                    Helper::logActivity($request, ['name' => $login, 'role' => 'admin', 'action' => $action]);
+                }
+            }else
+            {
                 $statusCode = Globals::$STATUS_CODE_FAILED;
-                $message = 'Your account is inactivated, see admin';
+                $message = 'Invalid login credentials';
             }
-            if($status == 1){
-                $statusCode = Globals::$STATUS_CODE_SUCCESS;
-                $action = $message =  "logged into the system";
-                $resp->data = Auth::user();
-                Helper::logActivity($request, ['name' => $login, 'role' => 'admin', 'action' => $action]);
-            }
-        }else
-        {
-            $statusCode = Globals::$STATUS_CODE_FAILED;
-            $message = 'Invalid login credentials';
+        }else{
+            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
+            $resp->message = "Unauthorized access";
+            $resp->data = "Unauthorized access";
+            
         }
     } catch (\Exception $ex) {
         $statusCode = Globals::$STATUS_CODE_ERROR;
