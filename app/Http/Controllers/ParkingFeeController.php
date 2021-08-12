@@ -36,6 +36,27 @@ class ParkingFeeController extends Controller
         
         return response()->json($resp);
     }
+
+
+
+    public function getParkingFees(Request $request){
+        $resp = new ApiResponse();
+        try {
+            $client_id = $request->input('client_id');
+            $parking_area_id = $request->input('parking_area_id');
+            $parking_fees = ParkingFee::where('client_id', $client_id)
+                           ->where('parking_area_id', $parking_area_id)->get();
+            $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
+            $resp->message  = Globals::$STATUS_DESC_SUCCESS;
+            $resp->data = $parking_fees;
+        } catch (\Exception $ex) {
+            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
+            $resp->message = Globals::$STATUS_DESC_ERROR;
+            $resp->data = $ex->getMessage();
+        }
+        
+        return response()->json($resp);
+    }
     
     /**
     * Show the form for creating a new resource.
