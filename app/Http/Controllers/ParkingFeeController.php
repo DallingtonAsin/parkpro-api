@@ -46,6 +46,12 @@ class ParkingFeeController extends Controller
             $parking_area_id = $request->input('parking_area_id');
             $parking_fees = ParkingFee::where('client_id', $client_id)
                            ->where('parking_area_id', $parking_area_id)->get();
+            foreach ($parking_fees as $item){
+                $item->area = ParkingArea::where('id', $item->parking_area_id)->value('name');
+                $item->client = Client::where('id', $item->client_id)->value('name');
+                $item->vehicle_type = VehicleCategory::where('id', $item->vehicle_cat_id)->value('name');
+            }
+
             $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
             $resp->message  = Globals::$STATUS_DESC_SUCCESS;
             $resp->data = $parking_fees;
