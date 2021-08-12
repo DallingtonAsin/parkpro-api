@@ -25,6 +25,7 @@ class ParkingAreaController extends Controller
             $num = 1000;
             foreach($parking_areas as $parking){
                 $parking->address = Client::where('id', $parking->client_id)->value('address');
+                $parking->client = Client::where('id', $parking->client_id)->value('name');
                 $parking->image = "https://picsum.photos/".$num++."";
             }
             $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
