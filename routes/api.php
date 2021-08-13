@@ -65,10 +65,12 @@ Route::get('/reports/incomes/data', [ReportsController::class, 'GetMonthlyIncome
 
 Route::get('/image/path', [UserController::class, 'getImageStoragePath']);
 Route::get('/parking/fees', [ParkingFeeController::class, 'getParkingFees']);
+Route::get('/parking/fees', [ParkingFeeController::class, 'getParkingFees']);
+
 
 
 // LOGS
-Route::get('/logs', [ReportsController::class, 'fetchLogs']);
+Route::get('/transaction/history', [ParkingRequestController::class, 'getTransactionHistory']);
 
 
 // RESOURCE ENDPOINTS
