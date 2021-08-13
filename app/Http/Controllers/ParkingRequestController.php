@@ -67,7 +67,7 @@ class ParkingRequestController extends Controller
                     ->orderBy('approval_date', 'desc')
                     ->wherenotNull('approval_date')->get();
                 }
-                if(!empty($transactions)){
+                if(count($transactions->toArray()) > 0) {
                     foreach($transactions as $transaction){
                         $transaction->approval_date = date('Y-m-d', strtotime($transaction->approval_date));
                         $transaction->description = 'Payment';
