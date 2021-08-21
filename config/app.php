@@ -176,6 +176,7 @@ return [
         // App\Providers\BroadcastServiceProvider::class,
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
+        Laraman\Beyonic\BeyonicServiceProvider::class,
         
 
     ],
@@ -233,6 +234,7 @@ return [
         'Helper' => App\Helpers\SharedCommon::class,
         'TokenAuth' => App\Helpers\TokenAuth::class,
         'Globals' => App\Helpers\Globals::class,
+        'LaramanBeyonic' => Laraman\Beyonic\Facades\BeyonicFacade::class,
       
     ],
 

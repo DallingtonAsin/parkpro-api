@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4a16c3c541bd99241cab1c21ce8e83ac",
+    "content-hash": "0b3a059518168e499f0a1b8a4785e1dd",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -61,6 +61,57 @@
                 "source": "https://github.com/asm89/stack-cors/tree/v2.0.3"
             },
             "time": "2021-03-11T06:42:03+00:00"
+        },
+        {
+            "name": "beyonic/beyonic-php",
+            "version": "0.0.15",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/beyonic/beyonic-php.git",
+                "reference": "c4b00a9fd0adf5bcd417d8faf8d2a379d03b2614"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/beyonic/beyonic-php/zipball/c4b00a9fd0adf5bcd417d8faf8d2a379d03b2614",
+                "reference": "c4b00a9fd0adf5bcd417d8faf8d2a379d03b2614",
+                "shasum": ""
+            },
+            "require": {
+                "ext-curl": "*",
+                "ext-json": "*",
+                "ext-mbstring": "*",
+                "php": ">=5.2"
+            },
+            "type": "library",
+            "autoload": {
+                "classmap": [
+                    "lib/Beyonic/"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Beyonic",
+                    "homepage": "http://beyonic.com"
+                }
+            ],
+            "description": "Beyonic PHP Library",
+            "homepage": "http://beyonic.com",
+            "keywords": [
+                "Mobile Payments",
+                "api",
+                "beyonic",
+                "mobile money",
+                "mpesa"
+            ],
+            "support": {
+                "issues": "https://github.com/beyonic/beyonic-php/issues",
+                "source": "https://github.com/beyonic/beyonic-php/tree/0.0.15"
+            },
+            "time": "2019-07-07T18:41:12+00:00"
         },
         {
             "name": "brick/math",
@@ -891,6 +942,64 @@
                 "source": "https://github.com/guzzle/psr7/tree/1.7.0"
             },
             "time": "2020-09-30T07:37:11+00:00"
+        },
+        {
+            "name": "laraman/beyonic",
+            "version": "v1.0.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/jeanjoe/laraman-beyonic.git",
+                "reference": "c79db96964b9de591ba0e6c1a5d5e15ed372f640"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/jeanjoe/laraman-beyonic/zipball/c79db96964b9de591ba0e6c1a5d5e15ed372f640",
+                "reference": "c79db96964b9de591ba0e6c1a5d5e15ed372f640",
+                "shasum": ""
+            },
+            "require": {
+                "beyonic/beyonic-php": "*"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Laraman\\Beyonic\\BeyonicServiceProvider"
+                    ],
+                    "aliases": {
+                        "LaramanBeyonic": "Laraman\\Beyonic\\Facades\\BeyonicFacade"
+                    }
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Laraman\\Beyonic\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Manzede Benard",
+                    "email": "manzede@gmail.com"
+                }
+            ],
+            "description": "Laravel package for working with Beyonic Mobile Money APIs",
+            "keywords": [
+                "beyonic",
+                "laravel",
+                "library",
+                "mobile money",
+                "payments",
+                "php"
+            ],
+            "support": {
+                "issues": "https://github.com/jeanjoe/laraman-beyonic/issues",
+                "source": "https://github.com/jeanjoe/laraman-beyonic/tree/v1.0.2"
+            },
+            "time": "2020-01-31T10:59:34+00:00"
         },
         {
             "name": "laravel/framework",
@@ -7363,5 +7472,5 @@
         "php": "^7.3|^8.0"
     },
     "platform-dev": [],
-    "plugin-api-version": "2.0.0"
+    "plugin-api-version": "2.1.0"
 }

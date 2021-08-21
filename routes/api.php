@@ -13,6 +13,8 @@ use App\Http\Controllers\RolesController;
 use App\Http\Controllers\ParkingAreaController;
 use App\Http\Controllers\CompanySettingsController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\PaymentController;
+
 
 
 
@@ -72,6 +74,7 @@ Route::get('/parking/fees', [ParkingFeeController::class, 'getParkingFees']);
 // LOGS
 Route::get('/transaction/history', [ParkingRequestController::class, 'getTransactionHistory']);
 
+Route::post('/payment/create', [PaymentController::class, 'create']);
 
 // RESOURCE ENDPOINTS
 Route::resources([
@@ -84,4 +87,6 @@ Route::resources([
     'parking_areas' => ParkingAreaController::class,
     'company' => CompanySettingsController::class,
     'customer' => CustomerController::class,
+    'payment' => PaymentController::class,
+
 ]);
