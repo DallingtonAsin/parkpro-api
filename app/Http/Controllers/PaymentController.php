@@ -27,7 +27,7 @@ class PaymentController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function create()
+    public function create(Request $request)
     {
         $resp = new ApiResponse();
         $paymentData = array(
@@ -44,7 +44,7 @@ class PaymentController extends Controller
           $response = LaramanBeyonic::createCollectionRequest($paymentData);
           $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
           $resp->message  = Globals::$STATUS_DESC_SUCCESS;
-          $resp->data = $parking_requests;
+          $resp->data = $response;
         } catch (\Exception $ex) {
             $resp->statusCode = Globals::$STATUS_CODE_ERROR;
             $resp->message = $ex->getMessage();
