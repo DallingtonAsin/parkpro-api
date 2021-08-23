@@ -40,6 +40,34 @@ class ParkingAreaController extends Controller
         return response()->json($resp);
     }
     
+    public function getParkingSpots(Request $request)
+    {
+        $resp = new ApiResponse();
+        try {
+            if($request->filled(['parking_area'])){
+                $parking_area = $request->input('parking_area');
+                $client_id = Client::where('name', 'like', '%'.$parking_area.'%')->value('id');
+                $parking_spots = ParkingArea::where('client_id',  '=', $client_id)->get();
+                $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                $resp->message  = Globals::$STATUS_DESC_SUCCESS;
+                $resp->data = $parking_spots;
+            }else{
+                $messageErr = "Unable to process request:missing parameters";
+                $responseInfo = Helper::getMessage('error', $messageErr);
+                $resp->statusCode = Globals::$STATUS_CODE_FAILED;
+                $resp->message = $responseInfo;
+            }
+        } catch (\Exception $ex) {
+            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
+            $resp->message = Globals::$STATUS_DESC_ERROR;
+            $resp->data = $ex->getMessage();
+        }
+        
+        return response()->json($resp);
+    }
+    
+    
+    
     /**
     * Show the form for creating a new resource.
     *
