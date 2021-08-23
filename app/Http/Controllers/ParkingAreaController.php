@@ -44,9 +44,8 @@ class ParkingAreaController extends Controller
     {
         $resp = new ApiResponse();
         try {
-            if($request->filled(['parking_area'])){
-                $parking_area = $request->input('parking_area');
-                $client_id = Client::where('name', 'like', '%'.$parking_area.'%')->value('id');
+            if($request->filled(['client_id'])){
+                $client_id = $request->input('client_id');
                 $parking_spots = ParkingArea::where('client_id',  '=', $client_id)->get();
                 $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
                 $resp->message  = Globals::$STATUS_DESC_SUCCESS;
