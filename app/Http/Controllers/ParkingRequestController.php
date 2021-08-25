@@ -348,7 +348,7 @@ class ParkingRequestController extends Controller
                                 $parkingRequest->request_date = $request_date;
                                 if($parkingRequest->save()){
                                     $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                                    $resp->message  = Globals::$STATUS_DESC_SUCCESS;
+                                    $resp->message  = "Request has been submitted successfully, wait shortly for notification of request approval.";
                                     $data = array(
                                         'telephone_no' => $telephone_no,
                                         'status' => $status,
