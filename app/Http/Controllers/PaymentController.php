@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Helpers\ApiResponse;
+use App\Models\Customer;
 use Helper;
 use TokenAuth;
 use Globals;
@@ -51,6 +52,64 @@ class PaymentController extends Controller
             $resp->data = null;
         }
 
+        return response()->json($resp);
+    }
+
+
+    public function topupUserAccount(Request $request){
+        $resp = new ApiResponse();
+
+        try{
+            $authToken   =   $request->header('AuthToken');
+            if (!empty($authToken) && TokenAuth::validate($authToken)) {
+                
+                if($request->filled(['customer_id', 'amount'])){
+                    $customer_id = $request->input('customer_id');
+                    $amount = $request->input('amount');
+                    $exists = Customer::where('id', $customer_id)->exists();
+                    
+                    if($exists){
+
+                        $amount = Helper::Numberize($amount);
+                        $hasUpdated = Customer::where('id', $customer_id)->increment('account_balance', $amount);
+                        $customer = Customer::find($customer_id);
+                        
+                        if ($hasUpdated) {
+                            $customer_names = $customer->first_name. " ".$customer->last_name;
+                            $action = "topped up ".$customer_names." account's with amount worth ".$amount;
+                            $responseInfo = Helper::getMessage('success', $action);
+                            Helper::logActivity($request, ['name' => 'System', 'role' => 'system', 'action' => $action]);
+                            $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                            $resp->message = $responseInfo; 
+                        } else {
+                            $messageErr = "Unable to top up customer account!";
+                            $responseInfo = Helper::getMessage('error', $messageErr);
+                            $resp->statusCode = Globals::$STATUS_CODE_FAILED;
+                            $resp->message = $responseInfo;
+                        }
+                        
+                    }else{
+                        $messageErr = "Failed to find supplied customer id";
+                        $responseInfo = Helper::getMessage('error', $messageErr);
+                        $resp->statusCode = Globals::$STATUS_CODE_FAILED;
+                        $resp->message = $responseInfo;
+                    }
+                } else {
+                    $messageErr = "Unable to process requuest: missing parameters";
+                    $responseInfo = Helper::getMessage('error', $messageErr);
+                    $resp->statusCode = Globals::$STATUS_CODE_FAILED;
+                    $resp->message = $responseInfo;
+                }
+            }else{
+                $resp->statusCode = Globals::$STATUS_CODE_ERROR;
+                $resp->message = "Unauthorized access";
+                $resp->data = "Unauthorized access";
+                
+            }
+        } catch (\Exception $ex) {
+            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
+            $resp->message = $ex->getMessage();
+        }
         return response()->json($resp);
     }
 

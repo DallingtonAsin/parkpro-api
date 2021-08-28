@@ -22,7 +22,7 @@ class ParkingAreaController extends Controller
         $resp = new ApiResponse();
         try {
             $parking_areas = ParkingArea::orderBy('id', 'desc')->get();
-            $num = 1000;
+            $num = 2000;
             foreach($parking_areas as $parking){
                 $parking->address = Client::where('id', $parking->client_id)->value('address');
                 $parking->client = Client::where('id', $parking->client_id)->value('name');
@@ -50,6 +50,37 @@ class ParkingAreaController extends Controller
                 $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
                 $resp->message  = Globals::$STATUS_DESC_SUCCESS;
                 $resp->data = $parking_spots;
+            }else{
+                $messageErr = "Unable to process request:missing parameters";
+                $responseInfo = Helper::getMessage('error', $messageErr);
+                $resp->statusCode = Globals::$STATUS_CODE_FAILED;
+                $resp->message = $responseInfo;
+            }
+        } catch (\Exception $ex) {
+            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
+            $resp->message = Globals::$STATUS_DESC_ERROR;
+            $resp->data = $ex->getMessage();
+        }
+        
+        return response()->json($resp);
+    }
+
+    public function filterParkingAreas(Request $request)
+    {
+        $resp = new ApiResponse();
+        try {
+            if($request->filled(['search'])){
+                $search = $request->input('search');
+                $searchResults = ParkingArea::where('name',  'like', '%'.$search.'%')->get();
+                $num = 2000;
+                foreach($searchResults as $parking){
+                    $parking->address = Client::where('id', $parking->client_id)->value('address');
+                    $parking->client = Client::where('id', $parking->client_id)->value('name');
+                    $parking->image = "https://picsum.photos/".$num++."";
+                }
+                $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                $resp->message  = Globals::$STATUS_DESC_SUCCESS;
+                $resp->data = $searchResults;
             }else{
                 $messageErr = "Unable to process request:missing parameters";
                 $responseInfo = Helper::getMessage('error', $messageErr);

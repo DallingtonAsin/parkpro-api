@@ -77,6 +77,11 @@ Route::get('/transaction/history', [ParkingRequestController::class, 'getTransac
 Route::post('/payment/create', [PaymentController::class, 'create']);
 
 Route::get('parking_spots', [ParkingAreaController::class, 'getParkingSpots']);
+Route::get('parking_areas/filter', [ParkingAreaController::class, 'filterParkingAreas']);
+Route::post('user/account/topup', [PaymentController::class, 'topupUserAccount']);
+
+
+
 
 // RESOURCE ENDPOINTS
 Route::resources([
