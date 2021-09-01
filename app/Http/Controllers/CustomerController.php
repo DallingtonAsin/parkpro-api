@@ -261,9 +261,17 @@ class CustomerController extends Controller
                                 
                                 $resp->message = $message;
                                 $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                                $data = ['first_name' => $firstName, 'last_name' => $lastName,
-                                        'phone_number' => $phoneNumber, 'email' => $email];
-                                $resp->data = $data;
+
+                                $authToken = Hash::make($phoneNumber. time());
+                                if(!empty($authToken)){
+                                    $customerData['first_name'] =  $firstName;
+                                    $customerData['last_name'] =  $lastName;
+                                    $customerData['phone_number'] =  $phoneNumber;
+                                    $customerData['email'] =  $email;
+                                    $customerData['account_balance'] = 0;
+                                    $customerData['authToken'] =  $authToken;
+                                }
+                                $resp->data = $customerData;
                             }
                             else
                             {
