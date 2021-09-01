@@ -264,8 +264,8 @@ class CustomerController extends Controller
 
                                 $authToken = Hash::make($phone_number. time());
                                 if(!empty($authToken)){
-                                    $customerData['first_name'] =  $firstName;
-                                    $customerData['last_name'] =  $lastName;
+                                    $customerData['first_name'] =  $first_name;
+                                    $customerData['last_name'] =  $last_name;
                                     $customerData['phone_number'] =  $phone_number;
                                     $customerData['email'] =  $email;
                                     $customerData['account_balance'] = 0;
