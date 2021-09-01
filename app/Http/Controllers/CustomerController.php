@@ -261,6 +261,9 @@ class CustomerController extends Controller
                                 
                                 $resp->message = $message;
                                 $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                                $data = ['first_name' => $firstName, 'last_name' => $lastName,
+                                        'phone_number' => $phoneNumber, 'email' => $email];
+                                $resp->data = $data;
                             }
                             else
                             {
