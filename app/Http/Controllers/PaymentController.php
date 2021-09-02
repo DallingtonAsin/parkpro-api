@@ -102,7 +102,7 @@ class PaymentController extends Controller
                         $resp->message = $responseInfo;
                     }
                 } else {
-                    $messageErr = "Unable to process requuest: missing parameters";
+                    $messageErr = "Unable to process request: missing parameters";
                     $responseInfo = Helper::getMessage('error', $messageErr);
                     $resp->statusCode = Globals::$STATUS_CODE_FAILED;
                     $resp->message = $responseInfo;
