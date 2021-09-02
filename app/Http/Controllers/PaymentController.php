@@ -63,10 +63,11 @@ class PaymentController extends Controller
             $authToken   =   $request->header('AuthToken');
             if (!empty($authToken) && TokenAuth::validate($authToken)) {
                 
-                if($request->filled(['customer_id', 'amount'])){
+                if($request->filled(['customer_id', 'amount', 'phone_number'])){
                     $customer_id = $request->input('customer_id');
                     $amount = $request->input('amount');
-                    $exists = Customer::where('id', $customer_id)->exists();
+                    $phone_number = $request->input('phone_number');
+                    $exists = Customer::where('id', $customer_id)->where('phone_number', $phone_number)->exists();
                     
                     if($exists){
 
@@ -75,12 +76,18 @@ class PaymentController extends Controller
                         $customer = Customer::find($customer_id);
                         
                         if ($hasUpdated) {
-                            $customer_names = $customer->first_name. " ".$customer->last_name;
-                            $action = "topped up ".$customer_names." account's with amount worth ".$amount;
+                            $customer_name = $customer->first_name. " ".$customer->last_name;
+                            $action = "topped up ".$customer_name." account's with amount worth ".$amount;
                             $responseInfo = Helper::getMessage('success', $action);
                             Helper::logActivity($request, ['name' => 'System', 'role' => 'system', 'action' => $action]);
                             $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
                             $resp->message = $responseInfo; 
+                            $data = ['customer_id' => $customer_id,
+                                     'customer_name' => $customer_name,
+                                     'phonenumber' => $phone_number, 
+                                     'account_balance' => $customer->account_balance,
+                                    ];
+                            $resp->data = $data;
                         } else {
                             $messageErr = "Unable to top up customer account!";
                             $responseInfo = Helper::getMessage('error', $messageErr);
