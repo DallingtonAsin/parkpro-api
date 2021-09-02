@@ -190,9 +190,9 @@ class CustomerController extends Controller
                         $email = null;
                     }
                     
-                    if($request->filled('id')) {
+                    if($request->filled('user_id')) {
                         
-                        $customerId = $request->input('id');
+                        $customerId = $request->input('user_id');
                         $customer = Customer::find($customerId);
                         if($request->hasFile('photo')){
                             $photo = $request->file('photo');
@@ -213,14 +213,24 @@ class CustomerController extends Controller
                             'last_name' => $last_name,
                             'phone_number' => $phone_number,
                             'email' => $email,
-                            'password' => $password,
+                            // 'password' => $password,
                         ]);
                         
                         if($hasUpdated){
                             $action = "updated profile";
                             $resp->message = Helper::getMessage('success', $action);
                             $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                            $resp->data = Customer::count();
+                            $authToken = Hash::make($phone_number. time());
+                            if(!empty($authToken)){
+                                $customerData['first_name'] =  $customer->first_name;
+                                $customerData['last_name'] =  $customer->last_name;
+                                $customerData['phone_number'] =  $customer->phone_number;
+                                $customerData['email'] =  $customer->email;
+                                $customerData['account_balance'] = $customer->account_balance;
+                                $customerData['authToken'] =  $authToken;
+                            }
+                            $resp->data = $customerData;
+
                         }else{
                             $resp->message ="Unable to update customer account profile!";
                             $resp->statusCode = Globals::$STATUS_CODE_FAILED;
