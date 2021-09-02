@@ -96,7 +96,7 @@ class PaymentController extends Controller
                         }
                         
                     }else{
-                        $messageErr = "Failed to find supplied customer id";
+                        $messageErr = "Failed to find customer with supplied details";
                         $responseInfo = Helper::getMessage('error', $messageErr);
                         $resp->statusCode = Globals::$STATUS_CODE_FAILED;
                         $resp->message = $responseInfo;
