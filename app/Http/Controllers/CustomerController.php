@@ -72,6 +72,7 @@ class CustomerController extends Controller
                         if (!empty($checkPass) && $checkPass == '1') {
                             $authToken = Hash::make($phone_number. time());
                             if(!empty($authToken)){
+                                $customerAuthData['user_id'] =  $customer['id'];
                                 $customerAuthData['first_name'] =  $customer['first_name'];
                                 $customerAuthData['last_name'] =  $customer['last_name'];
                                 $customerAuthData['phone_number'] =  $customer['phone_number'];;
