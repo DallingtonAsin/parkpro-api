@@ -217,6 +217,7 @@ class CustomerController extends Controller
                         ]);
                         
                         if($hasUpdated){
+                            $customer = Customer::find($customerId);
                             $action = "updated profile";
                             $resp->message = Helper::getMessage('success', $action);
                             $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
