@@ -32,12 +32,12 @@ class PaymentController extends Controller
     {
         $resp = new ApiResponse();
         $paymentData = array(
-            'phonenumber' => '+256774014727',
+            'phonenumber' => '256774014727',
             'amount'      => '1000',
             'currency'    => 'UGX',
-            'description' => 'OptiGrab',
+            'description' => 'Pay Dallington this money',
             /* Information used by application to identify transaction */
-            'metadata'    => "{ 'appId': 'my-application', 'xactId': '1' }"
+            'metadata'    => "{ 'appId': '2952025', 'xactId': '1000000' }"
         );
         // f62a81d491fb2921d99797f3825c3fbf014b2f17
         
