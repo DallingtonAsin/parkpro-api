@@ -72,6 +72,7 @@ class CustomerController extends Controller
                         if (!empty($checkPass) && $checkPass == '1') {
                             $authToken = Hash::make($phone_number. time());
                             if(!empty($authToken)){
+                                $customerAuthData['user_id'] =  $customer['id'];
                                 $customerAuthData['first_name'] =  $customer['first_name'];
                                 $customerAuthData['last_name'] =  $customer['last_name'];
                                 $customerAuthData['phone_number'] =  $customer['phone_number'];;
@@ -189,9 +190,9 @@ class CustomerController extends Controller
                         $email = null;
                     }
                     
-                    if($request->filled('id')) {
+                    if($request->filled('user_id')) {
                         
-                        $customerId = $request->input('id');
+                        $customerId = $request->input('user_id');
                         $customer = Customer::find($customerId);
                         if($request->hasFile('photo')){
                             $photo = $request->file('photo');
@@ -212,14 +213,25 @@ class CustomerController extends Controller
                             'last_name' => $last_name,
                             'phone_number' => $phone_number,
                             'email' => $email,
-                            'password' => $password,
+                            // 'password' => $password,
                         ]);
                         
                         if($hasUpdated){
+                            $customer = Customer::find($customerId);
                             $action = "updated profile";
                             $resp->message = Helper::getMessage('success', $action);
                             $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                            $resp->data = Customer::count();
+                            $authToken = Hash::make($phone_number. time());
+                            if(!empty($authToken)){
+                                $customerData['first_name'] =  $customer->first_name;
+                                $customerData['last_name'] =  $customer->last_name;
+                                $customerData['phone_number'] =  $customer->phone_number;
+                                $customerData['email'] =  $customer->email;
+                                $customerData['account_balance'] = $customer->account_balance;
+                                $customerData['authToken'] =  $authToken;
+                            }
+                            $resp->data = $customerData;
+
                         }else{
                             $resp->message ="Unable to update customer account profile!";
                             $resp->statusCode = Globals::$STATUS_CODE_FAILED;
@@ -261,6 +273,17 @@ class CustomerController extends Controller
                                 
                                 $resp->message = $message;
                                 $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
+
+                                $authToken = Hash::make($phone_number. time());
+                                if(!empty($authToken)){
+                                    $customerData['first_name'] =  $first_name;
+                                    $customerData['last_name'] =  $last_name;
+                                    $customerData['phone_number'] =  $phone_number;
+                                    $customerData['email'] =  $email;
+                                    $customerData['account_balance'] = 0;
+                                    $customerData['authToken'] =  $authToken;
+                                }
+                                $resp->data = $customerData;
                             }
                             else
                             {
