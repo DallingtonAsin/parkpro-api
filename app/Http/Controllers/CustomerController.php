@@ -223,12 +223,16 @@ class CustomerController extends Controller
                             $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
                             $authToken = Hash::make($phone_number. time());
                             if(!empty($authToken)){
+
+                                $customerData['user_id'] =  $customer->id;
                                 $customerData['first_name'] =  $customer->first_name;
                                 $customerData['last_name'] =  $customer->last_name;
                                 $customerData['phone_number'] =  $customer->phone_number;
                                 $customerData['email'] =  $customer->email;
                                 $customerData['account_balance'] = $customer->account_balance;
+                                $customerAuthData['is_active'] =  $customer->is_active;
                                 $customerData['authToken'] =  $authToken;
+
                             }
                             $resp->data = $customerData;
 
@@ -276,12 +280,17 @@ class CustomerController extends Controller
 
                                 $authToken = Hash::make($phone_number. time());
                                 if(!empty($authToken)){
+                                    $cust = Customer::where('phone_number', '=', $phone_number)->first();
+                                    $customerData['user_id'] =  $cust->id;
                                     $customerData['first_name'] =  $first_name;
                                     $customerData['last_name'] =  $last_name;
                                     $customerData['phone_number'] =  $phone_number;
                                     $customerData['email'] =  $email;
                                     $customerData['account_balance'] = 0;
+                                    $customerData['is_active'] =  1;
                                     $customerData['authToken'] =  $authToken;
+
+                                    
                                 }
                                 $resp->data = $customerData;
                             }
