@@ -82,7 +82,7 @@ Route::post('user/account/topup', [PaymentController::class, 'topupUserAccount']
 
 
 // Customers
-Route::get('/customer/id', [CustomerController::class, 'findCustomer']);
+Route::get('/customer/details', [CustomerController::class, 'findCustomer']);
 
 
 
