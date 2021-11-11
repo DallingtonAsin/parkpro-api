@@ -81,6 +81,10 @@ Route::get('parking_areas/filter', [ParkingAreaController::class, 'filterParking
 Route::post('user/account/topup', [PaymentController::class, 'topupUserAccount']);
 
 
+// Customers
+Route::get('/customer/id', [CustomerController::class, 'findCustomer']);
+
+
 
 
 // RESOURCE ENDPOINTS

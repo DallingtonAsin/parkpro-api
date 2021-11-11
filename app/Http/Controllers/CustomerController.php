@@ -96,7 +96,7 @@ class CustomerController extends Controller
                     }
                 } else {
                     $this->apiResponse['statusCode'] = 0;
-                    $this->apiResponse['message'] = "Uable to process request: missing parameters";
+                    $this->apiResponse['message'] = "Unable to process request: missing parameters";
                 }
             }else{
                 $this->apiResponse['statusCode'] = Globals::$STATUS_CODE_ERROR;
@@ -376,4 +376,64 @@ class CustomerController extends Controller
     {
         //
     }
+
+
+    public function findCustomer(Request $request){ 
+        if($request->isMethod('get')){
+            $authToken   =   $request->header('AuthToken');
+            if (!empty($authToken) && TokenAuth::validate($authToken)) {
+                if($request->has('id')) {
+                        $customer_id = $request->input('id');
+                        $doesCustomerExist = Customer::where('id', $customer_id)->exists();
+                        if ($doesCustomerExist) {
+                            $customer = Customer::find($customer_id);
+                            $authToken = Hash::make($customer->phone_number. time());
+
+                            if(!empty($authToken)){
+                                $customerData['user_id'] =  $customer->id;
+                                $customerData['first_name'] =  $customer->first_name;
+                                $customerData['last_name'] =  $customer->last_name;
+                                $customerData['phone_number'] =  $customer->phone_number;
+                                $customerData['email'] =  $customer->email;
+                                $customerData['account_balance'] =  $customer->account_balance;
+                                $customerData['is_active'] =  $customer->is_active;
+                                $customerData['authToken'] =  $authToken;
+                            }
+                            
+                            $this->apiResponse['statusCode'] = 1;
+                            $this->apiResponse['message'] = 'customer details found';
+                            $this->apiResponse['data'] = $customerData;
+                        } else {
+                            $this->apiResponse['statusCode'] = 0;
+                            $this->apiResponse['message'] = 'Unable to find customer details';
+                        }
+                } else {
+                    $this->apiResponse['statusCode'] = 0;
+                    $this->apiResponse['message'] = "Unable to process request";
+                }
+            }else{
+                $this->apiResponse['statusCode'] = Globals::$STATUS_CODE_ERROR;
+                $this->apiResponse['message'] = "Unauthorized access";   
+            }
+            return response()->json($this->apiResponse, 200);
+        }
+        
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }
