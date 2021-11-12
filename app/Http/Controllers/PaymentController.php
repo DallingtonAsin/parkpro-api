@@ -221,7 +221,7 @@ class PaymentController extends Controller
                     foreach($notifications as $item){
                         $customer = Customer::find($item->notifiable_id);
                         $item->name = $customer->first_name." ".$customer->last_name;
-                        $item->paid_at = date('Y-m-d H:i A', strtotime($item->created_at));
+                        $item->date = date('Y-m-d H:i A', strtotime($item->created_at));
                     }
                 }else{
                     $resp->message  = "No transactions found";
