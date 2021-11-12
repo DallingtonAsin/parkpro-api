@@ -92,7 +92,8 @@ class PaymentController extends Controller
                         
                         if ($hasUpdated) {
                             $customer_name = $customer->first_name. " ".$customer->last_name;
-                            $action = "topped up ".$customer_name." account's with amount worth ".$amount;
+                            // $action = "topped up ".$customer_name." account's with amount worth ".$amount;
+                            $action = "topped up your account with amount ".number_format($amount).".\nYour new balance is ".number_format($customer->account_balance)."";
                             $responseInfo = Helper::getMessage('success', $action);
                             Helper::logActivity($request, ['name' => 'System', 'role' => 'system', 'action' => $action]);
                             $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
@@ -103,7 +104,7 @@ class PaymentController extends Controller
                                         'id' => $customer_id,
                                         'type' => ucfirst('payment'),
                                         'name' => $customer_name,
-                                        'body' => 'deposited amount '.number_format($amount).'',
+                                        'body' => 'Congratulations, You have deposited amount '.number_format($amount).' successfully',
                                         'thanks' => 'Thank you',
                                         'offerText' => 'Please keep using the app to get better offers',
                         ];
@@ -217,6 +218,11 @@ class PaymentController extends Controller
                 $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
                 if(count($notifications->toArray()) > 0){
                     $resp->message  = Globals::$STATUS_DESC_SUCCESS;
+                    foreach($notifications as $item){
+                        $customer = Customer::find($item->notifiable_id);
+                        $item->name = $customer->first_name." ".$customer->last_name;
+                        $item->paid_at = date('Y-m-d H:i A', strtotime($item->created_at));
+                    }
                 }else{
                     $resp->message  = "No transactions found";
                 }
