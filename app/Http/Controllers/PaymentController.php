@@ -239,7 +239,7 @@ class PaymentController extends Controller
                         $item->date = date('Y-m-d H:i A', strtotime($item->created_at));
                     }
                 }else{
-                    $resp->message  = "No transactions found";
+                    $resp->message  = "No notifications found";
                 }
                 $resp->data = $notifications;
                 }else {
