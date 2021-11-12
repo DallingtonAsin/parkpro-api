@@ -93,7 +93,7 @@ class PaymentController extends Controller
                         if ($hasUpdated) {
                             $customer_name = $customer->first_name. " ".$customer->last_name;
                             // $action = "topped up ".$customer_name." account's with amount worth ".$amount;
-                            $action = "topped up your account with amount ".number_format($amount).".\nYour new balance is ".number_format($customer->account_balance)."";
+                            $action = "topped up your account with amount ".number_format($amount).". Your new balance is ".number_format($customer->account_balance)."";
                             $responseInfo = Helper::getMessage('success', $action);
                             Helper::logActivity($request, ['name' => 'System', 'role' => 'system', 'action' => $action]);
                             $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
