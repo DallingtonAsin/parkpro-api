@@ -87,6 +87,11 @@ Route::get('/customer/details', [CustomerController::class, 'findCustomer']);
 
 // Transaction History
 Route::get('/transactions', [PaymentController::class, 'getTransactionHistory']);
+Route::get('/notifications', [PaymentController::class, 'getNotifications']);
+
+
+
+
 
 
 // RESOURCE ENDPOINTS

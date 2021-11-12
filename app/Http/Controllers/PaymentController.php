@@ -13,6 +13,8 @@ use LaramanBeyonic;
 use App\Notifications\PaymentMadeNotification;
 use Notification;
 use App\Models\Notifications;
+use App\Models\CustomersLedger;
+
 
 
 class PaymentController extends Controller
@@ -98,8 +100,21 @@ class PaymentController extends Controller
                             Helper::logActivity($request, ['name' => 'System', 'role' => 'system', 'action' => $action]);
                             $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
                             $resp->message = $responseInfo; 
-                           
 
+                            // $ledger = new CustomersLedger();
+                            $ledgerInput = [
+                                'reference' => time().''.$customer_id,
+                                'customer_id' => $customer_id,
+                                'type' => ucfirst('deposit'),
+                                'description' => 'deposited amount '.$amount,
+                                'credit' => $amount,
+                                'debt' => 0,
+                                'balance' => $customer->account_balance,
+                                'date' => date('Y-m-d'),
+                            ];
+                         CustomersLedger::create($ledgerInput);
+                            
+                        
                         $paymentNotificationData = [
                                         'id' => $customer_id,
                                         'type' => ucfirst('payment'),
@@ -206,7 +221,7 @@ class PaymentController extends Controller
     }
 
 
-    public function getTransactionHistory(Request $request){
+    public function getNotifications(Request $request){
         $resp = new ApiResponse();
         try {
             $authToken   =   $request->header('AuthToken');
@@ -227,6 +242,49 @@ class PaymentController extends Controller
                     $resp->message  = "No transactions found";
                 }
                 $resp->data = $notifications;
+                }else {
+                    $resp->statusCode = Globals::$STATUS_CODE_ERROR;
+                    $resp->message = "Unable to process request: missing parameters";
+                }
+                
+            }else{
+                $resp->statusCode = Globals::$STATUS_CODE_ERROR;
+                $resp->message = "Unauthorized access";
+                $resp->data = "Unauthorized access";
+                
+            }
+            
+        } catch (\Exception $ex) {
+            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
+            $resp->message = $ex->getMessage();
+            $resp->data = $ex->getMessage();
+        }
+        
+        return response()->json($resp);
+    }
+
+    public function getTransactionHistory(Request $request){
+        $resp = new ApiResponse();
+        try {
+            $authToken   =   $request->header('AuthToken');
+            if (!empty($authToken) && TokenAuth::validate($authToken)) {
+                if($request->filled('id')){
+                $customer_id = $request->input('id');
+                $transactions = CustomersLedger::where('customer_id', $customer_id)->orderBy('created_at', 'desc')->get();
+                $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                if(count($transactions->toArray()) > 0){
+                    $resp->message  = Globals::$STATUS_DESC_SUCCESS;
+                    foreach($transactions as $item){
+                        $customer = Customer::find($item->customer_id);
+                        $item->name = $customer->first_name." ".$customer->last_name;
+                        $item->credit = number_format($item->credit);
+                        $item->debt = number_format($item->debt);
+                        $item->balance = number_format($item->balance);
+                    }
+                }else{
+                    $resp->message  = "No transactions found";
+                }
+                $resp->data = $transactions;
                 }else {
                     $resp->statusCode = Globals::$STATUS_CODE_ERROR;
                     $resp->message = "Unable to process request: missing parameters";

@@ -513,6 +513,7 @@ class ComposerStaticInitb4e83dd425a8c855f480f938ea59714b
     );
 
     public static $classMap = array (
+        'App\\Channels\\CustomPaymentDbChannel' => __DIR__ . '/../..' . '/app/Channels/CustomPaymentDbChannel.php',
         'App\\Console\\Kernel' => __DIR__ . '/../..' . '/app/Console/Kernel.php',
         'App\\Exceptions\\Handler' => __DIR__ . '/../..' . '/app/Exceptions/Handler.php',
         'App\\Helpers\\ApiResponse' => __DIR__ . '/../..' . '/app/Helpers/ApiResponse.php',
@@ -546,8 +547,10 @@ class ComposerStaticInitb4e83dd425a8c855f480f938ea59714b
         'App\\Models\\Client' => __DIR__ . '/../..' . '/app/Models/Client.php',
         'App\\Models\\Company' => __DIR__ . '/../..' . '/app/Models/Company.php',
         'App\\Models\\Customer' => __DIR__ . '/../..' . '/app/Models/Customer.php',
+        'App\\Models\\CustomersLedger' => __DIR__ . '/../..' . '/app/Models/CustomersLedger.php',
         'App\\Models\\ErrorLog' => __DIR__ . '/../..' . '/app/Models/ErrorLog.php',
         'App\\Models\\MonthlyReview' => __DIR__ . '/../..' . '/app/Models/MonthlyReview.php',
+        'App\\Models\\Notifications' => __DIR__ . '/../..' . '/app/Models/Notifications.php',
         'App\\Models\\ParkingArea' => __DIR__ . '/../..' . '/app/Models/ParkingArea.php',
         'App\\Models\\ParkingFee' => __DIR__ . '/../..' . '/app/Models/ParkingFee.php',
         'App\\Models\\ParkingRequest' => __DIR__ . '/../..' . '/app/Models/ParkingRequest.php',
@@ -555,7 +558,7 @@ class ComposerStaticInitb4e83dd425a8c855f480f938ea59714b
         'App\\Models\\Role' => __DIR__ . '/../..' . '/app/Models/Role.php',
         'App\\Models\\User' => __DIR__ . '/../..' . '/app/Models/User.php',
         'App\\Models\\VehicleCategory' => __DIR__ . '/../..' . '/app/Models/VehicleCategory.php',
-        'App\\Notifications\\PaymentMade' => __DIR__ . '/../..' . '/app/Notifications/PaymentMade.php',
+        'App\\Notifications\\PaymentMadeNotification' => __DIR__ . '/../..' . '/app/Notifications/PaymentMadeNotification.php',
         'App\\Providers\\AppServiceProvider' => __DIR__ . '/../..' . '/app/Providers/AppServiceProvider.php',
         'App\\Providers\\AuthServiceProvider' => __DIR__ . '/../..' . '/app/Providers/AuthServiceProvider.php',
         'App\\Providers\\BroadcastServiceProvider' => __DIR__ . '/../..' . '/app/Providers/BroadcastServiceProvider.php',

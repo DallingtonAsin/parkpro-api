@@ -6,6 +6,7 @@ $vendorDir = dirname(dirname(__FILE__));
 $baseDir = dirname($vendorDir);
 
 return array(
+    'App\\Channels\\CustomPaymentDbChannel' => $baseDir . '/app/Channels/CustomPaymentDbChannel.php',
     'App\\Console\\Kernel' => $baseDir . '/app/Console/Kernel.php',
     'App\\Exceptions\\Handler' => $baseDir . '/app/Exceptions/Handler.php',
     'App\\Helpers\\ApiResponse' => $baseDir . '/app/Helpers/ApiResponse.php',
@@ -39,8 +40,10 @@ return array(
     'App\\Models\\Client' => $baseDir . '/app/Models/Client.php',
     'App\\Models\\Company' => $baseDir . '/app/Models/Company.php',
     'App\\Models\\Customer' => $baseDir . '/app/Models/Customer.php',
+    'App\\Models\\CustomersLedger' => $baseDir . '/app/Models/CustomersLedger.php',
     'App\\Models\\ErrorLog' => $baseDir . '/app/Models/ErrorLog.php',
     'App\\Models\\MonthlyReview' => $baseDir . '/app/Models/MonthlyReview.php',
+    'App\\Models\\Notifications' => $baseDir . '/app/Models/Notifications.php',
     'App\\Models\\ParkingArea' => $baseDir . '/app/Models/ParkingArea.php',
     'App\\Models\\ParkingFee' => $baseDir . '/app/Models/ParkingFee.php',
     'App\\Models\\ParkingRequest' => $baseDir . '/app/Models/ParkingRequest.php',
@@ -48,7 +51,7 @@ return array(
     'App\\Models\\Role' => $baseDir . '/app/Models/Role.php',
     'App\\Models\\User' => $baseDir . '/app/Models/User.php',
     'App\\Models\\VehicleCategory' => $baseDir . '/app/Models/VehicleCategory.php',
-    'App\\Notifications\\PaymentMade' => $baseDir . '/app/Notifications/PaymentMade.php',
+    'App\\Notifications\\PaymentMadeNotification' => $baseDir . '/app/Notifications/PaymentMadeNotification.php',
     'App\\Providers\\AppServiceProvider' => $baseDir . '/app/Providers/AppServiceProvider.php',
     'App\\Providers\\AuthServiceProvider' => $baseDir . '/app/Providers/AuthServiceProvider.php',
     'App\\Providers\\BroadcastServiceProvider' => $baseDir . '/app/Providers/BroadcastServiceProvider.php',
