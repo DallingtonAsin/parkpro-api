@@ -106,7 +106,7 @@ class PaymentController extends Controller
                                 'reference' => time().''.$customer_id,
                                 'customer_id' => $customer_id,
                                 'type' => ucfirst('deposit'),
-                                'description' => 'deposited amount '.$amount,
+                                'description' => ucfirst('deposit'),
                                 'credit' => $amount,
                                 'debt' => 0,
                                 'balance' => $customer->account_balance,
