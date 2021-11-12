@@ -213,7 +213,7 @@ class PaymentController extends Controller
             if (!empty($authToken) && TokenAuth::validate($authToken)) {
                 if($request->filled('id')){
                 $customer_id = $request->input('id');
-                $notifications = Notifications::where('notifiable_id', $customer_id)->orderBy('id', 'desc')->get();
+                $notifications = Notifications::where('notifiable_id', $customer_id)->orderBy('created_at', 'desc')->get();
                 $notifications->makeHidden(['notifiable_type']);
                 $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
                 if(count($notifications->toArray()) > 0){
