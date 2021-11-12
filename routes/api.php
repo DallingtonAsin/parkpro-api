@@ -85,6 +85,8 @@ Route::post('user/account/topup', [PaymentController::class, 'topupUserAccount']
 Route::get('/customer/details', [CustomerController::class, 'findCustomer']);
 
 
+// Transaction History
+Route::get('/transactions', [PaymentController::class, 'getTransactionHistory']);
 
 
 // RESOURCE ENDPOINTS

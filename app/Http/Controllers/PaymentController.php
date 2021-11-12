@@ -10,6 +10,10 @@ use Helper;
 use TokenAuth;
 use Globals;
 use LaramanBeyonic;
+use App\Notifications\PaymentMadeNotification;
+use Notification;
+use App\Models\Notifications;
+
 
 class PaymentController extends Controller
 {
@@ -55,6 +59,17 @@ class PaymentController extends Controller
         return response()->json($resp);
     }
 
+    public function sendPaymentNotification($paymentData) {
+
+        try{
+        $customerSchema = Customer::where('id', $paymentData['id'])->first();
+        Notification::send($customerSchema, new PaymentMadeNotification($paymentData));
+       }catch(Exception $ex){
+        throw $ex;
+       }
+
+    }
+
 
     public function topupUserAccount(Request $request){
         $resp = new ApiResponse();
@@ -82,12 +97,25 @@ class PaymentController extends Controller
                             Helper::logActivity($request, ['name' => 'System', 'role' => 'system', 'action' => $action]);
                             $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
                             $resp->message = $responseInfo; 
-                            $data = ['customer_id' => $customer_id,
-                                     'customer_name' => $customer_name,
-                                     'phonenumber' => $phone_number, 
-                                     'account_balance' => $customer->account_balance,
+                           
+
+                        $paymentNotificationData = [
+                                        'id' => $customer_id,
+                                        'type' => ucfirst('payment'),
+                                        'name' => $customer_name,
+                                        'body' => 'deposited amount '.number_format($amount).'',
+                                        'thanks' => 'Thank you',
+                                        'offerText' => 'Please keep using the app to get better offers',
+                        ];
+
+                        $this->sendPaymentNotification($paymentNotificationData);
+                        $data =    ['customer_id' => intval($customer_id),
+                                    'customer_name' => $customer_name,
+                                    'phonenumber' => $phone_number, 
+                                    'account_balance' => $customer->account_balance,
+                                    'paid_at' => date('Y-m-d H:i A'),
                                     ];
-                            $resp->data = $data;
+                        $resp->data = $data;
                         } else {
                             $messageErr = "Unable to top up customer account!";
                             $responseInfo = Helper::getMessage('error', $messageErr);
@@ -175,4 +203,45 @@ class PaymentController extends Controller
     {
         //
     }
+
+
+    public function getTransactionHistory(Request $request){
+        $resp = new ApiResponse();
+        try {
+            $authToken   =   $request->header('AuthToken');
+            if (!empty($authToken) && TokenAuth::validate($authToken)) {
+                if($request->filled('id')){
+                $customer_id = $request->input('id');
+                $notifications = Notifications::where('notifiable_id', $customer_id)->orderBy('id', 'desc')->get();
+                $notifications->makeHidden(['notifiable_type']);
+                $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                if(count($notifications->toArray()) > 0){
+                    $resp->message  = Globals::$STATUS_DESC_SUCCESS;
+                }else{
+                    $resp->message  = "No transactions found";
+                }
+                $resp->data = $notifications;
+                }else {
+                    $resp->statusCode = Globals::$STATUS_CODE_ERROR;
+                    $resp->message = "Unable to process request: missing parameters";
+                }
+                
+            }else{
+                $resp->statusCode = Globals::$STATUS_CODE_ERROR;
+                $resp->message = "Unauthorized access";
+                $resp->data = "Unauthorized access";
+                
+            }
+            
+        } catch (\Exception $ex) {
+            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
+            $resp->message = $ex->getMessage();
+            $resp->data = $ex->getMessage();
+        }
+        
+        return response()->json($resp);
+    }
+
+
+
 }
