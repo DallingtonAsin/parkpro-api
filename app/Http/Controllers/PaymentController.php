@@ -278,18 +278,27 @@ class PaymentController extends Controller
                 if(count($transactions->toArray()) > 0){
                     $resp->message  = Globals::$STATUS_DESC_SUCCESS;
                     foreach($transactions as $key){
-                    foreach($key as $item){
-                        $customer = Customer::find($item->customer_id);
+                        foreach($key as $item){
+                        $customer = Customer::find($customer_id);
                         $item->name = $customer->first_name." ".$customer->last_name;
                         $item->credit = number_format($item->credit);
                         $item->debt = number_format($item->debt);
                         $item->balance = number_format($item->balance);
+                        }
                     }
-                   }
                 }else{
                     $resp->message  = "No transactions found";
                 }
-                $resp->data = $transactions;
+
+                $data = $data1 = [];
+                foreach($transactions as $key => $value){
+                    $data = array(
+                        'year' => $key,
+                        'data' => $value,
+                    );
+                    array_push($data1, $data);
+                }
+                $resp->data = $data1;
                 }else {
                     $resp->statusCode = Globals::$STATUS_CODE_ERROR;
                     $resp->message = "Unable to process request: missing parameters";
