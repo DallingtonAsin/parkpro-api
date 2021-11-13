@@ -14,6 +14,7 @@ use App\Notifications\PaymentMadeNotification;
 use Notification;
 use App\Models\Notifications;
 use App\Models\CustomersLedger;
+use Carbon\Carbon;
 
 
 
@@ -270,17 +271,21 @@ class PaymentController extends Controller
             if (!empty($authToken) && TokenAuth::validate($authToken)) {
                 if($request->filled('id')){
                 $customer_id = $request->input('id');
-                $transactions = CustomersLedger::where('customer_id', $customer_id)->orderBy('created_at', 'desc')->get();
+                $transactions = CustomersLedger::where('customer_id', $customer_id)->orderBy('created_at', 'desc')->get()->groupBy(function($val) {
+                                     return Carbon::parse($val->created_at)->format('Y');
+                            });
                 $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
                 if(count($transactions->toArray()) > 0){
                     $resp->message  = Globals::$STATUS_DESC_SUCCESS;
-                    foreach($transactions as $item){
+                    foreach($transactions as $key){
+                    foreach($key as $item){
                         $customer = Customer::find($item->customer_id);
                         $item->name = $customer->first_name." ".$customer->last_name;
                         $item->credit = number_format($item->credit);
                         $item->debt = number_format($item->debt);
                         $item->balance = number_format($item->balance);
                     }
+                   }
                 }else{
                     $resp->message  = "No transactions found";
                 }
