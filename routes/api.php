@@ -81,8 +81,10 @@ Route::get('parking_areas/filter', [ParkingAreaController::class, 'filterParking
 Route::post('user/account/topup', [PaymentController::class, 'topupUserAccount']);
 
 
-// Customers
+// Customers 
 Route::get('/customer/details', [CustomerController::class, 'findCustomer']);
+Route::post('/customer/password/change', [CustomerController::class, 'changePassword']);
+
 
 
 // Transaction History

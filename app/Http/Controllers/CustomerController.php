@@ -223,7 +223,7 @@ class CustomerController extends Controller
                             $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
                             $authToken = Hash::make($phone_number. time());
                             if(!empty($authToken)){
-
+                                
                                 $customerData['user_id'] =  $customer->id;
                                 $customerData['first_name'] =  $customer->first_name;
                                 $customerData['last_name'] =  $customer->last_name;
@@ -232,10 +232,10 @@ class CustomerController extends Controller
                                 $customerData['account_balance'] = $customer->account_balance;
                                 $customerAuthData['is_active'] =  $customer->is_active;
                                 $customerData['authToken'] =  $authToken;
-
+                                
                             }
                             $resp->data = $customerData;
-
+                            
                         }else{
                             $resp->message ="Unable to update customer account profile!";
                             $resp->statusCode = Globals::$STATUS_CODE_FAILED;
@@ -277,7 +277,7 @@ class CustomerController extends Controller
                                 
                                 $resp->message = $message;
                                 $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
-
+                                
                                 $authToken = Hash::make($phone_number. time());
                                 if(!empty($authToken)){
                                     $cust = Customer::where('phone_number', '=', $phone_number)->first();
@@ -289,7 +289,7 @@ class CustomerController extends Controller
                                     $customerData['account_balance'] = 0;
                                     $customerData['is_active'] =  1;
                                     $customerData['authToken'] =  $authToken;
-
+                                    
                                     
                                 }
                                 $resp->data = $customerData;
@@ -376,37 +376,37 @@ class CustomerController extends Controller
     {
         //
     }
-
-
+    
+    
     public function findCustomer(Request $request){ 
         if($request->isMethod('get')){
             $authToken   =   $request->header('AuthToken');
             if (!empty($authToken) && TokenAuth::validate($authToken)) {
                 if($request->has('id')) {
-                        $customer_id = $request->input('id');
-                        $doesCustomerExist = Customer::where('id', $customer_id)->exists();
-                        if ($doesCustomerExist) {
-                            $customer = Customer::find($customer_id);
-                            $authToken = Hash::make($customer->phone_number. time());
-
-                            if(!empty($authToken)){
-                                $customerData['user_id'] =  $customer->id;
-                                $customerData['first_name'] =  $customer->first_name;
-                                $customerData['last_name'] =  $customer->last_name;
-                                $customerData['phone_number'] =  $customer->phone_number;
-                                $customerData['email'] =  $customer->email;
-                                $customerData['account_balance'] =  $customer->account_balance;
-                                $customerData['is_active'] =  $customer->is_active;
-                                $customerData['authToken'] =  $authToken;
-                            }
-                            
-                            $this->apiResponse['statusCode'] = 1;
-                            $this->apiResponse['message'] = 'customer details found';
-                            $this->apiResponse['data'] = $customerData;
-                        } else {
-                            $this->apiResponse['statusCode'] = 0;
-                            $this->apiResponse['message'] = 'Unable to find customer details';
+                    $customer_id = $request->input('id');
+                    $doesCustomerExist = Customer::where('id', $customer_id)->exists();
+                    if ($doesCustomerExist) {
+                        $customer = Customer::find($customer_id);
+                        $authToken = Hash::make($customer->phone_number. time());
+                        
+                        if(!empty($authToken)){
+                            $customerData['user_id'] =  $customer->id;
+                            $customerData['first_name'] =  $customer->first_name;
+                            $customerData['last_name'] =  $customer->last_name;
+                            $customerData['phone_number'] =  $customer->phone_number;
+                            $customerData['email'] =  $customer->email;
+                            $customerData['account_balance'] =  $customer->account_balance;
+                            $customerData['is_active'] =  $customer->is_active;
+                            $customerData['authToken'] =  $authToken;
                         }
+                        
+                        $this->apiResponse['statusCode'] = 1;
+                        $this->apiResponse['message'] = 'customer details found';
+                        $this->apiResponse['data'] = $customerData;
+                    } else {
+                        $this->apiResponse['statusCode'] = 0;
+                        $this->apiResponse['message'] = 'Unable to find customer details';
+                    }
                 } else {
                     $this->apiResponse['statusCode'] = 0;
                     $this->apiResponse['message'] = "Unable to process request";
@@ -419,21 +419,155 @@ class CustomerController extends Controller
         }
         
     }
+    
+    
+    
+    
+    
+    
+    
+    public function changePassword(Request $request)
+    {
+        $resp = new ApiResponse();
+        try {
+            $authToken  = $request->header('AuthToken');
+            if (!empty($authToken) && TokenAuth::validate($authToken)) {
+                if( ($request->has('id') && $request->filled('id')) &&
+                ($request->has('current_password') && $request->filled('current_password')) &&
+                ($request->has('new_password') && $request->filled('new_password')) &&
+                ($request->has('confirm_password') && $request->filled('confirm_password'))){
+                    
+                    $customer_id = $request->input('id');
+                    $current_password = $request->input('current_password');
+                    $new_password = $request->input('new_password');
+                    $confirm_password = $request->input('confirm_password');
+                    $doesCustomerExist = Customer::where('id', $customer_id)->exists();
 
+                    if($doesCustomerExist){
+                    $customer = Customer::find($customer_id);
+                    $old_password = $customer->password;
+                    if($new_password == $confirm_password){
+                        if(Hash::check($current_password, $old_password)){
+                            $customer->password = Hash::make($new_password);
+                            if($customer->save()){
+                                $action = "changed your password";
+                                Helper::logActivity($request, ['name' => $customer->first_name." ".$customer->last_name,
+                                 'role' => 'customer',
+                                 'action' => "changed password" ]);
+                                $message = Helper::getMessage('success', $action);
+                                
+                                $customerData['user_id'] =  $customer->id;
+                                $customerData['first_name'] =  $customer->first_name;
+                                $customerData['last_name'] =  $customer->last_name;
+                                $customerData['phone_number'] =  $customer->phone_number;
+                                $customerData['email'] =  $customer->email;
+                                $customerData['account_balance'] =  $customer->account_balance;
+                                $customerData['is_active'] =  $customer->is_active;
+                                $customerData['authToken'] =  Hash::make($customer->phone_number. time());
+                                $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                                $resp->message  = $message;
+                                $resp->data  = $customerData;
 
+                            }else{
+                                $resp->statusCode = Globals::$STATUS_CODE_FAILED;
+                                $resp->message = "Unable to change your password";
+                            }  
+                        }else{
+                            $resp->statusCode = Globals::$STATUS_CODE_FAILED;
+                            $resp->message = "Incorrect old password";
+                        }
 
+                    }else{
+                        $resp->statusCode = Globals::$STATUS_CODE_FAILED;
+                        $resp->message = "Enter new matching passwords";
+                    }
 
+                }else{
+                    $resp->statusCode = Globals::$STATUS_CODE_ERROR;
+                    $resp->message = "Customer with supplied details does not exist"; 
+                }
+                }
+                else{
+                    $resp->statusCode = Globals::$STATUS_CODE_ERROR;
+                    $resp->message = "Unable to process request";
+                }
+            }else{
+                $resp->statusCode = Globals::$STATUS_CODE_ERROR;
+                $resp->message = "Unauthorized access";
+                $resp->data = "Unauthorized access";
+                
+            }
+            
+        } catch (\Exception $ex) {
+            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
+            $resp->message = $ex->getMessage();
+            $resp->data = $ex->getMessage();
+        }
+        
+        return response()->json($resp);
+    }
+    
+    
+    public function uploadProfilePicture(Request $request){
+        $resp = new ApiResponse();
+        try {
+            $authToken   =   $request->header('AuthToken');
+            if (!empty($authToken) && TokenAuth::validate($authToken)) {
+                if($request->filled('user_id') && $request->filled('phone_number') && $request->hasFile('image')){
+                    
+                    $customer_id = $request->input('user_id');
+                    $phone_number = $request->input('phone_number');
 
-
-
-
-
-
-
-
-
-
-
-
-
+                    $path = $request->file('image')->store('images');
+                    $user = Customer::find($customer_id);
+                    $input = ['image' => $path];
+                    $hasUpdated = Customer::where('id', $customer_id)->where('phonenumber', $phone_number)->update($input);
+                    
+                    if($hasUpdated){
+                        $action = "updated your profile picture";
+                        $message = Helper::getMessage('success', $action);
+                        $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                        $resp->message  = $message;
+                    }else{
+                        $resp->statusCode = Globals::$STATUS_CODE_FAILED;
+                        $resp->message = "Unable to update your profile picture";
+                    }  
+                    
+                }
+                else{
+                    $resp->statusCode = Globals::$STATUS_CODE_ERROR;
+                    $resp->message = "Unable to process request";
+                }
+            }else{
+                $resp->statusCode = Globals::$STATUS_CODE_ERROR;
+                $resp->message = "Unauthorized access";
+                $resp->data = "Unauthorized access";
+                
+            }
+            
+        } catch (\Exception $ex) {
+            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
+            $resp->message = $ex->getMessage();
+            $resp->data = $ex->getMessage();
+        }
+        
+        return response()->json($resp);
+    }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 }
