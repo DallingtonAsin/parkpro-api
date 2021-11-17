@@ -76,8 +76,8 @@ class CustomerController extends Controller
                                 $customerAuthData['first_name'] =  $customer['first_name'];
                                 $customerAuthData['last_name'] =  $customer['last_name'];
                                 $customerAuthData['phone_number'] =  $customer['phone_number'];;
-                                $customerAuthData['email'] =  $customer['email'];;
-                                $customerAuthData['account_balance'] =  $customer['account_balance'];;
+                                $customerAuthData['email'] =  $customer['email'];
+                                $customerAuthData['account_balance'] =  number_format($customer['account_balance']);
                                 $customerAuthData['is_active'] =  $customer['is_active'];
                                 $customerAuthData['authToken'] =  $authToken;
                             }
@@ -229,7 +229,7 @@ class CustomerController extends Controller
                                 $customerData['last_name'] =  $customer->last_name;
                                 $customerData['phone_number'] =  $customer->phone_number;
                                 $customerData['email'] =  $customer->email;
-                                $customerData['account_balance'] = $customer->account_balance;
+                                $customerData['account_balance'] = number_format($customer->account_balance);
                                 $customerAuthData['is_active'] =  $customer->is_active;
                                 $customerData['authToken'] =  $authToken;
                                 
@@ -395,7 +395,7 @@ class CustomerController extends Controller
                             $customerData['last_name'] =  $customer->last_name;
                             $customerData['phone_number'] =  $customer->phone_number;
                             $customerData['email'] =  $customer->email;
-                            $customerData['account_balance'] =  $customer->account_balance;
+                            $customerData['account_balance'] =  number_format($customer->account_balance);
                             $customerData['is_active'] =  $customer->is_active;
                             $customerData['authToken'] =  $authToken;
                         }
@@ -432,10 +432,8 @@ class CustomerController extends Controller
         try {
             $authToken  = $request->header('AuthToken');
             if (!empty($authToken) && TokenAuth::validate($authToken)) {
-                if( ($request->has('id') && $request->filled('id')) &&
-                ($request->has('current_password') && $request->filled('current_password')) &&
-                ($request->has('new_password') && $request->filled('new_password')) &&
-                ($request->has('confirm_password') && $request->filled('confirm_password'))){
+                if($request->filled('id') && $request->filled('current_password') 
+                && $request->filled('new_password') && $request->filled('confirm_password')  ){
                     
                     $customer_id = $request->input('id');
                     $current_password = $request->input('current_password');
@@ -445,8 +443,10 @@ class CustomerController extends Controller
 
                     if($doesCustomerExist){
                     $customer = Customer::find($customer_id);
+
                     $old_password = $customer->password;
-                    if($new_password == $confirm_password){
+
+                    if($new_password === $confirm_password){
                         if(Hash::check($current_password, $old_password)){
                             $customer->password = Hash::make($new_password);
                             if($customer->save()){
@@ -461,7 +461,7 @@ class CustomerController extends Controller
                                 $customerData['last_name'] =  $customer->last_name;
                                 $customerData['phone_number'] =  $customer->phone_number;
                                 $customerData['email'] =  $customer->email;
-                                $customerData['account_balance'] =  $customer->account_balance;
+                                $customerData['account_balance'] =  number_format($customer->account_balance);
                                 $customerData['is_active'] =  $customer->is_active;
                                 $customerData['authToken'] =  Hash::make($customer->phone_number. time());
                                 $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;

@@ -15,6 +15,7 @@ use Notification;
 use App\Models\Notifications;
 use App\Models\CustomersLedger;
 use Carbon\Carbon;
+use Hash;
 
 
 
@@ -126,10 +127,14 @@ class PaymentController extends Controller
                         ];
 
                         $this->sendPaymentNotification($paymentNotificationData);
-                        $data =    ['customer_id' => intval($customer_id),
-                                    'customer_name' => $customer_name,
-                                    'phonenumber' => $phone_number, 
-                                    'account_balance' => $customer->account_balance,
+                        $data =    ['user_id' => intval($customer_id),
+                                    'first_name' => $customer->first_name,
+                                    'last_name' => $customer->last_name,
+                                    'phone_number' => $customer->phone_number, 
+                                    'email' => $customer->email,
+                                    'account_balance' => number_format($customer->account_balance),
+                                    'is_active' => $customer->is_active,
+                                    'authToken' =>  Hash::make($customer->phone_number. time()),
                                     'paid_at' => date('Y-m-d H:i A'),
                                     ];
                         $resp->data = $data;
