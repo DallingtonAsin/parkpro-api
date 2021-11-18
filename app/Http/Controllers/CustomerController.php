@@ -515,13 +515,14 @@ class CustomerController extends Controller
             if (!empty($authToken) && TokenAuth::validate($authToken)) {
                 if($request->filled('user_id') && $request->filled('phone_number') && $request->hasFile('image')){
                     
+                    $file = $request->file('image');
                     $customer_id = $request->input('user_id');
                     $phone_number = $request->input('phone_number');
 
-                    $path = $request->file('image')->store('images');
+                    $path = $file->store('images');
                     $user = Customer::find($customer_id);
                     $input = ['image' => $path];
-                    $hasUpdated = Customer::where('id', $customer_id)->where('phonenumber', $phone_number)->update($input);
+                    $hasUpdated = Customer::where('id', $customer_id)->where('phone_number', $phone_number)->update($input);
                     
                     if($hasUpdated){
                         $action = "updated your profile picture";

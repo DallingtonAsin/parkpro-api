@@ -84,16 +84,12 @@ Route::post('user/account/topup', [PaymentController::class, 'topupUserAccount']
 // Customers 
 Route::get('/customer/details', [CustomerController::class, 'findCustomer']);
 Route::post('/customer/password/change', [CustomerController::class, 'changePassword']);
-
+Route::post('/change/profile/image', [CustomerController::class, 'uploadProfilePicture']);
 
 
 // Transaction History
 Route::get('/transactions', [PaymentController::class, 'getTransactionHistory']);
 Route::get('/notifications', [PaymentController::class, 'getNotifications']);
-
-
-
-
 
 
 // RESOURCE ENDPOINTS
