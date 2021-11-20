@@ -466,7 +466,7 @@ class CustomerController extends Controller
                         if(!empty($customer->image)){
                             Storage::disk('public')->delete($customer->image);
                         }
-                        $fileName = $customer_id.''.time().''.$file_extension;
+                        $fileName = $customer_id.''.time().'.'.$file_extension;
                         $filePath = $file->storeAs('images', $fileName, 'public');
 
                         $input = ['image' => $filePath];
