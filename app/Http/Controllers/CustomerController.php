@@ -511,7 +511,7 @@ class CustomerController extends Controller
     public function uploadProfilePicture(Request $request){
         $resp = new ApiResponse();
         try {
-            // return response()->json($request->all());
+            return response()->json($request->all());
             $authToken   =   $request->header('AuthToken');
             if (!empty($authToken) && TokenAuth::validate($authToken)) {
                 if($request->filled('user_id') && $request->filled('phone_number') && $request->input('image')){
