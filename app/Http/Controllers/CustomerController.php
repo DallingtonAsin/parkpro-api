@@ -452,30 +452,37 @@ class CustomerController extends Controller
     public function uploadProfilePicture(Request $request){
         $resp = new ApiResponse();
         try {
-            // return response()->json($request->all());
             $authToken   =   $request->header('AuthToken');
             if (!empty($authToken) && TokenAuth::validate($authToken)) {
-                if($request->filled('user_id') && $request->filled('phone_number') && $request->has('image')){
-                    
+                if($request->filled('id') && $request->filled('phone_number') && $request->has('image')){
                     $file = $request->file('image');
-                    $customer_id = $request->input('user_id');
+                    $customer_id = $request->input('id');
                     $phone_number = $request->input('phone_number');
-
-                    $path = $file->store('images');
-                    $user = Customer::find($customer_id);
-                    $input = ['image' => $path];
-                    $hasUpdated = Customer::where('id', $customer_id)->where('phone_number', $phone_number)->update($input);
-                    
-                    if($hasUpdated){
-                        $action = "updated your profile picture";
-                        $message = Helper::getMessage('success', $action);
-                        $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                        $resp->message  = $message;
+                    $doesCustomerExist = Customer::where('id', $customer_id)->where('phone_number', $phone_number)->exists();
+                    if($doesCustomerExist){
+                        $customer = Customer::find($customer_id);
+                        if(isset($customer->image)){
+                            Storage::disk('public')->delete($customer->image);
+                        }
+                        $path = $file->store('images');
+                        $input = ['image' => $path];
+                        $hasUpdated = Customer::where('id', $customer_id)->where('phone_number', $phone_number)->update($input);
+                        
+                        if($hasUpdated){
+                            $action = "updated your profile picture";
+                            $message = Helper::getMessage('success', $action);
+                            $customerData = Helper::getCustomerData($customer_id);
+                            $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                            $resp->message  = $message;
+                            $resp->data = $customerData;
+                        }else{
+                            $resp->statusCode = Globals::$STATUS_CODE_FAILED;
+                            $resp->message = "Unable to update your profile picture";
+                        }
                     }else{
                         $resp->statusCode = Globals::$STATUS_CODE_FAILED;
-                        $resp->message = "Unable to update your profile picture";
-                    }  
-                    
+                        $resp->message = "Unable to find customer with supplied details";
+                    }
                 }
                 else{
                     $resp->statusCode = Globals::$STATUS_CODE_ERROR;
