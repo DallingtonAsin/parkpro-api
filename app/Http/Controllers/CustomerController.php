@@ -469,7 +469,7 @@ class CustomerController extends Controller
                         $fileName = time().'.'.$file_extension;
                         $filePath = $file->storeAs('images', $fileName, 'public');
 
-                        $input = ['image' => $path];
+                        $input = ['image' => $filePath];
                         $hasUpdated = Customer::where('id', $customer_id)->where('phone_number', $phone_number)->update($input);
                         
                         if($hasUpdated){
