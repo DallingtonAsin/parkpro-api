@@ -464,7 +464,7 @@ class CustomerController extends Controller
                         if(!empty($customer->image)){
                             Storage::disk('public')->delete($customer->image);
                         }
-                        $file_extension = $file->getClientOriginalExtension();
+                        $file_extension = $request->input('extension');
                         $fileName = time().'.'.$file_extension;
                         $filePath = $file->storeAs('images', $fileName, 'public');
 
