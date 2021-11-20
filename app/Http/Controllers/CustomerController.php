@@ -462,7 +462,7 @@ class CustomerController extends Controller
                     if($doesCustomerExist){
                         $customer = Customer::find($customer_id);
                         if(isset($customer->image)){
-                            Storage::disk('public')->delete($customer->image);
+                            Storage::disk('public')->delete("images" , $customer->image);
                         }
                         $path = $file->store('images');
                         $input = ['image' => $path];
