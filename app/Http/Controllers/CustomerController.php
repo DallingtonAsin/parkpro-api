@@ -454,18 +454,19 @@ class CustomerController extends Controller
         try {
             $authToken   =   $request->header('AuthToken');
             if (!empty($authToken) && TokenAuth::validate($authToken)) {
-                if($request->filled('id') && $request->filled('phone_number') && $request->has('image')){
+                if($request->filled('id') && $request->filled('phone_number') && $request->filled('extension') && $request->has('image')){
                     $file = $request->file('image');
                     $customer_id = $request->input('id');
                     $phone_number = $request->input('phone_number');
+                    $file_extension = $request->input('extension');
+
                     $doesCustomerExist = Customer::where('id', $customer_id)->where('phone_number', $phone_number)->exists();
                     if($doesCustomerExist){
                         $customer = Customer::find($customer_id);
                         if(!empty($customer->image)){
                             Storage::disk('public')->delete($customer->image);
                         }
-                        $file_extension = $request->input('extension');
-                        $fileName = time().'.'.$file_extension;
+                        $fileName = $customer_id.''.time().''.$file_extension;
                         $filePath = $file->storeAs('images', $fileName, 'public');
 
                         $input = ['image' => $filePath];
