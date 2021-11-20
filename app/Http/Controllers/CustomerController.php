@@ -461,9 +461,10 @@ class CustomerController extends Controller
                     $doesCustomerExist = Customer::where('id', $customer_id)->where('phone_number', $phone_number)->exists();
                     if($doesCustomerExist){
                         $customer = Customer::find($customer_id);
-                        $customerImage = Customer::where('id', $customer_id)->value('image');
-                        if(!empty($customerImage)){
-                            Storage::disk('public')->delete($customerImage);
+                        if(!empty($customer->image)){
+                            $deleteImagePath =  Storage::disk('public')->url($customer->image);
+                            unlink($deleteImagePath);
+                            // Storage::disk('public')->delete($customerImage);
                         }
                         $path = $file->store('images');
                         $input = ['image' => $path];
