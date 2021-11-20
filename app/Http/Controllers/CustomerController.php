@@ -514,7 +514,7 @@ class CustomerController extends Controller
             // return response()->json($request->all());
             $authToken   =   $request->header('AuthToken');
             if (!empty($authToken) && TokenAuth::validate($authToken)) {
-                if($request->filled('user_id') && $request->filled('phone_number') && $request->filled('image')){
+                if($request->filled('user_id') && $request->filled('phone_number') && $request->has('image')){
                     
                     $file = $request->file('image');
                     $customer_id = $request->input('user_id');
