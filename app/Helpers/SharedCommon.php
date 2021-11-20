@@ -7,13 +7,14 @@ use App\Models\RequestResponse;
 use App\Models\ActivityLog;
 use App\Models\ErrorLog;
 use App\Models\Role;
-
 use App\Models\Client;
 use App\Models\ParkingArea;
 use App\Models\VehicleCategory;
-
+use App\Models\Customer;
 use Carbon\Carbon;
 use Globals;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 class SharedCommon
 {
@@ -37,6 +38,34 @@ class SharedCommon
                 $resp->message = $ex->getMessage();
             }
             return $resp;
+      }
+
+      public static function getCustomerData($customer_id){
+          try{
+            $doesCustomerExist = Customer::where('id', $customer_id)->exists();
+            if($doesCustomerExist){
+                $customer = Customer::find($customer_id);
+                $authToken = Hash::make($customer->phone_number. time());
+                $customerData['user_id'] =  $customer->id;
+                $customerData['first_name'] =  $customer->first_name;
+                $customerData['last_name'] =  $customer->last_name;
+                $customerData['phone_number'] =  $customer->phone_number;
+                $customerData['email'] =  $customer->email;
+                $customerData['account_balance'] = number_format($customer->account_balance);
+                $customerData['is_active'] =  $customer->is_active;
+                $customerData['authToken'] =  $authToken;
+                if(isset($customer->image)){
+                    $customerData['image'] =  Storage::disk('public')->url($customer->image);
+                }else{
+                    $customerData['image'] = $customer->image;
+                }
+            }else{
+                $customerData = [];
+            }
+            return $customerData;
+          }catch(\Exception $ex){
+              throw $ex;
+          }
       }
 
       public static function getClientName($id){

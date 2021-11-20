@@ -12,6 +12,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Hash;
 use App\Mail\RegistrationMailSender;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Validator;
 use Helper;
 use Globals;
@@ -70,18 +71,7 @@ class CustomerController extends Controller
                         $customer = Customer::all()->firstWhere('phone_number', '=', $phone_number);
                         $checkPass = Hash::check($password, $customer['password']);
                         if (!empty($checkPass) && $checkPass == '1') {
-                            $authToken = Hash::make($phone_number. time());
-                            if(!empty($authToken)){
-                                $customerAuthData['user_id'] =  $customer['id'];
-                                $customerAuthData['first_name'] =  $customer['first_name'];
-                                $customerAuthData['last_name'] =  $customer['last_name'];
-                                $customerAuthData['phone_number'] =  $customer['phone_number'];;
-                                $customerAuthData['email'] =  $customer['email'];
-                                $customerAuthData['account_balance'] =  number_format($customer['account_balance']);
-                                $customerAuthData['is_active'] =  $customer['is_active'];
-                                $customerAuthData['authToken'] =  $authToken;
-                            }
-                            
+                            $customerAuthData = Helper::getCustomerData($customer['id']);
                             $this->apiResponse['statusCode'] = 1;
                             $this->apiResponse['message'] = 'customer logged in successfully';
                             $this->apiResponse['data'] = $customerAuthData;
@@ -191,7 +181,6 @@ class CustomerController extends Controller
                     }
                     
                     if($request->filled('user_id')) {
-                        
                         $customerId = $request->input('user_id');
                         $customer = Customer::find($customerId);
                         if($request->hasFile('photo')){
@@ -221,21 +210,8 @@ class CustomerController extends Controller
                             $action = "updated profile";
                             $resp->message = Helper::getMessage('success', $action);
                             $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                            $authToken = Hash::make($phone_number. time());
-                            if(!empty($authToken)){
-                                
-                                $customerData['user_id'] =  $customer->id;
-                                $customerData['first_name'] =  $customer->first_name;
-                                $customerData['last_name'] =  $customer->last_name;
-                                $customerData['phone_number'] =  $customer->phone_number;
-                                $customerData['email'] =  $customer->email;
-                                $customerData['account_balance'] = number_format($customer->account_balance);
-                                $customerAuthData['is_active'] =  $customer->is_active;
-                                $customerData['authToken'] =  $authToken;
-                                
-                            }
+                            $customerData = Helper::getCustomerData($customerId);
                             $resp->data = $customerData;
-                            
                         }else{
                             $resp->message ="Unable to update customer account profile!";
                             $resp->statusCode = Globals::$STATUS_CODE_FAILED;
@@ -246,7 +222,6 @@ class CustomerController extends Controller
                         
                         $customer = new Customer();
                         $customer_name = $first_name." ".$last_name;
-                        
                         $password = Hash::make($password, ['rounds' => 12]);
                         $count = Customer::where('phone_number', '=', $phone_number)->count();
                         if($count == 0){
@@ -277,21 +252,8 @@ class CustomerController extends Controller
                                 
                                 $resp->message = $message;
                                 $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                                
-                                $authToken = Hash::make($phone_number. time());
-                                if(!empty($authToken)){
-                                    $cust = Customer::where('phone_number', '=', $phone_number)->first();
-                                    $customerData['user_id'] =  $cust->id;
-                                    $customerData['first_name'] =  $first_name;
-                                    $customerData['last_name'] =  $last_name;
-                                    $customerData['phone_number'] =  $phone_number;
-                                    $customerData['email'] =  $email;
-                                    $customerData['account_balance'] = 0;
-                                    $customerData['is_active'] =  1;
-                                    $customerData['authToken'] =  $authToken;
-                                    
-                                    
-                                }
+                                $cust = Customer::where('phone_number', '=', $phone_number)->first();
+                                $customerData = Helper::getCustomerData($cust->id);
                                 $resp->data = $customerData;
                             }
                             else
@@ -386,20 +348,7 @@ class CustomerController extends Controller
                     $customer_id = $request->input('id');
                     $doesCustomerExist = Customer::where('id', $customer_id)->exists();
                     if ($doesCustomerExist) {
-                        $customer = Customer::find($customer_id);
-                        $authToken = Hash::make($customer->phone_number. time());
-                        
-                        if(!empty($authToken)){
-                            $customerData['user_id'] =  $customer->id;
-                            $customerData['first_name'] =  $customer->first_name;
-                            $customerData['last_name'] =  $customer->last_name;
-                            $customerData['phone_number'] =  $customer->phone_number;
-                            $customerData['email'] =  $customer->email;
-                            $customerData['account_balance'] =  number_format($customer->account_balance);
-                            $customerData['is_active'] =  $customer->is_active;
-                            $customerData['authToken'] =  $authToken;
-                        }
-                        
+                        $customerData = Helper::getCustomerData($customer_id);
                         $this->apiResponse['statusCode'] = 1;
                         $this->apiResponse['message'] = 'customer details found';
                         $this->apiResponse['data'] = $customerData;
@@ -455,15 +404,7 @@ class CustomerController extends Controller
                                  'role' => 'customer',
                                  'action' => "changed password" ]);
                                 $message = Helper::getMessage('success', $action);
-                                
-                                $customerData['user_id'] =  $customer->id;
-                                $customerData['first_name'] =  $customer->first_name;
-                                $customerData['last_name'] =  $customer->last_name;
-                                $customerData['phone_number'] =  $customer->phone_number;
-                                $customerData['email'] =  $customer->email;
-                                $customerData['account_balance'] =  number_format($customer->account_balance);
-                                $customerData['is_active'] =  $customer->is_active;
-                                $customerData['authToken'] =  Hash::make($customer->phone_number. time());
+                                $customerData = Helper::getCustomerData($customer->id);
                                 $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
                                 $resp->message  = $message;
                                 $resp->data  = $customerData;
