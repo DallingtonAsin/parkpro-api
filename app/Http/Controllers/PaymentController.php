@@ -16,6 +16,7 @@ use App\Models\Notifications;
 use App\Models\CustomersLedger;
 use Carbon\Carbon;
 use Hash;
+use Illuminate\Support\Facades\Storage;
 
 
 
@@ -127,6 +128,13 @@ class PaymentController extends Controller
                         ];
 
                         $this->sendPaymentNotification($paymentNotificationData);
+
+                         if(isset($customer->image)){
+                            $customer_image =  Storage::disk('public')->url($customer->image);
+                          } else{
+                            $customer_image = $customer->image;
+                          }
+                          
                         $data =    ['user_id' => intval($customer_id),
                                     'first_name' => $customer->first_name,
                                     'last_name' => $customer->last_name,
@@ -135,6 +143,7 @@ class PaymentController extends Controller
                                     'account_balance' => number_format($customer->account_balance),
                                     'is_active' => $customer->is_active,
                                     'authToken' =>  Hash::make($customer->phone_number. time()),
+                                    'image' => $customer_image,
                                     'paid_at' => date('Y-m-d H:i A'),
                                     ];
                         $resp->data = $data;
