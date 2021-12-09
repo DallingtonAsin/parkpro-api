@@ -17,6 +17,7 @@ return array(
     'App\\Http\\Controllers\\CompanySettingsController' => $baseDir . '/app/Http/Controllers/CompanySettingsController.php',
     'App\\Http\\Controllers\\Controller' => $baseDir . '/app/Http/Controllers/Controller.php',
     'App\\Http\\Controllers\\CustomerController' => $baseDir . '/app/Http/Controllers/CustomerController.php',
+    'App\\Http\\Controllers\\MailController' => $baseDir . '/app/Http/Controllers/MailController.php',
     'App\\Http\\Controllers\\ParkingAreaController' => $baseDir . '/app/Http/Controllers/ParkingAreaController.php',
     'App\\Http\\Controllers\\ParkingFeeController' => $baseDir . '/app/Http/Controllers/ParkingFeeController.php',
     'App\\Http\\Controllers\\ParkingRequestController' => $baseDir . '/app/Http/Controllers/ParkingRequestController.php',

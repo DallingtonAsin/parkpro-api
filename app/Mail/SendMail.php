@@ -23,8 +23,13 @@ class SendMail extends Mailable
      *  * * @return $this */
     public function build()
     {
-        return $this->view('mail.message')
-        ->from($this->data['senderEmail'], $this->data['senderName'])
-        ->subject($this->data['subject']);
+        return $this->markdown('mail.customer_suggestions')
+        ->subject($this->data['subject'])
+        ->with([
+            'subject' => $this->data['subject'],
+            'name' => $this->data['name'],
+            'email' => $this->data['email'],
+            'description' => $this->data['description'],
+    ]);
     }
 }

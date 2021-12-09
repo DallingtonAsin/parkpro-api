@@ -14,6 +14,8 @@ use App\Http\Controllers\ParkingAreaController;
 use App\Http\Controllers\CompanySettingsController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\MailController;
+
 
 
 
@@ -91,6 +93,9 @@ Route::post('/change/profile/image', [CustomerController::class, 'uploadProfileP
 Route::get('/transactions', [PaymentController::class, 'getTransactionHistory']);
 Route::get('/notifications', [PaymentController::class, 'getNotifications']);
 
+// Sending email 
+
+Route::post('customer/suggestion', [MailController::class, 'postCustomerSuggestion']);
 
 // RESOURCE ENDPOINTS
 Route::resources([

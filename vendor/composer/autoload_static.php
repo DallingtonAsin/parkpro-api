@@ -524,6 +524,7 @@ class ComposerStaticInitb4e83dd425a8c855f480f938ea59714b
         'App\\Http\\Controllers\\CompanySettingsController' => __DIR__ . '/../..' . '/app/Http/Controllers/CompanySettingsController.php',
         'App\\Http\\Controllers\\Controller' => __DIR__ . '/../..' . '/app/Http/Controllers/Controller.php',
         'App\\Http\\Controllers\\CustomerController' => __DIR__ . '/../..' . '/app/Http/Controllers/CustomerController.php',
+        'App\\Http\\Controllers\\MailController' => __DIR__ . '/../..' . '/app/Http/Controllers/MailController.php',
         'App\\Http\\Controllers\\ParkingAreaController' => __DIR__ . '/../..' . '/app/Http/Controllers/ParkingAreaController.php',
         'App\\Http\\Controllers\\ParkingFeeController' => __DIR__ . '/../..' . '/app/Http/Controllers/ParkingFeeController.php',
         'App\\Http\\Controllers\\ParkingRequestController' => __DIR__ . '/../..' . '/app/Http/Controllers/ParkingRequestController.php',
