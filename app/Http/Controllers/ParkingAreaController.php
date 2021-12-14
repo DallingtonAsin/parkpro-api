@@ -22,7 +22,7 @@ class ParkingAreaController extends Controller
         $resp = new ApiResponse();
         try {
             $parking_areas = ParkingArea::orderBy('id', 'desc')->get();
-            $num = 2000;
+            $num = 1000;
             foreach($parking_areas as $parking){
                 $parking->address = Client::where('id', $parking->client_id)->value('address');
                 $parking->client = Client::where('id', $parking->client_id)->value('name');
