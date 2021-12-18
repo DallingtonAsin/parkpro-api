@@ -61,7 +61,7 @@ class ParkingAreaController extends Controller
         foreach($vehicleCats as $cat){
          $fee_per_hour = ParkingFee::where('parking_area_id', $parking_area_id)
                 ->where('vehicle_cat_id', $cat->id)->value('fee_per_hour');
-        $fees[$cat->name] = $fee_per_hour; 
+        $fees[strtolower($cat->name)] = $fee_per_hour; 
         }
        return $fees;
        }catch(Exception $e){
