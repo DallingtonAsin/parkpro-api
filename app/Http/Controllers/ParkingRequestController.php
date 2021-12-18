@@ -7,6 +7,7 @@ use Illuminate\Support\Str;
 use App\Models\ParkingRequest;
 use App\Models\ParkingFee;
 use App\Models\ParkingArea;
+use App\Models\VehicleCategory;
 use App\Helpers\ApiResponse;
 use Carbon\Carbon;
 use Helper;
@@ -364,19 +365,22 @@ class ParkingRequestController extends Controller
                     
                     $authToken   =   $request->header('AuthToken');
                     if (!empty($authToken) && TokenAuth::validate($authToken)) {
-                        if($request->filled(['parking_area_id', 'telephone_no', 'vehicle_details', 'vehicle_cat_id',
+                        if($request->filled(['parking_area_id', 'telephone_no', 'vehicle_details', 'vehicle_category',
                                              'start_time', 'end_time'])){
                             
                                 $parking_area_id = $request->input('parking_area_id'); 
                                 $telephone_no = $request->input('telephone_no'); 
                                 $vehicle_details = $request->input('vehicle_details');
-                                $vehicle_cat_id = $request->input('vehicle_cat_id');
+                                $vehicle_category = $request->input('vehicle_category');
                                 $start_time = $request->input('start_time');
                                 $end_time = $request->input('end_time');
 
                                 if($this->isParkingAreaOpen($parking_area_id) === true){
 
                                 if($this->isParkingAreaFree($parking_area_id) === true){
+
+                                      if(VehicleCategory::where('name', 'like', '%'.$vehicle_category.'%')->exists()){
+                                        $vehicle_cat_id = VehicleCategory::where('name', 'like', '%'.$vehicle_category.'%')->value('id');
                                         $parking_hours = $this->differenceInHours($start_time, $end_time);
                                         $fee_per_hour = ParkingFee::where('parking_area_id', $parking_area_id)
                                         ->where('vehicle_cat_id', $vehicle_cat_id)->value('fee_per_hour');
@@ -420,7 +424,10 @@ class ParkingRequestController extends Controller
                                             $resp->statusCode = Globals::$STATUS_CODE_FAILED;
                                             $resp->message = "Unable to submit request";
                                         }
-                                        
+                                    }else {
+                                        $resp->statusCode = Globals::$STATUS_CODE_ERROR;
+                                        $resp->message = "Unable to get supplied vehicle type";
+                                    }   
                                    
                                 }else {
                                     $resp->statusCode = Globals::$STATUS_CODE_ERROR;
