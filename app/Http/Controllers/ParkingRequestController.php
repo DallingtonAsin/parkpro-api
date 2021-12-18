@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use App\Models\ParkingRequest;
 use App\Models\ParkingFee;
+use App\Models\ParkingArea;
 use App\Helpers\ApiResponse;
 use Carbon\Carbon;
 use Helper;
@@ -177,20 +178,20 @@ class ParkingRequestController extends Controller
                             
                             if($doesRequestExists){
                                 
-                                $ticket_no = Str::random(12);
+                                $order_no = Str::random(12);
                                 $status = Globals::$APPROVED_STATUS;
                                 $approval_date = Carbon::now()->toDateTimeString();
                                 
                                 $isApproved = ParkingRequest::where('id', '=', $request_id)
                                 ->where('telephone_no', '=', $telephone_no)
                                 ->where('vehicle_number', '=', $vehicle_number)
-                                ->update(['ticket_no'=> $ticket_no, 'status' => $status, 'approval_date' => $approval_date]);
+                                ->update(['order_no'=> $order_no, 'status' => $status, 'approval_date' => $approval_date]);
                                 if($isApproved){
                                     $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
                                     $resp->message  = Globals::$STATUS_DESC_SUCCESS;
                                     $data = array(
                                         'request_id' => $request_id,
-                                        'ticket_no' => $ticket_no,
+                                        'order_no' => $order_no,
                                         'telephone_no' => $telephone_no,
                                         'status' => $status,
                                         'approval_date' => $approval_date,
@@ -243,14 +244,14 @@ class ParkingRequestController extends Controller
                             
                             if($doesRequestExists){
                                 
-                                $ticket_no = Str::random(12);
+                                $order_no = Str::random(12);
                                 $status = Globals::$REJECTED_STATUS;
                                 $reject_date = Carbon::now()->toDateTimeString();
                                 
                                 $isRejected = ParkingRequest::where('id', '=', $request_id)
                                 ->where('telephone_no', '=', $telephone_no)
                                 ->where('vehicle_number', '=', $vehicle_number)
-                                ->update(['ticket_no'=> null, 'status' => $status, 'approval_date' => null, 'reject_date' => $reject_date]);
+                                ->update(['order_no'=> null, 'status' => $status, 'approval_date' => null, 'reject_date' => $reject_date]);
                                 if($isRejected){
                                     $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
                                     $resp->message  = Globals::$STATUS_DESC_SUCCESS;
@@ -297,6 +298,57 @@ class ParkingRequestController extends Controller
             {
                 //
             }
+
+            private function differenceInHours($startdate, $enddate){
+                $starttimestamp = strtotime($startdate);
+                $endtimestamp = strtotime($enddate);
+                $difference = abs($endtimestamp - $starttimestamp)/3600;
+                return $difference;
+            }
+
+            private function generateOrderNo(){
+                if(ParkingRequest::count() > 0){
+                    $latestRequest = ParkingRequest::orderBy('created_at','DESC')->first();
+                    $id = $latestRequest->id;
+                }else{
+                    $id = 0;
+                }
+                $orderNo= '#'.str_pad($id + 1, 8, "0", STR_PAD_LEFT);
+                return $orderNo;
+            }
+
+            private function  isParkingAreaOpen($id){
+                $isParkingOpen = false;
+                try{
+                    if(ParkingArea::where('id', $id)->exists()){
+                        $parking = ParkingArea::find($id);
+                        if(date('H') < date('H', strtotime($parking->closes_at))){ 
+                            $isParkingOpen = true;
+                        } 
+                    }
+                    
+                }catch(Exception $e){
+                    throw $e;
+                }
+                return $isParkingOpen;
+            }
+
+            private function isParkingAreaFree($id){
+                $isSpaceAvailable = false;
+                try{
+                    if(ParkingArea::where('id', $id)->exists()){
+                        $parking = ParkingArea::find($id);
+                        $free_spots = $parking->current_free_space;
+                        if($free_spots >= 1){
+                            $isSpaceAvailable = true;
+                        }
+                    }
+                    
+                }catch(Exception $e){
+                    throw $e;
+                }
+                return $isSpaceAvailable;
+            }
             
             /**
             * Store a newly created resource in storage.
@@ -312,60 +364,73 @@ class ParkingRequestController extends Controller
                     
                     $authToken   =   $request->header('AuthToken');
                     if (!empty($authToken) && TokenAuth::validate($authToken)) {
-                        if($request->filled(['telephone_no', 'vehicle_number', 'vehicle_type_id', 'client_id',
-                        'parking_area_id', 'start_time', 'end_time',
-                        'parking_hours'])){
+                        if($request->filled(['parking_area_id', 'telephone_no', 'vehicle_details', 'vehicle_cat_id',
+                                             'start_time', 'end_time'])){
                             
-                            $telephone_no = $request->input('telephone_no'); 
-                            $vehicle_number = $request->input('vehicle_number');
-                            $vehicle_type_id = $request->input('vehicle_type_id');
-                            $client_id = $request->input('client_id');
-                            $parking_area_id = $request->input('parking_area_id'); 
-                            $start_time = $request->input('start_time');
-                            $end_time = $request->input('end_time');
-                            $parking_hours = $request->input('parking_hours');
-                            $request_date = Carbon::now()->toDateTimeString();
-                            $status = Globals::$PENDING_STATUS;
-                            
-                            $result = $this->getParkingFee($client_id, $parking_area_id, $vehicle_type_id);
-                            $data = $result->data;
-                            if(count($data) > 0){
-                                
-                                $fee = $data['fee'];
-                                $amount = floatval($parking_hours)*floatval($fee);
-                                
-                                $parkingRequest = new ParkingRequest();
-                                $parkingRequest->telephone_no = $telephone_no;
-                                $parkingRequest->vehicle_number = $vehicle_number;
-                                $parkingRequest->vehicle_type_id = $vehicle_type_id;
-                                $parkingRequest->client_id = $client_id;
-                                $parkingRequest->parking_area_id = $parking_area_id;
-                                $parkingRequest->start_time = $start_time;
-                                $parkingRequest->end_time = $end_time;
-                                $parkingRequest->parking_hours = $parking_hours;
-                                $parkingRequest->amount = $amount;
-                                $parkingRequest->status = $status;
-                                $parkingRequest->request_date = $request_date;
-                                if($parkingRequest->save()){
-                                    $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                                    $resp->message  = "Request has been submitted successfully, wait shortly for notification of request approval.";
-                                    $data = array(
-                                        'telephone_no' => $telephone_no,
-                                        'status' => $status,
-                                        'request_date' => $request_date,
-                                        'statusCode' => $resp->statusCode,
-                                        'message' => $resp->message,
-                                    );
-                                    $resp->data = $data;
-                                }else{
-                                    $resp->statusCode = Globals::$STATUS_CODE_FAILED;
-                                    $resp->message = "Unable to submit request";
+                                $parking_area_id = $request->input('parking_area_id'); 
+                                $telephone_no = $request->input('telephone_no'); 
+                                $vehicle_details = $request->input('vehicle_details');
+                                $vehicle_cat_id = $request->input('vehicle_cat_id');
+                                $start_time = $request->input('start_time');
+                                $end_time = $request->input('end_time');
+
+                                if($this->isParkingAreaOpen($parking_area_id) === true){
+
+                                if($this->isParkingAreaFree($parking_area_id) === true){
+                                        $parking_hours = $this->differenceInHours($start_time, $end_time);
+                                        $fee_per_hour = ParkingFee::where('parking_area_id', $parking_area_id)
+                                        ->where('vehicle_cat_id', $vehicle_cat_id)->value('fee_per_hour');
+                                        $amount = floatval($fee_per_hour*$parking_hours);
+            
+                                        $request_date = Carbon::now()->toDateTimeString();
+                                        $status = Globals::$APPROVED_STATUS;
+                                   
+                                        $fee = $this->getParkingFee($parking_area_id, $vehicle_cat_id);
+                                      
+                                        $amount = floatval($parking_hours)*floatval($fee);
+                                        $orderNo = $this->generateOrderNo();
+                                        $parkingRequest = new ParkingRequest();
+        
+                                        $parkingRequest->order_no = $orderNo;
+                                        $parkingRequest->parking_area_id = $parking_area_id;
+                                        $parkingRequest->telephone_no = $telephone_no;
+                                        $parkingRequest->vehicle_details = $vehicle_details;
+                                        $parkingRequest->vehicle_cat_id = $vehicle_cat_id;
+                                        $parkingRequest->start_time = $start_time;
+                                        $parkingRequest->end_time = $end_time;
+                                        $parkingRequest->parking_hours = $parking_hours;
+                                        $parkingRequest->amount = $amount;
+                                        $parkingRequest->status = $status;
+                                        $parkingRequest->request_date = $request_date;
+                                        $parkingRequest->approval_date = Carbon::now()->toDateTimeString();
+
+                                        if($parkingRequest->save()){
+                                            $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                                            $resp->message  = "Your request has been submitted and approved successfully";
+                                            $data = array(
+                                                'order_no' => $orderNo,
+                                                'telephone_no' => $telephone_no,
+                                                'status' => $status,
+                                                'request_date' => $request_date,
+                                                'statusCode' => $resp->statusCode,
+                                                'message' => $resp->message,
+                                            );
+                                            $resp->data = $data;
+                                        }else{
+                                            $resp->statusCode = Globals::$STATUS_CODE_FAILED;
+                                            $resp->message = "Unable to submit request";
+                                        }
+                                        
+                                   
+                                }else {
+                                    $resp->statusCode = Globals::$STATUS_CODE_ERROR;
+                                    $resp->message = "Parking area is currently fully occupied";
                                 }
-                                
-                            }else{
+                            }else {
                                 $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-                                $resp->message = "Unable to get parking fee";
-                            }    
+                                $resp->message = "Parking area is currently closed";
+                            }
+                              
                         }else{
                             $resp->statusCode = Globals::$STATUS_CODE_ERROR;
                             $resp->message = "Unable to process request: missing parameters";
@@ -385,44 +450,16 @@ class ParkingRequestController extends Controller
             
             
             
-            public function getParkingFee($client_id, $parking_area_id, $vehicle_category_id){
-                $resp = new ApiResponse();
+            private function getParkingFee($parking_area_id, $vehicle_category_id){
                 try{
-                    
-                    $doesRequestExist = ParkingFee::where('client_id', $client_id)
-                    ->where('parking_area_id', $parking_area_id)
-                    ->where('vehicle_cat_id', $vehicle_category_id)
-                    ->exists();
-                    
-                    if($doesRequestExist){
-                        $parking_fee = ParkingFee::where('client_id', $client_id)
-                        ->where('parking_area_id', $parking_area_id)
+                        $parking_fee = ParkingFee::where('parking_area_id', $parking_area_id)
                         ->where('vehicle_cat_id', $vehicle_category_id)
-                        ->value('fee');
-                        $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                        $resp->message  = Globals::$STATUS_DESC_SUCCESS;
-                        $data = array(
-                            'client' => Helper::getClientName($client_id)->data,
-                            'parking_area' => Helper::getParkingAreaName($parking_area_id)->data,
-                            'vehicle_type' => Helper::getVehicleTypeName($vehicle_category_id)->data,
-                            'statusCode' => $resp->statusCode,
-                            'message' => $resp->message,
-                            'fee' => $parking_fee,
-                        );
-                        $resp->data = $data;
-                        
-                    }else{
-                        $resp->statusCode = Globals::$STATUS_CODE_FAILED;
-                        $resp->message = "No results found";
-                    }
-                    
+                        ->value('fee_per_hour');
+                        return $parking_fee;
+
                 }catch(Exception $ex){
-                    $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-                    $resp->message = $ex->getMessage();
-                }
-                
-                return $resp;
-                
+                    throw $x;
+                } 
             }
             
             /**

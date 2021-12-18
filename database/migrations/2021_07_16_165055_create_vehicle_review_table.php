@@ -19,10 +19,10 @@ class CreateVehicleReviewTable extends Migration
                 date_format(`approval_date`,'%m-%Y') AS `period`, 
                 year(`approval_date`) AS year,
                 month(`approval_date`) AS month_int,
-                vehicle_type_id AS vehicle_type_id,
+                vehicle_cat_id AS vehicle_cat_id,
                 monthname(`approval_date`) AS month, count(`id`) AS total_requests,
                 sum(`amount`) AS total_income from `parking_requests` where `approval_date` is not null 
-                group by period, vehicle_type_id,month_int, month, year order by year desc");
+                group by period, vehicle_cat_id,month_int, month, year order by year desc");
     }
 
     /**

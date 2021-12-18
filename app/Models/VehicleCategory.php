@@ -9,4 +9,5 @@ class VehicleCategory extends Model
 {
     use HasFactory;
     protected $table='vehicle_categories';
+    public $timestamps = true;
 }

@@ -13,6 +13,6 @@ class UserTableSeeder extends Seeder
      */
     public function run()
     {
-        \App\Models\User::factory()->count(25)->create();
+        \App\Models\User::factory()->count(5)->create();
     }
 }

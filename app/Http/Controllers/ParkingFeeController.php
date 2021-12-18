@@ -42,13 +42,10 @@ class ParkingFeeController extends Controller
     public function getParkingFees(Request $request){
         $resp = new ApiResponse();
         try {
-            $client_id = $request->input('client_id');
             $parking_area_id = $request->input('parking_area_id');
-            $parking_fees = ParkingFee::where('client_id', $client_id)
-                           ->where('parking_area_id', $parking_area_id)->get();
+            $parking_fees = ParkingFee::where('parking_area_id', $parking_area_id)->get();
             foreach ($parking_fees as $item){
                 $item->area = ParkingArea::where('id', $item->parking_area_id)->value('name');
-                $item->client = Client::where('id', $item->client_id)->value('name');
                 $item->vehicle_type = VehicleCategory::where('id', $item->vehicle_cat_id)->value('name');
             }
 
@@ -89,17 +86,14 @@ class ParkingFeeController extends Controller
             $authToken   =   $request->header('AuthToken');
             if (!empty($authToken) && TokenAuth::validate($authToken)) {
                 
-                if($request->filled(['client', 'parking_area', 'vehicle_category', 'fee'])){
-                    $client_id = $request->input('client');
+                if($request->filled(['parking_area', 'vehicle_category', 'fee'])){
                     $parking_area_id = $request->input('parking_area');
                     $vehicle_category_id = $request->input('vehicle_category');
                     
-                    $clientName = Client::where('id', $client_id)->value('name');
                     $parkingAreaName = ParkingArea::where('id', $parking_area_id)->value('name');
                     $vehicleCatName = VehicleCategory::where('id', $vehicle_category_id)->value('name');
                     
-                    $count = ParkingFee::where('client_id', '=', $client_id)
-                    ->where('parking_area_id', '=', $parking_area_id)
+                    $count = ParkingFee::where('parking_area_id', '=', $parking_area_id)
                     ->where('vehicle_cat_id', '=', $vehicle_category_id)
                     ->count();
                     
@@ -107,10 +101,9 @@ class ParkingFeeController extends Controller
                         $fee = $request->input('fee');
                         $parkingFee = new ParkingFee();
                         
-                        $parkingFee->client_id = $client_id;
                         $parkingFee->parking_area_id = $parking_area_id;
                         $parkingFee->vehicle_cat_id = $vehicle_category_id;
-                        $parkingFee->fee = Helper::Numberize($fee);
+                        $parkingFee->fee_per_hour = Helper::Numberize($fee);
                         
                         if ($parkingFee->save()) {
                             $action = "added parking fee for vehicle category ".$vehicleCatName." for ".$clientName."'s parking area ".$parkingAreaName." ";
@@ -152,24 +145,21 @@ class ParkingFeeController extends Controller
     }
     
     
-    public function getParkingFee($client_id, $parking_area_id, $vehicle_category_id){
+    public function getParkingFee($parking_area_id, $vehicle_category_id){
         $resp = new ApiResponse();
         try{
             
-            $doesRequestExist = ParkingFee::where('client_id', $client_id)
-            ->where('parking_area_id', $parking_area_id)
+            $doesRequestExist = ParkingFee::where('parking_area_id', $parking_area_id)
             ->where('vehicle_cat_id', $vehicle_category_id)
             ->exists();
             
             if($doesRequestExist){
-                $parking_fee = ParkingFee::where('client_id', $client_id)
-                ->where('parking_area_id', $parking_area_id)
+                $parking_fee = ParkingFee::where('parking_area_id', $parking_area_id)
                 ->where('vehicle_cat_id', $vehicle_category_id)
-                ->value('fee');
+                ->value('fee_per_hour');
                 $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
                 $resp->message  = Globals::$STATUS_DESC_SUCCESS;
                 $data = array(
-                    'client' => Helper::getClientName($client_id)->data,
                     'parking_area' => Helper::getParkingAreaName($parking_area_id)->data,
                     'vehicle_type' => Helper::getVehicleTypeName($vehicle_category_id)->data,
                     'statusCode' => $resp->statusCode,

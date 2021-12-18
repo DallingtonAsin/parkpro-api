@@ -9,4 +9,6 @@ class Client extends Model
 {
     use HasFactory;
     protected $table = 'clients';
+    public $timestamps = true;
+
 }
