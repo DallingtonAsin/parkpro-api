@@ -41,7 +41,7 @@ class ParkingAreaSeeder extends Seeder
                                 'total_space' => 155, 'current_free_space' => 35,
            ]);
 
-            ParkingArea::create(['client_id' => 4,'name' => 'Ntinda Vocational Training Institute','address' => 'Ntinda',
+            ParkingArea::create(['client_id' => 4,'name' => 'Ntinda Vocational','address' => 'Ntinda',
                                 'description' => 'Ntinda along Mukulu curve road', 
                                 'opens_at' => date('H:i:s', strtotime('08:00')),
                                 'closes_at' => date('H:i:s', strtotime('17:00')),
