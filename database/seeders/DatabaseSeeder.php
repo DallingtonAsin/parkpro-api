@@ -20,6 +20,8 @@ class DatabaseSeeder extends Seeder
         VehicleCategorySeeder::class,
         ParkingAreaSeeder::class,
         ParkingFeesSeeder::class,
+        CustomerTableSeeder::class,
+
         // ParkingRequestTableSeeder::class,
 
         ]);

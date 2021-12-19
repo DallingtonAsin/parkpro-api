@@ -31,82 +31,101 @@ use App\Http\Controllers\MailController;
 |
 */
 
-Route::middleware('auth:api')->get('/user', function (Request $request) {
-    return $request->user();
+// Route::middleware('auth:api')->get('/user', function (Request $request) {
+//     return $request->user();
+// });
+
+
+// USER DASHBOARD ROUTING
+Route::post('/user/login', [UserController::class, 'authenticate'])->name('login'); // done
+
+// USER ACCOUNT 
+Route::group(['prefix' => 'user', 'middleware' => ['auth:api-users']], function(){
+        Route::post('/password/edit', [UserController::class, 'changePassword']);
+        Route::get('/image/path', [UserController::class, 'getImageStoragePath']);
 });
 
-// USER ACOUNT
-Route::post('/login', [UserController::class, 'authenticate']);
-Route::post('/customer/login', [CustomerController::class, 'authenticate']);
+Route::group(['middleware' => 'auth:api-users'], function(){
+
+    Route::post('/roles/destroy', [RolesController::class, 'destroy']);
+    Route::apiResource('/customer', CustomerController::class);
+    Route::resources([
+        'roles' => RolesController::class,
+        'clients' => ClientController::class,
+        'users' => UserController::class,
+        'company' => CompanySettingsController::class,
+
+        'requests' => ParkingRequestController::class,
+        'vehicle_category' => VehicleCategoryController::class,
+        'parking_fees' => ParkingFeeController::class,
+        'parking_areas' => ParkingAreaController::class,
+        'payment' => PaymentController::class,
+        'customers' => CustomerController::class,
+
+    ]);
+});
 
 
-Route::post('/password/edit', [UserController::class, 'changePassword']);
-
-// ROLES
-Route::post('/roles/destroy', [RolesController::class, 'destroy']);
-
-
-// REQUESTS
-Route::get('/requests/pending', [ParkingRequestController::class, 'pendingRequests']);
-Route::get('/requests/approved', [ParkingRequestController::class, 'approvedRequests']);
-Route::get('/requests/rejected', [ParkingRequestController::class, 'rejectedRequests']);
-
-Route::post('/request/post', [ParkingRequestController::class, 'store']);
-Route::post('/request/approve', [ParkingRequestController::class, 'approveRequest']);
-Route::post('/request/reject', [ParkingRequestController::class, 'rejectRequest']);
-
-Route::get('/parking/fee/{client_id}/{parking_area_id}/{vehicle_type_id}', [ParkingFeeController::class, 'getParkingFee']);
-// Route::get('/parking/fee', [ParkingRequestController::class, 'getParkingFee']);
+// PARKING REQUESTS 
+Route::group(['prefix' => 'requests', 'middleware' => ['auth:api-users']], function(){
+        Route::get('/pending', [ParkingRequestController::class, 'pendingRequests']);
+        Route::get('/approved', [ParkingRequestController::class, 'approvedRequests']);
+        Route::get('/rejected', [ParkingRequestController::class, 'rejectedRequests']);
+        Route::post('/approve', [ParkingRequestController::class, 'approveRequest']);
+        Route::post('/reject', [ParkingRequestController::class, 'rejectRequest']);
+});
 
 // REPORTS
-Route::get('/reports', [ReportsController::class, 'index']);
-Route::get('/reports/requests/review', [ReportsController::class, 'requestMonthlyReview']);   
-Route::get('/reports/incomes/review', [ReportsController::class, 'incomeMonthlyReview']);
-Route::get('/reports/requests/data', [ReportsController::class, 'GetMonthlyRequestsData']);
-Route::get('/reports/incomes/data', [ReportsController::class, 'GetMonthlyIncomeData']);
+Route::group(['prefix' => 'reports', 'middleware' => ['auth:api-users']], function(){
+    Route::get('/', [ReportsController::class, 'index']);
+    Route::get('/requests/review', [ReportsController::class, 'requestMonthlyReview']);   
+    Route::get('/incomes/review', [ReportsController::class, 'incomeMonthlyReview']);
+    Route::get('/requests/data', [ReportsController::class, 'GetMonthlyRequestsData']);
+    Route::get('/incomes/data', [ReportsController::class, 'GetMonthlyIncomeData']);
+});
+
+
+Route::get('/parking/fee/{client_id}/{parking_area_id}/{vehicle_type_id}', [ParkingFeeController::class, 'getParkingFee']);
 
 
 
-Route::get('/image/path', [UserController::class, 'getImageStoragePath']);
-Route::get('/parking/fees', [ParkingFeeController::class, 'getParkingFees']);
+// Customer Login and Registration (done)
+Route::post('/customer/login', [CustomerController::class, 'customerLogin']); // done
+Route::post('/customer/register', [CustomerController::class, 'register']); // done
+
+
+// Customer Routes
+Route::group(['prefix' => 'customer', 'middleware' => ['auth:api-customers']], function(){
+
+    Route::get('/details', [CustomerController::class, 'findCustomer']); //done
+    Route::get('/transactions', [PaymentController::class, 'getTransactionHistory']); // done
+    Route::get('/transaction/history', [ParkingRequestController::class, 'getTransactionHistory']); //done
+    Route::get('/notifications', [PaymentController::class, 'getNotifications']); // done
+    Route::post('/account/topup', [PaymentController::class, 'topupUserAccount']); //done
+
+    Route::post('/password/change', [CustomerController::class, 'changePassword']); // done
+    Route::put('/profile/update', [CustomerController::class, 'updateProfile']); // done
+    Route::post('/change/profile-picture', [CustomerController::class, 'uploadProfilePicture']); // done
+    Route::post('/suggestion', [MailController::class, 'postCustomerSuggestion']); // done
+    Route::post('/payment/create', [PaymentController::class, 'create']); // done
+
+});
+
+
+Route::group(['prefix' => 'device', 'middleware' => ['auth:api-customers']], function(){
+
+        Route::get('parking-fees', [ParkingFeeController::class, 'getParkingFees']); // done
+        Route::get('parking-spots', [ParkingAreaController::class, 'getParkingSpots']); // done
+        Route::get('parking-areas/search', [ParkingAreaController::class, 'searchParkingArea']); // done
+
+        Route::resources([
+            'vehicle-category' => VehicleCategoryController::class, // done
+            'parking-fees' => ParkingFeeController::class, // done
+            'parking-areas' => ParkingAreaController::class, // done
+        ]);
+});
 
 
 
-// LOGS
-Route::get('/transaction/history', [ParkingRequestController::class, 'getTransactionHistory']);
-
-Route::post('/payment/create', [PaymentController::class, 'create']);
-
-Route::get('parking_spots', [ParkingAreaController::class, 'getParkingSpots']);
-Route::get('parking_areas/filter', [ParkingAreaController::class, 'filterParkingAreas']);
-Route::post('user/account/topup', [PaymentController::class, 'topupUserAccount']);
 
 
-// Customers 
-Route::get('/customer/details', [CustomerController::class, 'findCustomer']);
-Route::post('/customer/password/change', [CustomerController::class, 'changePassword']);
-Route::post('/change/profile/image', [CustomerController::class, 'uploadProfilePicture']);
-
-
-// Transaction History
-Route::get('/transactions', [PaymentController::class, 'getTransactionHistory']);
-Route::get('/notifications', [PaymentController::class, 'getNotifications']);
-
-// Sending email 
-
-Route::post('customer/suggestion', [MailController::class, 'postCustomerSuggestion']);
-
-// RESOURCE ENDPOINTS
-Route::resources([
-    'users' => UserController::class,
-    'requests' => ParkingRequestController::class,
-    'vehicle_category' => VehicleCategoryController::class,
-    'parking_fees' => ParkingFeeController::class,
-    'clients' => ClientController::class,
-    'roles' => RolesController::class,
-    'parking_areas' => ParkingAreaController::class,
-    'company' => CompanySettingsController::class,
-    'customer' => CustomerController::class,
-    'payment' => PaymentController::class,
-
-]);

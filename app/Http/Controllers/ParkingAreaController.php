@@ -94,7 +94,7 @@ class ParkingAreaController extends Controller
         return response()->json($resp);
     }
 
-    public function filterParkingAreas(Request $request)
+    public function searchParkingArea(Request $request)
     {
         $resp = new ApiResponse();
         try {

@@ -23,6 +23,11 @@ class CreateCustomersTable extends Migration
             $table->string('password');
             $table->string('image')->nullable();
             $table->boolean('is_active')->default(true);
+            $table->integer('login_attempts')->default(0);
+            $table->string('otp')->nullable();
+            $table->integer('otp_attempts')->default(0);
+            $table->timestamp('email_verified_at')->nullable();
+            $table->rememberToken()->nullable();
             $table->timestamps();
         });
     }

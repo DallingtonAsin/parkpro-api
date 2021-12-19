@@ -21,14 +21,28 @@ use Mail;
 class UserController extends Controller
 {
     
+     public $response = [];
+
+
+     public function __constructor(){
+            $this->response = new ApiResponse();
+     }
+
+
     public function authenticate(Request $request)
     {
-        $resp = new ApiResponse();
+
+         $validator = Validator::make($request->all(), [
+            'username' => 'required',
+            'password' => 'required',
+        ]);
+
         try{
-            
-            $authToken   =   $request->header('AuthToken');
-            if (!empty($authToken) && TokenAuth::validate($authToken)) {
-                
+          if($validator->fails()){
+              $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
+              $this->response['message'] = $validator->errors()->all();
+           } else {
+
                 ($request->has('remember'))
                 ? $remembered = true
                 : $remembered = false;
@@ -48,35 +62,32 @@ class UserController extends Controller
                 
                 $userId = $this->getUserId($login);
                 $status = $this->findAccountStatus($userId);
+
                 if($status == 0){
-                    $statusCode = Globals::$STATUS_CODE_FAILED;
-                    $message = 'Your account is inactivated, see admin';
+                    $this->response['statusCode']  = Globals::$STATUS_CODE_FAILED;
+                    $this->response['message']= 'Your account is inactivated, see admin';
                 }
                 if($status == 1){
-                    $statusCode = Globals::$STATUS_CODE_SUCCESS;
-                    $action = $message =  "logged into the system";
-                    $resp->data = Auth::user();
+                    $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
+                    $action = $this->response['message'] =  "logged into the system";
+                    $user = Auth::user();
+                    $user['access_token'] = $user->createToken('User->'.$user->username, ['user'])->accessToken;
+                    $this->response['data'] = $user;
                     Helper::logActivity($request, ['name' => $login, 'role' => 'admin', 'action' => $action]);
                 }
             }else
             {
-                $statusCode = Globals::$STATUS_CODE_FAILED;
-                $message = 'Invalid login credentials';
+                $this->response['statusCode']  = Globals::$STATUS_CODE_FAILED;
+                $this->response['message'] = 'Invalid login credentials';
             }
-        }else{
-            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-            $resp->message = "Unauthorized access";
-            $resp->data = "Unauthorized access";
-            
         }
+     
     } catch (\Exception $ex) {
-        $statusCode = Globals::$STATUS_CODE_ERROR;
-        $message = $ex->getMessage();
+        $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
+        $this->response['message'] = $ex->getMessage();
     }
-    $resp->statusCode = $statusCode;
-    $resp->message = $message;
-    
-    return response()->json($resp);
+
+    return response()->json($this->response, 200);
 }
 
 public function getUserId($login)

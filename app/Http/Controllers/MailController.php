@@ -20,9 +20,7 @@ class MailController extends Controller
     public function postCustomerSuggestion(Request $request){
         $resp = new ApiResponse();
         try {
-            $authToken = $request->header('AuthToken');
-            if (!empty($authToken) && TokenAuth::validate($authToken)) {
-                if($request->filled('id') && $request->filled('email') && $request->filled('subject') && $request->filled('description')){
+                if($request->filled(['id','email','subject','description'])){
 
                     $customer_id = $request->input('id');
                     $email = $request->input('email');
@@ -59,12 +57,6 @@ class MailController extends Controller
                     $resp->statusCode = Globals::$STATUS_CODE_ERROR;
                     $resp->message = "Unable to process request";
                 }
-            }else{
-                $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-                $resp->message = "Unauthorized access";
-                $resp->data = "Unauthorized access";
-                
-            }
             
         } catch (\Exception $ex) {
             $resp->statusCode = Globals::$STATUS_CODE_ERROR;

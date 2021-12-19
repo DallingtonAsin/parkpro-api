@@ -13,7 +13,8 @@ use Illuminate\Support\Facades\Hash;
 use App\Mail\RegistrationMailSender;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use Validator;
+use Illuminate\Support\Facades\Validator;
+use App\Http\Resources\CustomerResource;
 use Helper;
 use Globals;
 use TokenAuth;
@@ -21,6 +22,15 @@ use Mail;
 
 class CustomerController extends Controller
 {
+
+     public $response = [];
+
+
+     public function __constructor(){
+            $this->response = new ApiResponse();
+     }
+
+
     /**
     * Display a listing of the resource.
     *
@@ -28,26 +38,16 @@ class CustomerController extends Controller
     */
     public function index()
     {
-        //
+       $customers = Customer::all();
+       return response(['customers' => CustomerResource::collection($customers), 'message' => 'Retrieved successfully'], 200);
     }
-    
-    /**
-    * Show the form for creating a new resource.
-    *
-    * @return \Illuminate\Http\Response
-    */
-    public function create()
-    {
-        //
-    }
-    
-    public function getCustomerId($phone_number){
+ 
+    private function getCustomerId($phone_number){
         $customerId = Customer::where('phone_number',$phone_number)
         ->value('id');
         
         return $customerId;
     }
-    
     
     private function findAccountStatus($id){
         
@@ -55,8 +55,38 @@ class CustomerController extends Controller
         return $accountStatus;
         
     }
-    
-    public $apiResponse = [];
+
+    public function customerLogin(Request $request){
+        $validator = Validator::make($request->all(), [
+            'phone_number' => 'required',
+            'password' => 'required',
+        ]);
+        if($validator->fails()){
+            $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
+            $this->response['message'] = $validator->errors()->all();
+        }else{
+            if(auth()->guard('customer')->attempt([
+                'phone_number' => request('phone_number'),
+                'password' => request('password'),
+            ])){
+                config(['auth.guards.api.provider' => 'customer']);
+                $customer = Customer::select('customers.*')
+                           ->find(auth()->guard('customer')->user()->id);
+                $success = $customer;
+                $success['access_token'] = $customer->createToken('Customer'.$customer->phone_number, ['customer'])->accessToken;
+                $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
+                $this->response['message'] = 'Login successful';
+                $this->response['data'] = $success;
+
+            }else{
+                $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
+                $this->response['message'] = 'Invalid login details';
+            }
+
+        }
+         return response()->json($this->response, 200);
+    }
+
     public function authenticate(Request $request){ 
         if($request->isMethod('post')){
             $authToken   =   $request->header('AuthToken');
@@ -97,11 +127,10 @@ class CustomerController extends Controller
         
     }
     
-    public function authenticate1(Request $request)
+    public function login(Request $request)
     {
         
         try{
-            $resp = new ApiResponse();
             
             $authToken   =   $request->header('AuthToken');
             if (!empty($authToken) && TokenAuth::validate($authToken)) {
@@ -153,6 +182,128 @@ class CustomerController extends Controller
         
         return response()->json($resp);
     }
+
+
+    public function register(Request $request){
+
+          $validatedData = Validator::make($request->all(), [
+            'first_name' => 'required',
+            'last_name' => 'required',
+            'phone_number' => 'required',
+            'password' => 'min:8|required_with:confirm_password|same:confirm_password',
+            'confirm_password' => 'required|min:8',
+        ]);
+
+        if($validatedData->fails()){
+            $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
+            $this->response['message'] =  $validatedData->errors()->all();
+        }else{
+
+                    $first_name = trim($request->input('first_name'));
+                    $last_name = trim($request->input('last_name'));
+                    $phone_number = trim($request->input('phone_number'));
+                    $password = $request->input('password');
+
+                        $doesCustomerExist = Customer::where('phone_number', '=', $phone_number)->exists();
+                        if(!$doesCustomerExist){
+
+                            $hashedPassword = Hash::make($password);
+                            $data = [
+                            'first_name' => $first_name,
+                            'last_name' => $last_name,
+                            'phone_number' => $phone_number,
+                            'password' => $hashedPassword
+                            ];
+                           
+                            $customer = Customer::create($data);
+
+                            if($customer){
+                                $customer_name = $first_name." ".$last_name;
+                                $role = 'customer';
+                                $action =  "New customer ".$customer_name." registered";
+                                $message = "You have been successfully registered as ".$role.", thank you!";
+                                Helper::logActivity($request, ['name' => 'system', 'role' => $role, 'action' => $action]);
+                                
+                                $this->response['message'] = $message;
+                                $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
+                                // $cust = Customer::where('phone_number', '=', $phone_number)->first();
+                                // $customerData = Helper::getCustomerData($cust->id); 
+                                $customer->access_token = $customer->createToken('Customer'.$customer->phone_number, ['customer'])->accessToken;
+                                $this->response['data'] = $customer;
+                            }
+                            else
+                            {
+                                $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
+                                $this->resp['message'] = "Customer registration failed!";
+                            }
+                        } else{
+                            $message = "Customer with phone number ".$phone_number." has been already registered";
+                            $responseInfo = Helper::getMessage('error', $message);
+                            $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
+                            $this->response['message']  = $responseInfo;
+                        }
+        }
+         return response()->json($this->response, 200);
+
+    }
+
+
+      public function updateProfile(Request $request){
+
+         $validator = Validator::make($request->all(), [
+            'id' => 'required',
+            'first_name' => 'required',
+            'last_name' => 'required',
+            'phone_number' => 'required',
+        ]);
+
+               if($validator->fails())
+               {
+                    $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
+                    $this->response['message'] =  $validator->errors()->all();
+                }
+                else{
+                   
+                    $customerId = $request->input('id');
+                    $first_name = trim($request->input('first_name'));
+                    $last_name = trim($request->input('last_name'));
+                    $phone_number = trim($request->input('phone_number'));
+                    $role = 'Customer';
+                    
+                    if($request->has('email') && $request->filled('email')){
+                        $email = $request->input('email');
+                    }else{
+                        $email = null;
+                    }
+                   
+                        $customer = Customer::find($customerId);
+                        $hasUpdated = Customer::where('id', '=', $customerId)
+                        ->update([
+                            'first_name' => $first_name,
+                            'last_name' => $last_name,
+                            'phone_number' => $phone_number,
+                            'email' => $email
+                        ]);
+                        
+                        if($hasUpdated){
+                            $customer = Customer::find($customerId);
+                            $action = "updated your profile";
+                            $this->response['message'] = Helper::getMessage('success', $action);
+                            $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
+                            $customerData = Helper::getCustomerData($customerId);
+                            $this->response['data'] = $customerData;
+                        }else{
+                            $this->response['message'] ="Unable to update customer account profile!";
+                            $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
+                        }
+                      
+                    }
+              
+      
+        
+                      return response()->json($this->response, 200);
+        
+    }
     
     /**
     * Store a newly created resource in storage.
@@ -201,8 +352,7 @@ class CustomerController extends Controller
                             'first_name' => $first_name,
                             'last_name' => $last_name,
                             'phone_number' => $phone_number,
-                            'email' => $email,
-                            // 'password' => $password,
+                            'email' => $email
                         ]);
                         
                         if($hasUpdated){
@@ -300,21 +450,11 @@ class CustomerController extends Controller
     * @param  int  $id
     * @return \Illuminate\Http\Response
     */
-    public function show($id)
+    public function show($customer)
     {
-        //
+        return response(['customer' => new CustomerResource($customer), 'message' => 'Retrieved successfully'], 200);
     }
     
-    /**
-    * Show the form for editing the specified resource.
-    *
-    * @param  int  $id
-    * @return \Illuminate\Http\Response
-    */
-    public function edit($id)
-    {
-        //
-    }
     
     /**
     * Update the specified resource in storage.
@@ -323,9 +463,10 @@ class CustomerController extends Controller
     * @param  int  $id
     * @return \Illuminate\Http\Response
     */
-    public function update(Request $request, $id)
+    public function update(Request $request, $customer)
     {
-        //
+        $customer->update($request->all());
+        return response(['ceo' => new CustomerResource($customer), 'message' => 'Updated successfully'], 200);
     }
     
     /**
@@ -334,16 +475,15 @@ class CustomerController extends Controller
     * @param  int  $id
     * @return \Illuminate\Http\Response
     */
-    public function destroy($id)
+    public function destroy($customer)
     {
-        //
+        $customer->delete();
+        return response(['message' => 'Deleted successfully']);
     }
     
     
     public function findCustomer(Request $request){ 
         if($request->isMethod('get')){
-            $authToken   =   $request->header('AuthToken');
-            if (!empty($authToken) && TokenAuth::validate($authToken)) {
                 if($request->has('id')) {
                     $customer_id = $request->input('id');
                     $doesCustomerExist = Customer::where('id', $customer_id)->exists();
@@ -360,27 +500,16 @@ class CustomerController extends Controller
                     $this->apiResponse['statusCode'] = 0;
                     $this->apiResponse['message'] = "Unable to process request";
                 }
-            }else{
-                $this->apiResponse['statusCode'] = Globals::$STATUS_CODE_ERROR;
-                $this->apiResponse['message'] = "Unauthorized access";   
-            }
-            return response()->json($this->apiResponse, 200);
+              return response()->json($this->apiResponse, 200);
         }
         
     }
-    
-    
-    
-    
-    
     
     
     public function changePassword(Request $request)
     {
         $resp = new ApiResponse();
         try {
-            $authToken  = $request->header('AuthToken');
-            if (!empty($authToken) && TokenAuth::validate($authToken)) {
                 if($request->filled('id') && $request->filled('current_password') 
                 && $request->filled('new_password') && $request->filled('confirm_password')  ){
                     
@@ -432,13 +561,6 @@ class CustomerController extends Controller
                     $resp->statusCode = Globals::$STATUS_CODE_ERROR;
                     $resp->message = "Unable to process request";
                 }
-            }else{
-                $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-                $resp->message = "Unauthorized access";
-                $resp->data = "Unauthorized access";
-                
-            }
-            
         } catch (\Exception $ex) {
             $resp->statusCode = Globals::$STATUS_CODE_ERROR;
             $resp->message = $ex->getMessage();
@@ -452,8 +574,6 @@ class CustomerController extends Controller
     public function uploadProfilePicture(Request $request){
         $resp = new ApiResponse();
         try {
-            $authToken   =   $request->header('AuthToken');
-            if (!empty($authToken) && TokenAuth::validate($authToken)) {
                 if($request->filled('id') && $request->filled('phone_number') && $request->filled('extension') && $request->has('image')){
                     $file = $request->file('image');
                     $customer_id = $request->input('id');
@@ -492,12 +612,6 @@ class CustomerController extends Controller
                     $resp->statusCode = Globals::$STATUS_CODE_ERROR;
                     $resp->message = "Unable to process request";
                 }
-            }else{
-                $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-                $resp->message = "Unauthorized access";
-                $resp->data = "Unauthorized access";
-                
-            }
             
         } catch (\Exception $ex) {
             $resp->statusCode = Globals::$STATUS_CODE_ERROR;
@@ -507,21 +621,6 @@ class CustomerController extends Controller
         
         return response()->json($resp);
     }
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     
     
 }

@@ -14,6 +14,7 @@
         "guzzlehttp/guzzle": "^7.0.1",
         "laraman/beyonic": "^1.0",
         "laravel/framework": "^8.12",
+        "laravel/passport": "^10.2",
         "laravel/tinker": "^2.5"
     },
     "require-dev": {

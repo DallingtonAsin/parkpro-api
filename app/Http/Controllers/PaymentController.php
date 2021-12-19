@@ -80,8 +80,6 @@ class PaymentController extends Controller
         $resp = new ApiResponse();
 
         try{
-            $authToken   =   $request->header('AuthToken');
-            if (!empty($authToken) && TokenAuth::validate($authToken)) {
                 
                 if($request->filled(['customer_id', 'amount', 'phone_number'])){
                     $customer_id = $request->input('customer_id');
@@ -166,12 +164,6 @@ class PaymentController extends Controller
                     $resp->statusCode = Globals::$STATUS_CODE_FAILED;
                     $resp->message = $responseInfo;
                 }
-            }else{
-                $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-                $resp->message = "Unauthorized access";
-                $resp->data = "Unauthorized access";
-                
-            }
         } catch (\Exception $ex) {
             $resp->statusCode = Globals::$STATUS_CODE_ERROR;
             $resp->message = $ex->getMessage();
@@ -239,8 +231,6 @@ class PaymentController extends Controller
     public function getNotifications(Request $request){
         $resp = new ApiResponse();
         try {
-            $authToken   =   $request->header('AuthToken');
-            if (!empty($authToken) && TokenAuth::validate($authToken)) {
                 if($request->filled('id')){
                 $customer_id = $request->input('id');
                 $notifications = Notifications::where('notifiable_id', $customer_id)->orderBy('created_at', 'desc')->get();
@@ -261,13 +251,6 @@ class PaymentController extends Controller
                     $resp->statusCode = Globals::$STATUS_CODE_ERROR;
                     $resp->message = "Unable to process request: missing parameters";
                 }
-                
-            }else{
-                $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-                $resp->message = "Unauthorized access";
-                $resp->data = "Unauthorized access";
-                
-            }
             
         } catch (\Exception $ex) {
             $resp->statusCode = Globals::$STATUS_CODE_ERROR;
@@ -281,8 +264,6 @@ class PaymentController extends Controller
     public function getTransactionHistory(Request $request){
         $resp = new ApiResponse();
         try {
-            $authToken   =   $request->header('AuthToken');
-            if (!empty($authToken) && TokenAuth::validate($authToken)) {
                 if($request->filled('id')){
                 $customer_id = $request->input('id');
                 $transactions = CustomersLedger::where('customer_id', $customer_id)->orderBy('created_at', 'desc')->get()->groupBy(function($val) {
@@ -317,14 +298,6 @@ class PaymentController extends Controller
                     $resp->statusCode = Globals::$STATUS_CODE_ERROR;
                     $resp->message = "Unable to process request: missing parameters";
                 }
-                
-            }else{
-                $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-                $resp->message = "Unauthorized access";
-                $resp->data = "Unauthorized access";
-                
-            }
-            
         } catch (\Exception $ex) {
             $resp->statusCode = Globals::$STATUS_CODE_ERROR;
             $resp->message = $ex->getMessage();
