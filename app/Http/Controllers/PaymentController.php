@@ -133,7 +133,7 @@ class PaymentController extends Controller
                             $customer_image = $customer->image;
                           }
 
-                        $customerData = Helper::getCustomerData($customer_id);
+                        $customerData = Helper::getCustomerData(intval($customer_id));
                         $customerData['paid_at'] = date('Y-m-d H:i A');
                         $resp->data = $customerData;
 
