@@ -132,19 +132,11 @@ class PaymentController extends Controller
                           } else{
                             $customer_image = $customer->image;
                           }
-                          
-                        $data =    ['user_id' => intval($customer_id),
-                                    'first_name' => $customer->first_name,
-                                    'last_name' => $customer->last_name,
-                                    'phone_number' => $customer->phone_number, 
-                                    'email' => $customer->email,
-                                    'account_balance' => number_format($customer->account_balance),
-                                    'is_active' => $customer->is_active,
-                                    'authToken' =>  Hash::make($customer->phone_number. time()),
-                                    'image' => $customer_image,
-                                    'paid_at' => date('Y-m-d H:i A'),
-                                    ];
-                        $resp->data = $data;
+
+                        $customerData = Helper::getCustomerData($customer_id);
+                        $customerData['paid_at'] = date('Y-m-d H:i A');
+                        $resp->data = $customerData;
+
                         } else {
                             $messageErr = "Unable to top up customer account!";
                             $responseInfo = Helper::getMessage('error', $messageErr);
