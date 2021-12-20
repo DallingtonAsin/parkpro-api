@@ -323,7 +323,7 @@ class ParkingRequestController extends Controller
                 try{
                     if(ParkingArea::where('id', $id)->exists()){
                         $parking = ParkingArea::find($id);
-                        if(date('H') < date('H', strtotime($parking->closes_at))){ 
+                        if(date('H', strtotime($parking->opens_at)) < date('H') && date('H') < date('H', strtotime($parking->closes_at))){ 
                             $isParkingOpen = true;
                         } 
                     }
