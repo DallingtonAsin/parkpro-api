@@ -17,9 +17,6 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\MailController;
 
 
-
-
-
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -48,7 +45,7 @@ Route::group(['prefix' => 'user', 'middleware' => ['auth:api-users']], function(
 Route::group(['middleware' => 'auth:api-users'], function(){
 
     Route::post('/roles/destroy', [RolesController::class, 'destroy']);
-    Route::apiResource('/customer', CustomerController::class);
+    // Route::apiResource('/customer', CustomerController::class);
     Route::resources([
         'roles' => RolesController::class,
         'clients' => ClientController::class,
