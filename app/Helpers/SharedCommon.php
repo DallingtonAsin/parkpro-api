@@ -42,27 +42,13 @@ class SharedCommon
 
       public static function getCustomerData($customer_id){
           try{
-            $doesCustomerExist = Customer::where('id', $customer_id)->exists();
-            if($doesCustomerExist){
                 $customer = Customer::find($customer_id);
-                // $authToken = Hash::make($customer->phone_number. time());
-                $customerData['user_id'] =  $customer->id;
-                $customerData['first_name'] =  $customer->first_name;
-                $customerData['last_name'] =  $customer->last_name;
-                $customerData['phone_number'] =  $customer->phone_number;
-                $customerData['email'] =  $customer->email;
-                $customerData['account_balance'] = number_format($customer->account_balance);
-                $customerData['is_active'] =  $customer->is_active;
-                // $customerData['authToken'] =  $authToken;
                 if(isset($customer->image)){
-                    $customerData['image'] =  Storage::disk('public')->url($customer->image);
+                    $customer->image =  Storage::disk('public')->url($customer->image);
                 }else{
-                    $customerData['image'] = $customer->image;
+                    $customer->image = $customer->image;
                 }
-            }else{
-                $customerData = [];
-            }
-            return $customerData;
+            return $customer;
           }catch(\Exception $ex){
               throw $ex;
           }
