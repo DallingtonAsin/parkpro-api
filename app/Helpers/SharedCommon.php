@@ -43,13 +43,12 @@ class SharedCommon
       public static function getCustomerData($customer_id){
           try{
                 $customer = Customer::find($customer_id);
-                foreach($customer as $item){
-                    if($customer->account_balance >= 1000){
-                      $customer->account_balance = number_format($item->account_balance);
-                    }else{
-                        $customer->account_balance = $item->account_balance;  
-                    }
-                }
+                if($customer->account_balance >= 1000){
+                      $customer->account_balance = number_format($customer->account_balance);
+                 }else{
+                     $customer->account_balance = $customer->account_balance;  
+                 }
+                
                 if(isset($customer->image)){
                     $customer->image =  Storage::disk('public')->url($customer->image);
                 }else{
