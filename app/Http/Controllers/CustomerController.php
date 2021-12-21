@@ -72,11 +72,13 @@ class CustomerController extends Controller
                 config(['auth.guards.api.provider' => 'customer']);
                 $customer = Customer::select('customers.*')
                            ->find(auth()->guard('customer')->user()->id);
-                $success = $customer;
-                $success['access_token'] = $customer->createToken('Customer'.$customer->phone_number, ['customer'])->accessToken;
+                if($customer->account_balance >= 1000){
+                    $customer->account_balance = number_format($customer->account_balance);
+                }
+                $customer['access_token'] = $customer->createToken('Customer'.$customer->phone_number, ['customer'])->accessToken;
                 $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
                 $this->response['message'] = 'Login successful';
-                $this->response['data'] = $success;
+                $this->response['data'] = $customer;
 
             }else{
                 $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
