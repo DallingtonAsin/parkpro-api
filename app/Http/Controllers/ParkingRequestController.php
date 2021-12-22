@@ -364,16 +364,12 @@ class ParkingRequestController extends Controller
             public function getMyParkingRequests(Request $request) {
                 try{
 
-                    if($request->filled(['id', 'telephone_no'])){
+                    if($request->filled('id')){
                         $id = $request->input('id');
-                        $telephone_no = $request->input('telephone_no');
-                        $requests = ParkingRequest::where('customer_id', $id)->where('telephone_no', $telephone_no)->get();
+                        $requests = ParkingRequest::where('customer_id', $id)->get();
                         $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
-                        $this->response['message'] = "Parking request data found";
-                        $data['customer_id'] = $id;
-                        $data['phone_no'] = $telephone_no;
-                        $data['request'] = $requests;
-                        $this->response['data'] = $data;
+                        $this->response['message'] = "Parking requests data found";
+                        $this->response['data'] = $requests;
                     }else{
                         $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
                         $this->response['message'] = "Unable to process request: missing parameters";
