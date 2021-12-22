@@ -119,6 +119,8 @@ Route::group(['prefix' => 'device', 'middleware' => ['auth:api-customers']], fun
             'vehicle-category' => VehicleCategoryController::class, // done
             'parking-fees' => ParkingFeeController::class, // done
             'parking-areas' => ParkingAreaController::class, // done
+            'parking-request' => ParkingRequestController::class, // done
+
         ]);
 });
 
