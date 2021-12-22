@@ -17,6 +17,15 @@ use Globals;
 
 class ParkingRequestController extends Controller
 {
+
+
+    public $response = [];
+
+
+    public function __constructor(){
+           $this->response = new ApiResponse();
+    }
+
     /**
     * Display a listing of the resource.
     *
@@ -350,6 +359,28 @@ class ParkingRequestController extends Controller
                 }
                 return $isSpaceAvailable;
             }
+
+
+            public function getMyParkingRequests(Request $request) {
+                try{
+
+                    if($request->filled(['id', 'telephone_no'])){
+                        $id = $request->input('id');
+                        $telephone_no = $request->input('telephone_no');
+                        $requests = ParkingRequest::where('customer_id', $id)->where('telephone_no', $telephone_no)->get();
+                        $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
+                        $this->response['message'] = "Parking request data found";
+                        $this->response['data'] = $requests;
+                    }else{
+                        $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
+                        $this->response['message'] = "Unable to process request: missing parameters";
+                    }
+                }catch(Exception $ex){
+                   $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
+                   $this->response['message'] = $ex->getMessage();
+
+                }
+            }
             
             /**
             * Store a newly created resource in storage.
@@ -362,9 +393,10 @@ class ParkingRequestController extends Controller
                 $resp = new ApiResponse();
                 try {
                     
-                        if($request->filled(['parking_area_id', 'telephone_no', 'vehicle_details', 'vehicle_category',
+                        if($request->filled(['customer_id', 'parking_area_id', 'telephone_no', 'vehicle_details', 'vehicle_category',
                                              'start_time', 'end_time'])){
                             
+                                $customer_id = $request->input('customer_id'); 
                                 $parking_area_id = $request->input('parking_area_id'); 
                                 $telephone_no = $request->input('telephone_no'); 
                                 $vehicle_details = $request->input('vehicle_details');
@@ -394,8 +426,9 @@ class ParkingRequestController extends Controller
                                         $parkingRequest = new ParkingRequest();
         
                                         $parkingRequest->order_no = $orderNo;
-                                        $parkingRequest->parking_area_id = $parking_area_id;
+                                        $parkingRequest->customer_id = $customer_id;
                                         $parkingRequest->telephone_no = $telephone_no;
+                                        $parkingRequest->parking_area_id = $parking_area_id;
                                         $parkingRequest->vehicle_details = $vehicle_details;
                                         $parkingRequest->vehicle_cat_id = $vehicle_cat_id;
                                         $parkingRequest->start_time = $start_time;
@@ -410,6 +443,7 @@ class ParkingRequestController extends Controller
                                             $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
                                             $resp->message  = "Your request has been submitted and approved successfully";
                                             $data = array(
+                                                'customer_id' => $customer_id,
                                                 'order_no' => $orderNo,
                                                 'telephone_no' => $telephone_no,
                                                 'status' => $status,

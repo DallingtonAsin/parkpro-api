@@ -16,8 +16,9 @@ class CreateParkingRequestsTable extends Migration
         Schema::create('parking_requests', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('order_no');
-            $table->unsignedBigInteger('parking_area_id');
+            $table->unsignedBigInteger('customer_id');
             $table->string('telephone_no', 15);
+            $table->unsignedBigInteger('parking_area_id');
             $table->string('vehicle_details');
             $table->unsignedBigInteger('vehicle_cat_id');
             $table->time('start_time');
@@ -32,6 +33,7 @@ class CreateParkingRequestsTable extends Migration
         });
 
         Schema::table('parking_requests', function (Blueprint $table) {
+            $table->foreign('customer_id')->references('id')->on('customers')->onDelete('cascade');
             $table->foreign('vehicle_cat_id')->references('id')->on('vehicle_categories')->onDelete('cascade');
             $table->foreign('parking_area_id')->references('id')->on('parking_areas')->onDelete('cascade');
         });
