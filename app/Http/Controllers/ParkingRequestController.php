@@ -378,8 +378,8 @@ class ParkingRequestController extends Controller
                 }catch(Exception $ex){
                    $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
                    $this->response['message'] = $ex->getMessage();
-
                 }
+                return response()->json($this->response);
             }
             
             /**
