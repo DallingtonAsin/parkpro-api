@@ -360,6 +360,39 @@ class ParkingRequestController extends Controller
                 return $isSpaceAvailable;
             }
 
+            public function getRequestOrderInfo(Request $request) {
+                try{
+
+                    if($request->filled(['order_no' , 'customer_id'])){
+                        $order_no = $request->input('order_no');
+                        $customer_id = $request->input('customer_id');
+                        $order = ParkingRequest::where('order_no', $order_no)->where('customer_id', $customer_id)->get();
+                        if(count((array)$order) > 0){
+                            foreach($order as $info){
+                                $info->booking_period = $info->start_time."-".$info->end_time;
+                                $info->parking_area = ParkingArea::where('id', $info->parking_area_id)->value('name');
+                                $info->car_type = VehicleCategory::where('id', $info->vehicle_category_id)->value('name');
+                                $info->fee_per_hour = VehicleCategory::where('id', $info->vehicle_category_id)->value('fee_per_hour');
+                                $info->approval_date = date('Y-m-d H:i A', strtotime($request->approval_date));
+                                $ino->amount = number_format($request->amount);
+                            }
+                        }else{
+                            $order = [];
+                        }
+                        $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
+                        $this->response['message'] = "Order information found";
+                        $this->response['data'] = $order;
+                    }else{
+                        $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
+                        $this->response['message'] = "Unable to process request, missing parameters!";
+                    }
+                }catch(Exception $ex){
+                   $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
+                   $this->response['message'] = $ex->getMessage();
+                }
+                return response()->json($this->response);
+            }
+
 
             public function getMyParkingRequests(Request $request) {
                 try{
