@@ -378,10 +378,10 @@ class ParkingRequestController extends Controller
 
                                       if(VehicleCategory::where('name', 'like', '%'.$vehicle_category.'%')->exists()){
                                         $vehicle_cat_id = VehicleCategory::where('name', 'like', '%'.$vehicle_category.'%')->value('id');
-                                        $parking_hours = $this->differenceInHours($start_time, $end_time);
+                                        $parking_hours = round($this->differenceInHours($start_time, $end_time), 1);
                                         $fee_per_hour = ParkingFee::where('parking_area_id', $parking_area_id)
                                         ->where('vehicle_cat_id', $vehicle_cat_id)->value('fee_per_hour');
-                                        $amount = floatval($fee_per_hour*$parking_hours);
+                                        // $amount = floatval($fee_per_hour*$parking_hours);
             
                                         $request_date = Carbon::now()->toDateTimeString();
                                         $status = Globals::$APPROVED_STATUS;
@@ -389,6 +389,7 @@ class ParkingRequestController extends Controller
                                         $fee = $this->getParkingFee($parking_area_id, $vehicle_cat_id);
                                       
                                         $amount = floatval($parking_hours)*floatval($fee);
+                                        $amount = round($amount);
                                         $orderNo = $this->generateOrderNo();
                                         $parkingRequest = new ParkingRequest();
         
