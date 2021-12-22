@@ -367,6 +367,14 @@ class ParkingRequestController extends Controller
                     if($request->filled('id')){
                         $id = $request->input('id');
                         $requests = ParkingRequest::where('customer_id', $id)->get();
+                        if(count((array)$requests) > 0){
+                            foreach($requests as $request){
+                                $request->approval_date = date('Y-m-d H:i A', strtotime($request->approval_date));
+                                $request->amount = number_format($request->amount);
+                            }
+                        }else{
+                            $requests = [];
+                        }
                         $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
                         $this->response['message'] = "Parking requests data found";
                         $this->response['data'] = $requests;
