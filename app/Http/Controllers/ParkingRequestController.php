@@ -8,6 +8,7 @@ use App\Models\ParkingRequest;
 use App\Models\ParkingFee;
 use App\Models\ParkingArea;
 use App\Models\VehicleCategory;
+use App\Models\Customer;
 use App\Helpers\ApiResponse;
 use Carbon\Carbon;
 use Helper;
@@ -372,6 +373,9 @@ class ParkingRequestController extends Controller
                                 $start_time = date('H:i A', strtotime($info->start_time));
                                 $end_time = date('H:i A', strtotime($info->end_time));
                                 $info->booking_period = $start_time." - ".$end_time;
+                                $customer = Customer::find($info->customer_id);
+                                $info->name = $customer->first_name." ".$customer->last_name;
+                                $info->telephone_no = $customer->phone_number;
                                 $info->parking_area = ParkingArea::where('id', $info->parking_area_id)->value('name');
                                 $info->car_type = VehicleCategory::where('id', $info->vehicle_cat_id)->value('name');
                                 $info->fee_per_hour = ParkingFee::where('vehicle_cat_id', $info->vehicle_cat_id)->value('fee_per_hour');
