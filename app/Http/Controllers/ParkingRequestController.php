@@ -374,7 +374,7 @@ class ParkingRequestController extends Controller
                                 $info->car_type = VehicleCategory::where('id', $info->vehicle_category_id)->value('name');
                                 $info->fee_per_hour = ParkingFee::where('vehicle_cat_id', $info->vehicle_cat_id)->value('fee_per_hour');
                                 $info->approval_date = date('Y-m-d H:i A', strtotime($request->approval_date));
-                                $ino->amount = number_format($request->amount);
+                                $info->amount = number_format($request->amount);
                             }
                         }else{
                             $order = [];
