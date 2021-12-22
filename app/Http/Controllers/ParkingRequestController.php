@@ -362,9 +362,6 @@ class ParkingRequestController extends Controller
                 $resp = new ApiResponse();
                 try {
                     
-                    
-                    $authToken   =   $request->header('AuthToken');
-                    if (!empty($authToken) && TokenAuth::validate($authToken)) {
                         if($request->filled(['parking_area_id', 'telephone_no', 'vehicle_details', 'vehicle_category',
                                              'start_time', 'end_time'])){
                             
@@ -443,10 +440,7 @@ class ParkingRequestController extends Controller
                             $resp->message = "Unable to process request: missing parameters";
                         }
                         
-                    }else{
-                        $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-                        $resp->message = "Unauthorized access";
-                    }
+                    
                     
                 } catch (\Exception $ex) {
                     $resp->statusCode = Globals::$STATUS_CODE_ERROR;
