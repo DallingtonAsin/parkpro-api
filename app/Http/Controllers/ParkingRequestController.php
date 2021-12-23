@@ -317,14 +317,8 @@ class ParkingRequestController extends Controller
                 return $difference;
             }
 
-            private function generateOrderNo(){
-                if(ParkingRequest::count() > 0){
-                    $latestRequest = ParkingRequest::orderBy('created_at','DESC')->first();
-                    $id = $latestRequest->id;
-                }else{
-                    $id = 0;
-                }
-                $orderNo= '#'.str_pad($id + 1, 8, "0", STR_PAD_LEFT);
+            private function generateOrderNo($customer_id){
+                $orderNo = time() . '-' . $customer_id;
                 return $orderNo;
             }
 
@@ -468,7 +462,7 @@ class ParkingRequestController extends Controller
                                       
                                         $amount = floatval($parking_hours)*floatval($fee);
                                         $amount = round($amount);
-                                        $orderNo = $this->generateOrderNo();
+                                        $orderNo = $this->generateOrderNo($customer_id);
                                         $parkingRequest = new ParkingRequest();
         
                                         $parkingRequest->order_no = $orderNo;
