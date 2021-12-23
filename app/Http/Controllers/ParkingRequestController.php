@@ -370,9 +370,9 @@ class ParkingRequestController extends Controller
                         $order = ParkingRequest::where('order_no', $order_no)->where('customer_id', $customer_id)->get();
                         if(count((array)$order) > 0){
                             foreach($order as $info){
-                                $start_time = date('H:i A', strtotime($info->start_time));
-                                $end_time = date('H:i A', strtotime($info->end_time));
-                                $info->booking_period = $start_time." - ".$end_time;
+                                $start_time = date('H:i', strtotime($info->start_time));
+                                $end_time = date('H:i', strtotime($info->end_time));
+                                $info->booking_period = $start_time."-".$end_time;
                                 $customer = Customer::find($info->customer_id);
                                 $info->name = $customer->first_name." ".$customer->last_name;
                                 $info->telephone_no = $customer->phone_number;
