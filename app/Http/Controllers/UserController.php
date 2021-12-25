@@ -12,10 +12,10 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Hash;
 use App\Mail\RegistrationMailSender;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Validator;
 use Helper;
 use Globals;
-use TokenAuth;
 use Mail;
 
 class UserController extends Controller
@@ -119,20 +119,15 @@ public function index(Request $request)
 {
     $resp = new ApiResponse();
     try {
-        $authToken   =   $request->header('AuthToken');
-        if (!empty($authToken) && TokenAuth::validate($authToken)) {
             $users = User::orderBy('id', 'desc')->get();
+            if(count((array)$users) > 0){
+                foreach($users as $user){
+                    $user->name = $user->first_name." ".$user->last_name;
+                }
+            }
             $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
             $resp->message  = Globals::$STATUS_DESC_SUCCESS;
             $resp->data = $users;
-            
-        }else{
-            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-            $resp->message = "Unauthorized access";
-            $resp->data = "Unauthorized access";
-            
-        }
-        
     } catch (\Exception $ex) {
         $resp->statusCode = Globals::$STATUS_CODE_ERROR;
         $resp->message = $ex->getMessage();
@@ -241,19 +236,17 @@ public function store(Request $request)
     
     try{
         
-        $authToken   =   $request->header('AuthToken');
-        if (!empty($authToken) && TokenAuth::validate($authToken)) {
             if($request->filled(['user_id', 'first_name','last_name', 'address',
-            'email', 'mobile_no','nin', 'gender','user_role'])){
+            'email', 'mobile_no', 'gender','user_role'])){
                 $fname = trim($request->input('first_name'));
                 $lname = trim($request->input('last_name'));
                 $address = trim($request->input('address'));
                 $email = trim($request->input('email'));
                 $telno = trim($request->input('mobile_no'));
-                $nin = trim($request->input('nin'));
                 $gender = trim($request->input('gender'));
                 $role = $request->input('user_role');
-                $registra = User::where('id', $request->input('user_id'))->value('name');
+                $reg = User::find($request->input('user_id'));
+                $registra = $reg->first_name." ".$reg->last_name;
                 $registra_id = User::where('id', $request->input('user_id'))->value('role');
                 $name = $fname." ".$lname;
                 $defaultPwd = '12345678';
@@ -263,35 +256,34 @@ public function store(Request $request)
                     $userId = $request->input('id');
                     $user = User::find($userId);
                     $username = $request->input('username');
-                    $changed_by = $user->name;
                     $bool_userExists = $this->validateUsername($user->username, $username); // User::where('username' ,$username)->exists();
                     
                     if(!$bool_userExists){
                         
                         if($request->hasFile('photo')){
-                            $photo = $request->file('photo');
-                            $k = $this->saveFile($photo, Helper::getUserRole($registra_id));
-                            $photo_path = $k['file_path'];
-                            $photo_name = $k['filename'];
+
+                            $file = $request->file('photo');
+                            $file_extension = $file->extension();
+                            if(!empty($user->image)){
+                                Storage::disk('public')->delete($user->image);
+                            }
+                            $fileName = $userId.''.time().'.'.$file_extension;
+                            $filePath = $file->storeAs('images/users', $fileName, 'public');
+                            $image = $filePath;
                         }else{
-                            $photo_path = null;
-                            $photo_name = null;
+                            $image  = $user->image;
                         }
-                        
+
                         $hasUpdated = User::where('id', '=', $userId)
                         ->update([
                             'first_name' => $fname,
                             'last_name' => $lname,
-                            'name' => $name,
                             'username' => $username,
                             'gender' => $gender,
                             'email' => $email,
-                            'mobile_no' => $telno,
+                            'phone_number' => $telno,
                             'address' => $address,
-                            'national_id_no' => $nin,
-                            'photo_path' => $photo_path,
-                            'photo_name' => $photo_name,
-                            'changed_by' => $changed_by,
+                            'image' => $image,
                         ]);
                         
                         if($hasUpdated){
@@ -320,35 +312,33 @@ public function store(Request $request)
                         $password = Hash::make($defaultPwd, ['rounds' => 12]);
                         $count = User::where('email', '=', $email)->count();
                         if($count == 0){
+
                             if($request->hasFile('photo')){
-                                $photo = $request->file('photo');
-                                $k = $this->saveFile($photo, Helper::getUserRole($registra_id));
-                                $photo_path = $k['file_path'];
-                                $photo_name = $k['filename'];
+                            $file = $request->file('photo');
+                            $file_name = $file->getClientOriginalName();
+                            $file_extension = $file->extension();
+                            $fileName = $file_name.''.time().'.'.$file_extension;
+                            $filePath = $file->storeAs('images/users', $fileName, 'public');
+                            $image = $filePath;
                             }else{
-                                $photo_path = null;
-                                $photo_name = null;
+                                $image = null;
                             }
                             
                             $user->first_name = $fname;
                             $user->last_name = $lname;
-                            $user->name = $name;
                             $user->username = $username;
                             $user->gender = $gender;
                             $user->email = $email;
                             $user->role = $role;
-                            $user->mobile_no = $telno;
+                            $user->phone_number = $telno;
                             $user->address = $address;
-                            $user->national_id_no = $nin;
-                            $user->photo_path = $photo_path;
-                            $user->photo_name = $photo_name;
+                            $user->image = $image;
                             $user->password = $password;
                             $user->is_active = 1;
-                            $user->changed_by = $registra;
                             
                             $save_status = $user->save();
                             if($save_status){
-                                
+                                $name = $fname." ".$lname;
                                 $subject = 'User Registration';
                                 $registraPosition = 'User';
                                 $registraEmail = 'parksmartug@gmail.com'; //$request->user()->email;
@@ -408,13 +398,7 @@ public function store(Request $request)
                 $resp->statusCode = Globals::$STATUS_CODE_ERROR;
                 $resp->message = "Unable to process request: missing parameters";
             }
-            
-        }else{
-            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-            $resp->message = "Unauthorized access";
-            
-        }
-        
+         
     } catch (\Exception $ex) {
         $resp->statusCode = Globals::$STATUS_CODE_ERROR;
         $resp->message = $message = $ex->getMessage();
@@ -481,14 +465,10 @@ public function stores(Request $request)
     $method = "UserController@store";
     
     try{
-        
-        $authToken   =   $request->header('AuthToken');
-        if (!empty($authToken) && TokenAuth::validate($authToken)) {
-            
+           
             $formData = $request->input('form-params');
             $formData = json_decode($formData); // json object to array
             
-            // return response()->json($formData->first_name);
             
             if(
                 $formData->user_id &&
@@ -520,7 +500,6 @@ public function stores(Request $request)
                         $userId = $formData->id;
                         $user = User::find($userId);
                         $username = $formData->username;
-                        $changed_by = $user->name;
                         $bool_userExists = $this->validateUsername($user->username, $username); // User::where('username' ,$username)->exists();
                         
                         if(!$bool_userExists){
@@ -548,7 +527,6 @@ public function stores(Request $request)
                                 'national_id_no' => $nin,
                                 'photo_path' => $photo_path,
                                 'photo_name' => $photo_name,
-                                'changed_by' => $changed_by,
                             ]);
                             
                             if($hasUpdated){
@@ -606,7 +584,6 @@ public function stores(Request $request)
                                 
                                 $user->first_name = $fname;
                                 $user->last_name = $lname;
-                                $user->name = $name;
                                 $user->username = $username;
                                 $user->gender = $gender;
                                 $user->email = $email;
@@ -618,7 +595,6 @@ public function stores(Request $request)
                                 $user->photo_name = $photo_name;
                                 $user->password = $password;
                                 $user->is_active = 1;
-                                $user->changed_by = $registra;
                                 
                                 $save_status = $user->save();
                                 if($save_status){
@@ -694,13 +670,7 @@ public function stores(Request $request)
                     $resp->statusCode = Globals::$STATUS_CODE_ERROR;
                     $resp->message = "Unable to process request: missing parameters";
                 }
-                
-            }else{
-                $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-                $resp->message = "Unauthorized access";
-                
-            }
-            
+              
         } catch (\Exception $ex) {
             $resp->statusCode = Globals::$STATUS_CODE_ERROR;
             $resp->message = $message = $ex->getMessage();
@@ -795,8 +765,7 @@ public function stores(Request $request)
     {
         $resp = new ApiResponse();
         try {
-            $authToken   =   $request->header('AuthToken');
-            if (!empty($authToken) && TokenAuth::validate($authToken)) {
+
                 if( ($request->has('user_id') && $request->filled('user_id')) &&
                 ($request->has('current_password') && $request->filled('current_password')) &&
                 ($request->has('new_password') && $request->filled('new_password')) &&
@@ -835,13 +804,7 @@ public function stores(Request $request)
                     $resp->statusCode = Globals::$STATUS_CODE_ERROR;
                     $resp->message = "Unable to process request";
                 }
-            }else{
-                $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-                $resp->message = "Unauthorized access";
-                $resp->data = "Unauthorized access";
-                
-            }
-            
+
         } catch (\Exception $ex) {
             $resp->statusCode = Globals::$STATUS_CODE_ERROR;
             $resp->message = $ex->getMessage();

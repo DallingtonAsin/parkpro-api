@@ -17,7 +17,6 @@ use Illuminate\Support\Facades\Validator;
 use App\Http\Resources\CustomerResource;
 use Helper;
 use Globals;
-use TokenAuth;
 use Mail;
 
 class CustomerController extends Controller
@@ -91,8 +90,6 @@ class CustomerController extends Controller
 
     public function authenticate(Request $request){ 
         if($request->isMethod('post')){
-            $authToken   =   $request->header('AuthToken');
-            if (!empty($authToken) && TokenAuth::validate($authToken)) {
                 if ($request->filled(['phone_number', 'password'])) {
                     
                     $phone_number = $request->input('phone_number');
@@ -120,10 +117,6 @@ class CustomerController extends Controller
                     $this->apiResponse['statusCode'] = 0;
                     $this->apiResponse['message'] = "Unable to process request: missing parameters";
                 }
-            }else{
-                $this->apiResponse['statusCode'] = Globals::$STATUS_CODE_ERROR;
-                $this->apiResponse['message'] = "Unauthorized access";   
-            }
             return response()->json($this->apiResponse, 200);
         }
         
@@ -133,10 +126,7 @@ class CustomerController extends Controller
     {
         
         try{
-            
-            $authToken   =   $request->header('AuthToken');
-            if (!empty($authToken) && TokenAuth::validate($authToken)) {
-                
+               
                 if($request->filled(['phone_number', 'password'])){
                     
                     $phone_number = $request->input('telephone');
@@ -169,11 +159,6 @@ class CustomerController extends Controller
                     $statusCode = Globals::$STATUS_CODE_ERROR;
                     $message = "Unable to process request: missing parameters";
                 }
-            }else{
-                $statusCode = Globals::$STATUS_CODE_ERROR;
-                $message = "Unauthorized access";
-                
-            }
         } catch (\Exception $ex) {
             $statusCode = Globals::$STATUS_CODE_ERROR;
             $message = $ex->getMessage();
@@ -318,8 +303,6 @@ class CustomerController extends Controller
         $resp = new ApiResponse();
         $method = "CustomerController@store";
         try{
-            $authToken   =   $request->header('AuthToken');
-            if (!empty($authToken) && TokenAuth::validate($authToken)) {
                 if($request->filled(['first_name','last_name', 'phone_number','password'])){
                     $first_name = trim($request->input('first_name'));
                     $last_name = trim($request->input('last_name'));
@@ -426,13 +409,7 @@ class CustomerController extends Controller
                     $resp->statusCode = Globals::$STATUS_CODE_ERROR;
                     $resp->message = "Unable to process request: missing parameters";
                 }
-                
-            }else{
-                $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-                $resp->message = "Unauthorized access";
-                
-            }
-            
+           
         } catch (\Exception $ex) {
             $resp->statusCode = Globals::$STATUS_CODE_ERROR;
             $resp->message = $message = $ex->getMessage();

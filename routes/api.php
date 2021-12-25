@@ -42,6 +42,17 @@ Route::group(['prefix' => 'user', 'middleware' => ['auth:api-users']], function(
         Route::get('/image/path', [UserController::class, 'getImageStoragePath']);
 });
 
+
+// PARKING REQUESTS 
+Route::group(['prefix' => 'requests', 'middleware' => ['auth:api-users']], function(){
+    Route::get('/pending', [ParkingRequestController::class, 'pendingRequests']);
+    Route::get('/approved', [ParkingRequestController::class, 'approvedRequests']);
+    Route::get('/rejected', [ParkingRequestController::class, 'rejectedRequests']);
+    Route::post('/approve', [ParkingRequestController::class, 'approveRequest']);
+    Route::post('/reject', [ParkingRequestController::class, 'rejectRequest']);
+});
+
+
 Route::group(['middleware' => 'auth:api-users'], function(){
 
     Route::post('/roles/destroy', [RolesController::class, 'destroy']);
@@ -63,14 +74,7 @@ Route::group(['middleware' => 'auth:api-users'], function(){
 });
 
 
-// PARKING REQUESTS 
-Route::group(['prefix' => 'requests', 'middleware' => ['auth:api-users']], function(){
-        Route::get('/pending', [ParkingRequestController::class, 'pendingRequests']);
-        Route::get('/approved', [ParkingRequestController::class, 'approvedRequests']);
-        Route::get('/rejected', [ParkingRequestController::class, 'rejectedRequests']);
-        Route::post('/approve', [ParkingRequestController::class, 'approveRequest']);
-        Route::post('/reject', [ParkingRequestController::class, 'rejectRequest']);
-});
+
 
 // REPORTS
 Route::group(['prefix' => 'reports', 'middleware' => ['auth:api-users']], function(){

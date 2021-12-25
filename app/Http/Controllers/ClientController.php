@@ -7,7 +7,6 @@ use App\Helpers\ApiResponse;
 use App\Models\Client;
 use Helper;
 use Globals;
-use TokenAuth;
 
 class ClientController extends Controller
 {
@@ -55,9 +54,6 @@ class ClientController extends Controller
         
         try{
             
-            $authToken   =   $request->header('AuthToken');
-            if (!empty($authToken) && TokenAuth::validate($authToken)) {
-                
                 if($request->filled(['client_name', 'address', 'mobile_number', 'email'])){
                     
                     $client_name = $request->input('client_name');
@@ -97,12 +93,7 @@ class ClientController extends Controller
                     $resp->statusCode = Globals::$STATUS_CODE_FAILED;
                     $resp->message = $responseInfo;
                 }
-            }else{
-                $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-                $resp->message = "Unauthorized access";
-                $resp->data = "Unauthorized access";
-                
-            }
+          
         } catch (\Exception $ex) {
             $resp->statusCode = Globals::$STATUS_CODE_ERROR;
             $resp->message = $ex->getMessage();

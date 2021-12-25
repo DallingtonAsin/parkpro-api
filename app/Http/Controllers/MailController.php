@@ -9,7 +9,6 @@ use App\Models\Customer;
 use App\Helpers\ApiResponse;
 use Helper;
 use Globals;
-use TokenAuth;
 use Mail;
 
 class MailController extends Controller

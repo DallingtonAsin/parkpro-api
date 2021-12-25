@@ -10,7 +10,6 @@ use App\Models\Client;
 use App\Models\VehicleCategory;
 use Helper;
 use Globals;
-use TokenAuth;
 
 class ParkingAreaController extends Controller
 {
@@ -34,7 +33,9 @@ class ParkingAreaController extends Controller
                 $parking->distance = 35;
                 $parking->fees = $this->getParkingFees($parking->id);
                 $parking->is_open = date('H') < date('H', strtotime($parking->closes_at)) ? true : false;
-                 
+                $parking->opens_at = date('H:i', strtotime($parking->opens_at));
+                $parking->closes_at = date('H:i', strtotime($parking->closes_at));
+
                 // unset($parking->total_space);
                 // unset($parking->current_free_space);
                 // unset($parking->created_at);
@@ -149,10 +150,9 @@ class ParkingAreaController extends Controller
         
         try{
             
-            $authToken   =   $request->header('AuthToken');
-            if (!empty($authToken) && TokenAuth::validate($authToken)) {
-                
-                if($request->filled(['client_id', 'name', 'address', 'description', 'opens_at', 'closes_at', 'latitude', 'longitude', 'total_space'])){
+                if($request->filled(['client_id', 'name', 'address',
+                 'description', 'opens_at', 'closes_at', 'latitude',
+                 'longitude', 'total_space'])){
                     
                     $client_id = $request->input('client_id');
                     $name = $request->input('name');
@@ -217,12 +217,6 @@ class ParkingAreaController extends Controller
                     $resp->statusCode = Globals::$STATUS_CODE_FAILED;
                     $resp->message = $responseInfo;
                 }
-            }else{
-                $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-                $resp->message = "Unauthorized access";
-                $resp->data = "Unauthorized access";
-                
-            }
         } catch (\Exception $ex) {
             $resp->statusCode = Globals::$STATUS_CODE_ERROR;
             $resp->message = $ex->getMessage();

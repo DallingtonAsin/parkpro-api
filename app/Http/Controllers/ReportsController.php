@@ -12,7 +12,6 @@ use App\Models\MonthlyReview;
 use App\Models\ActivityLog;
 use App\Helpers\ApiResponse;
 use Carbon\Carbon;
-use TokenAuth;
 use Globals;
 use Helper;
 
@@ -169,20 +168,10 @@ class ReportsController extends Controller
     {
         $resp = new ApiResponse();
         try {
-            $authToken   =   $request->header('AuthToken');
-            if (!empty($authToken) && TokenAuth::validate($authToken)) {
                 $logs = ActivityLog::orderBy('id', 'desc')->get();
                 $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
                 $resp->message  = Globals::$STATUS_DESC_SUCCESS;
-                $resp->data = $logs;
-                
-            }else{
-                $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-                $resp->message = "Unauthorized access";
-                $resp->data = "Unauthorized access";
-                
-            }
-            
+                $resp->data = $logs; 
         } catch (\Exception $ex) {
             $resp->statusCode = Globals::$STATUS_CODE_ERROR;
             $resp->message = $ex->getMessage();

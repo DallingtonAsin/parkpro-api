@@ -8,7 +8,6 @@ use App\Models\User;
 use App\Helpers\ApiResponse;
 use Helper;
 use Globals;
-use TokenAuth;
 
 class CompanySettingsController extends Controller
 {
@@ -21,20 +20,10 @@ class CompanySettingsController extends Controller
     {
         $resp = new ApiResponse();
         try {
-            $authToken =  $request->header('AuthToken');
-            if (!empty($authToken) && TokenAuth::validate($authToken)) {
                 $company = Company::all();
                 $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
                 $resp->message  = Globals::$STATUS_DESC_SUCCESS;
                 $resp->data = $company;
-                
-            }else{
-                $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-                $resp->message = "Unauthorized access";
-                $resp->data = "Unauthorized access";
-                
-            }
-            
         } catch (\Exception $ex) {
             $resp->statusCode = Globals::$STATUS_CODE_ERROR;
             $resp->message = $ex->getMessage();
@@ -66,9 +55,6 @@ class CompanySettingsController extends Controller
         $method = "UserController@store";
         
         try{
-            
-            $authToken   =   $request->header('AuthToken');
-            if (!empty($authToken) && TokenAuth::validate($authToken)) {
                 
                 if($request->filled(['user_id', 'name', 'email', 'address', 'mobile_no']))
                 {
@@ -98,7 +84,7 @@ class CompanySettingsController extends Controller
                         if(!$name_exists){
                             if(!$email_exists){
                                 $company = new Company();
-                                $action = "added company ".$name."";
+                                $action = "added details for company ".$name."";
                                 $arr = $this->addUpdateCompany($request, $company, $action, 'add');
                                 $resp->statusCode = $arr['statusCode'];
                                 $resp->message = $arr['message'];
@@ -117,12 +103,6 @@ class CompanySettingsController extends Controller
                     $resp->statusCode = Globals::$STATUS_CODE_ERROR;
                     $resp->message = "Unable to process request: missing parameters";
                 }
-                
-            }else{
-                $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-                $resp->message = "Unauthorized access";
-                
-            }
             
         } catch (\Exception $ex) {
             $resp->statusCode = Globals::$STATUS_CODE_ERROR;
@@ -150,7 +130,8 @@ class CompanySettingsController extends Controller
         $company->email = trim($request->input('email'));
         $company->address = trim($request->input('address'));
         $company->mobile_no = trim($request->input('mobile_no'));
-        $registra = User::where('id', $request->input('user_id'))->value('name');
+        $user = User::find($request->input('user_id'));
+        $registra = $user->first_name." ".$user->last_name;
         $registra_id = User::where('id', $request->input('user_id'))->value('role');
 
         if($company->save()){

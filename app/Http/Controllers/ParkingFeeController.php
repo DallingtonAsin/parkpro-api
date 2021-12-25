@@ -10,8 +10,6 @@ use App\Models\Client;
 use App\Models\VehicleCategory;
 use Helper;
 use Globals;
-use TokenAuth;
-
 
 class ParkingFeeController extends Controller
 {
@@ -83,9 +81,6 @@ class ParkingFeeController extends Controller
         
         try{
             
-            $authToken   =   $request->header('AuthToken');
-            if (!empty($authToken) && TokenAuth::validate($authToken)) {
-                
                 if($request->filled(['parking_area', 'vehicle_category', 'fee'])){
                     $parking_area_id = $request->input('parking_area');
                     $vehicle_category_id = $request->input('vehicle_category');
@@ -106,20 +101,20 @@ class ParkingFeeController extends Controller
                         $parkingFee->fee_per_hour = Helper::Numberize($fee);
                         
                         if ($parkingFee->save()) {
-                            $action = "added parking fee for vehicle category ".$vehicleCatName." for ".$clientName."'s parking area ".$parkingAreaName." ";
+                            $action = "added parking fee for vehicle category ".$vehicleCatName." for parking area ".$parkingAreaName." ";
                             $responseInfo = Helper::getMessage('success', $action);
                             Helper::logActivity($request, ['name' => 'Dallington', 'role' => 'admin', 'action' => $action]);
                             $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
                             $resp->message = $responseInfo; 
                         } else {
-                            $messageErr = "Failed to add parking fee for vehicle category '.$vehicleCatName.' for ".$clientName."'s parking area ".$parkingAreaName."!";
+                            $messageErr = "Failed to add parking fee for vehicle category '.$vehicleCatName.' for parking area ".$parkingAreaName."!";
                             $responseInfo = Helper::getMessage('error', $messageErr);
                             $resp->statusCode = Globals::$STATUS_CODE_FAILED;
                             $resp->message = $responseInfo;
                         }
                         
                     }else{
-                        $messageErr = "Fee for vehicle category ".$vehicleCatName." for ".$clientName."'s parking area ".$parkingAreaName." has been already added";
+                        $messageErr = "Fee for vehicle category ".$vehicleCatName." parking area ".$parkingAreaName." has been already added";
                         $responseInfo = Helper::getMessage('error', $messageErr);
                         $resp->statusCode = Globals::$STATUS_CODE_FAILED;
                         $resp->message = $responseInfo;
@@ -130,12 +125,6 @@ class ParkingFeeController extends Controller
                     $resp->statusCode = Globals::$STATUS_CODE_FAILED;
                     $resp->message = $responseInfo;
                 }
-            }else{
-                $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-                $resp->message = "Unauthorized access";
-                $resp->data = "Unauthorized access";
-                
-            }
         } catch (\Exception $ex) {
             $resp->statusCode = Globals::$STATUS_CODE_ERROR;
             $resp->message = $ex->getMessage();

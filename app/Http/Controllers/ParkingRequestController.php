@@ -64,10 +64,7 @@ class ParkingRequestController extends Controller
     {
         
         $resp = new ApiResponse();
-        try {
-            // $authToken   =   $request->header('AuthToken');
-            // if (!empty($authToken) && TokenAuth::validate($authToken)) {
-                
+        try {  
                 if($request->has('telephone_no') && $request->filled('telephone_no')){
                     $telephone_no = $request->input('telephone_no');
                     $transactions = ParkingRequest::where('telephone_no', '=', $telephone_no)
@@ -89,13 +86,6 @@ class ParkingRequestController extends Controller
                 $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
                 $resp->message  = Globals::$STATUS_DESC_SUCCESS;
                 $resp->data = $transactions;
-                
-                // }else{
-                    //     $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-                    //     $resp->message = "Unauthorized access";
-                    //     $resp->data = "Unauthorized access";
-                    
-                    // }
                     
                 } catch (\Exception $ex) {
                     $resp->statusCode = Globals::$STATUS_CODE_ERROR;
@@ -131,21 +121,29 @@ class ParkingRequestController extends Controller
             public function approvedRequests(Request $request)
             {
                 
-                $resp = new ApiResponse();
                 try {
                     $approved_parking_requests = ParkingRequest::where('status', '=', 'APPROVED')
                     ->orderBy('approval_date', 'desc')
                     ->wherenotNull('approval_date')->get();
-                    $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                    $resp->message  = Globals::$STATUS_DESC_SUCCESS;
-                    $resp->data = $approved_parking_requests;
+
+                    if(count($approved_parking_requests->toArray()) > 0){
+                        // foreach($approved_parking_requests as $request){
+                        // }
+                        $this->response['data'] = $approved_parking_requests;
+
+                    }else{
+                        $this->response['data'] = [];
+                    }
+                    $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
+                    $this->response['message']  = Globals::$STATUS_DESC_SUCCESS;
+                    
                 } catch (\Exception $ex) {
-                    $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-                    $resp->message = $ex->getMessage();
-                    $resp->data = $ex->getMessage();
+                    $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
+                    $this->response['message'] = $ex->getMessage();
+                    $this->response['data'] = $ex->getMessage();
                 }
                 
-                return response()->json($resp);
+                return response()->json($this->response, 200);
             }
             
             

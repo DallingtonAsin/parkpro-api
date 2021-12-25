@@ -10,7 +10,6 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
 use Helper;
 use Globals;
-use TokenAuth;
 
 class RolesController extends Controller
 {
@@ -23,20 +22,11 @@ class RolesController extends Controller
     {
         $resp = new ApiResponse();
         try {
-            $authToken   =   $request->header('AuthToken');
-            if (!empty($authToken) && TokenAuth::validate($authToken)) {
                 $roles = Role::all();
                 $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
                 $resp->message  = Globals::$STATUS_DESC_SUCCESS;
                 $resp->data = $roles;
                 
-            }else{
-                $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-                $resp->message = "Unauthorized access";
-                $resp->data = "Unauthorized access";
-                
-            }
-            
         } catch (\Exception $ex) {
             $resp->statusCode = Globals::$STATUS_CODE_ERROR;
             $resp->message = $ex->getMessage();
@@ -68,9 +58,6 @@ class RolesController extends Controller
         
         try{
             
-            $authToken   =   $request->header('AuthToken');
-            if (!empty($authToken) && TokenAuth::validate($authToken)) {
-
             if( ($request->has('name') && $request->filled('name')) &&
                 ($request->has('user_id') && $request->filled('user_id'))){
 
@@ -111,13 +98,6 @@ class RolesController extends Controller
                 $resp->statusCode = Globals::$STATUS_CODE_FAILED;
                 $resp->message = $responseInfo;
             }
-
-        }else{
-            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-            $resp->message = "Unauthorized access";
-            $resp->data = "Unauthorized access";
-            
-        }
         } catch (\Exception $ex) {
             $resp->statusCode = Globals::$STATUS_CODE_ERROR;
             $resp->message = $ex->getMessage();
@@ -196,9 +176,6 @@ class RolesController extends Controller
         
         try{
             
-            $authToken   =   $request->header('AuthToken');
-            if (!empty($authToken) && TokenAuth::validate($authToken)) {
-
             if( ($request->has('role_id') && $request->filled('role_id')) &&
                 ($request->has('user_id') && $request->filled('user_id'))){
 
@@ -239,13 +216,6 @@ class RolesController extends Controller
                 $resp->statusCode = Globals::$STATUS_CODE_FAILED;
                 $resp->message = $responseInfo;
             }
-
-        }else{
-            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-            $resp->message = "Unauthorized access";
-            $resp->data = "Unauthorized access";
-            
-        }
         } catch (\Exception $ex) {
             $resp->statusCode = Globals::$STATUS_CODE_ERROR;
             $resp->message = $ex->getMessage();
