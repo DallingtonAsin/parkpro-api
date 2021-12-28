@@ -783,7 +783,8 @@ public function stores(Request $request)
                             $user->password = Hash::make($new_password);
                             if($user->save()){
                                 $action = "changed your password";
-                                Helper::logActivity($request, ['name' => $user->name, 'role' => Helper::getUserRole($user->role), 'action' => $action]);
+                                $name = $user->first_name." ".$user->last_name;
+                                Helper::logActivity($request, ['name' => $name, 'role' => Helper::getUserRole($user->role), 'action' => $action]);
                                 $message = Helper::getMessage('success', $action);
                                 $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
                                 $resp->message  = $message;

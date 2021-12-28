@@ -109,8 +109,10 @@ class RolesController extends Controller
 
     private function addUpdateRole(Request $request, $role, $action, $type){
        
-        $registra = User::where('id', $request->input('user_id'))->value('name');
-        $registra_id = User::where('id', $request->input('user_id'))->value('role');
+        $user_id = $request->input('user_id');
+        $user = User::find($user_id);
+        $registra = $user->first_name." ".$user->last_name;
+        $registra_id = User::where('id', $user_id)->value('role');
 
         $role->name = $request->input('name');
         $role->created_by = $registra;
