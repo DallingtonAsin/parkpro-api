@@ -10,9 +10,16 @@ use App\Models\Client;
 use App\Models\VehicleCategory;
 use Helper;
 use Globals;
+use Validator;
 
 class ParkingAreaController extends Controller
 {
+
+    public $response = [];
+    
+    public function __constructor(){
+        $this->response = new ApiResponse();
+    }
     /**
     * Display a listing of the resource.
     *
@@ -233,7 +240,8 @@ class ParkingAreaController extends Controller
     */
     public function show($id)
     {
-        //
+        $parkingArea = ParkingArea::find($id);
+        return response()->json($parkingArea, 200);
     }
     
     /**
@@ -256,7 +264,65 @@ class ParkingAreaController extends Controller
     */
     public function update(Request $request, $id)
     {
-        //
+        $validator = Validator::make($request->all(), [
+            'user_id' => 'required',
+            'name' => 'required',
+            'address' => 'required',
+            'description' => 'required',
+            'opens_at' => 'required',
+            'closes_at' => 'required',
+            'latitude' => 'required',
+            'longitude' => 'required',
+            'slots' => 'required',
+        ]);
+        
+        try{
+            if($validator->fails()){
+                $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
+                $this->response['message'] = $validator->errors()->all();
+            }else{
+                
+                $author_id = $request->input('user_id');
+                $name = $request->input('name');
+                $address = $request->input('address');
+                $description = $request->input('description');
+                $opens_at = $request->input('opens_at');
+                $closes_at = $request->input('closes_at');
+                $latitude = $request->input('latitude');
+                $longitude = $request->input('longitude');
+                $slots = $request->input('slots');
+
+
+                $parking = ParkingArea::find($id);
+                $parking_name = $parking->name;
+                
+                $parking->name = $name;
+                $parking->address = $address;
+                $parking->description = $description;
+                $parking->opens_at = $opens_at;
+                $parking->closes_at = $closes_at;
+                $parking->latitude = $latitude;
+                $parking->longitude = $longitude;
+                $parking->total_space = $slots;
+
+                if($parking->save()){
+                    $author = Helper::getUserNames($author_id);
+                    $role = Helper::getUserRoleName($author_id);
+                    $action = "updated parking ".$parking_name." details";
+                    Helper::logActivity($request, ['name' => $author, 'role' => $role, 'action' => $action]);
+                    $this->response['message'] = Helper::getMessage('success', $action);
+                    $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
+                }else{
+                    $this->response['message'] ="Unable to update parking area details!";
+                    $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
+                }
+            }
+        }catch(\Exception $ex){
+            $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
+            $this->response['message'] = $ex->getMessage();
+        }
+        
+        return response()->json($this->response, 200); 
     }
     
     /**
@@ -265,8 +331,44 @@ class ParkingAreaController extends Controller
     * @param  int  $id
     * @return \Illuminate\Http\Response
     */
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
-        //
+        $validator = Validator::make($request->all(), [
+            'user_id' => 'required',
+        ]);
+        
+        try{
+            if($validator->fails()){
+                $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
+                $this->response['message'] = $validator->errors()->all();
+            }else{
+                
+                $author_id = $request->input('user_id');
+                $parking = ParkingArea::find($id);
+                $parking_name = $parking->name; 
+                $input =[
+                    'is_deleted' => 1,
+                ];
+                if($parking->update($input)){
+                    $author = Helper::getUserNames($author_id);
+                    $role = Helper::getUserRoleName($author_id);
+                    $action = "deleted parking ".$parking_name."";
+                    Helper::logActivity($request, ['name' => $author, 'role' => $role, 'action' => $action]);
+                    $this->response['message'] = Helper::getMessage('success', $action);
+                    $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
+                }else{
+                    $this->response['message'] ="Unable to delete parking!";
+                    $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
+                }
+            }
+        }catch(\Exception $ex){
+            $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
+            $this->response['message'] = $ex->getMessage();
+        }
+        
+        return response()->json($this->response, 200);  
     }
+
+
+
 }

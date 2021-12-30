@@ -8,6 +8,7 @@ use App\Models\ActivityLog;
 use App\Models\ErrorLog;
 use App\Models\Role;
 use App\Models\Client;
+use App\Models\User;
 use App\Models\ParkingArea;
 use App\Models\VehicleCategory;
 use App\Models\Customer;
@@ -186,6 +187,22 @@ class SharedCommon
     public static function getUserRole($id){
         $role = Role::find($id);
         return $role->name;
+    }
+
+    public static function getUserRoleName($user_id){
+        $user = User::find($user_id);
+        $role = Role::find($user->role);
+        return $role->name;
+    }
+
+    public static function getUserNames($user_id){
+        $doesUserExist = User::where('id', $user_id)->exists();
+        $userNames = null;
+        if($doesUserExist){
+            $user = User::find($user_id);
+            $userNames = $user->first_name." ".$user->last_name;
+        }
+        return $userNames;
     }
     
     

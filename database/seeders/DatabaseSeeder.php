@@ -21,8 +21,7 @@ class DatabaseSeeder extends Seeder
         ParkingAreaSeeder::class,
         ParkingFeesSeeder::class,
         CustomerTableSeeder::class,
-
-        // ParkingRequestTableSeeder::class,
+        ParkingRequestTableSeeder::class,
 
         ]);
     }

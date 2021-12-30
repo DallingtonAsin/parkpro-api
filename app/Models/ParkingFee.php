@@ -9,4 +9,7 @@ class ParkingFee extends Model
 {
     use HasFactory;
     protected $table = 'parking_fees';
+    public $fillable = [
+      'parking_area_id', 'vehicle_cat_id', 'fee_per_hour', 'is_deleted'
+    ];
 }

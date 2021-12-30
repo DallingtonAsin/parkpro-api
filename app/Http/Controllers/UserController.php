@@ -21,28 +21,28 @@ use Mail;
 class UserController extends Controller
 {
     
-     public $response = [];
-
-
-     public function __constructor(){
-            $this->response = new ApiResponse();
-     }
-
-
+    public $response = [];
+    
+    
+    public function __constructor(){
+        $this->response = new ApiResponse();
+    }
+    
+    
     public function authenticate(Request $request)
     {
-
-         $validator = Validator::make($request->all(), [
+        
+        $validator = Validator::make($request->all(), [
             'username' => 'required',
             'password' => 'required',
         ]);
-
+        
         try{
-          if($validator->fails()){
-              $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
-              $this->response['message'] = $validator->errors()->all();
-           } else {
-
+            if($validator->fails()){
+                $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
+                $this->response['message'] = $validator->errors()->all();
+            } else {
+                
                 ($request->has('remember'))
                 ? $remembered = true
                 : $remembered = false;
@@ -62,7 +62,7 @@ class UserController extends Controller
                 
                 $userId = $this->getUserId($login);
                 $status = $this->findAccountStatus($userId);
-
+                
                 if($status == 0){
                     $this->response['statusCode']  = Globals::$STATUS_CODE_FAILED;
                     $this->response['message']= 'Your account is inactivated, see admin';
@@ -81,12 +81,12 @@ class UserController extends Controller
                 $this->response['message'] = 'Invalid login credentials';
             }
         }
-     
+        
     } catch (\Exception $ex) {
         $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
         $this->response['message'] = $ex->getMessage();
     }
-
+    
     return response()->json($this->response, 200);
 }
 
@@ -119,15 +119,15 @@ public function index(Request $request)
 {
     $resp = new ApiResponse();
     try {
-            $users = User::orderBy('id', 'desc')->get();
-            if(count((array)$users) > 0){
-                foreach($users as $user){
-                    $user->name = $user->first_name." ".$user->last_name;
-                }
+        $users = User::orderBy('id', 'desc')->get();
+        if(count((array)$users) > 0){
+            foreach($users as $user){
+                $user->name = $user->first_name." ".$user->last_name;
             }
-            $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
-            $resp->message  = Globals::$STATUS_DESC_SUCCESS;
-            $resp->data = $users;
+        }
+        $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
+        $resp->message  = Globals::$STATUS_DESC_SUCCESS;
+        $resp->data = $users;
     } catch (\Exception $ex) {
         $resp->statusCode = Globals::$STATUS_CODE_ERROR;
         $resp->message = $ex->getMessage();
@@ -236,169 +236,169 @@ public function store(Request $request)
     
     try{
         
-            if($request->filled(['user_id', 'first_name','last_name', 'address',
-            'email', 'mobile_no', 'gender','user_role'])){
-                $fname = trim($request->input('first_name'));
-                $lname = trim($request->input('last_name'));
-                $address = trim($request->input('address'));
-                $email = trim($request->input('email'));
-                $telno = trim($request->input('mobile_no'));
-                $gender = trim($request->input('gender'));
-                $role = $request->input('user_role');
-                $reg = User::find($request->input('user_id'));
-                $registra = $reg->first_name." ".$reg->last_name;
-                $registra_id = User::where('id', $request->input('user_id'))->value('role');
-                $name = $fname." ".$lname;
-                $defaultPwd = '12345678';
+        if($request->filled(['user_id', 'first_name','last_name', 'address',
+        'email', 'mobile_no', 'gender','user_role'])){
+            $fname = trim($request->input('first_name'));
+            $lname = trim($request->input('last_name'));
+            $address = trim($request->input('address'));
+            $email = trim($request->input('email'));
+            $telno = trim($request->input('mobile_no'));
+            $gender = trim($request->input('gender'));
+            $role = $request->input('user_role');
+            $reg = User::find($request->input('user_id'));
+            $registra = $reg->first_name." ".$reg->last_name;
+            $registra_id = User::where('id', $request->input('user_id'))->value('role');
+            $name = $fname." ".$lname;
+            $defaultPwd = '12345678';
+            
+            if($request->filled('id')) {
                 
-                if($request->filled('id')) {
+                $userId = $request->input('id');
+                $user = User::find($userId);
+                $username = $request->input('username');
+                $bool_userExists = $this->validateUsername($user->username, $username); // User::where('username' ,$username)->exists();
+                
+                if(!$bool_userExists){
                     
-                    $userId = $request->input('id');
-                    $user = User::find($userId);
-                    $username = $request->input('username');
-                    $bool_userExists = $this->validateUsername($user->username, $username); // User::where('username' ,$username)->exists();
+                    if($request->hasFile('photo')){
+                        
+                        $file = $request->file('photo');
+                        $file_extension = $file->extension();
+                        if(!empty($user->image)){
+                            Storage::disk('public')->delete($user->image);
+                        }
+                        $fileName = $userId.''.time().'.'.$file_extension;
+                        $filePath = $file->storeAs('images/users', $fileName, 'public');
+                        $image = $filePath;
+                    }else{
+                        $image  = $user->image;
+                    }
                     
-                    if(!$bool_userExists){
+                    $hasUpdated = User::where('id', '=', $userId)
+                    ->update([
+                        'first_name' => $fname,
+                        'last_name' => $lname,
+                        'username' => $username,
+                        'gender' => $gender,
+                        'email' => $email,
+                        'phone_number' => $telno,
+                        'address' => $address,
+                        'image' => $image,
+                    ]);
+                    
+                    if($hasUpdated){
+                        $action = "updated profile";
+                        $resp->message = Helper::getMessage('success', $action);
+                        $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                        $resp->data = User::count();
+                    }else{
+                        $resp->message ="Unable to update user account details!";
+                        $resp->statusCode = Globals::$STATUS_CODE_FAILED;
+                    }
+                }
+                else{
+                    $resp->message = "username ".$request->input('username')." has already been taken, choose another one";
+                    $resp->statusCode = Globals::$STATUS_CODE_FAILED; 
+                }
+                
+            }else {
+                
+                $user = new User();
+                $name = $fname." ".$lname;
+                $username = strtolower(Str::random(6).".".$fname);
+                $bool_userExists = User::where('username' ,$username)->exists();
+                if(!$bool_userExists){
+                    
+                    $password = Hash::make($defaultPwd, ['rounds' => 12]);
+                    $count = User::where('email', '=', $email)->count();
+                    if($count == 0){
                         
                         if($request->hasFile('photo')){
-
-                            $file = $request->file('photo');
-                            $file_extension = $file->extension();
-                            if(!empty($user->image)){
-                                Storage::disk('public')->delete($user->image);
-                            }
-                            $fileName = $userId.''.time().'.'.$file_extension;
-                            $filePath = $file->storeAs('images/users', $fileName, 'public');
-                            $image = $filePath;
-                        }else{
-                            $image  = $user->image;
-                        }
-
-                        $hasUpdated = User::where('id', '=', $userId)
-                        ->update([
-                            'first_name' => $fname,
-                            'last_name' => $lname,
-                            'username' => $username,
-                            'gender' => $gender,
-                            'email' => $email,
-                            'phone_number' => $telno,
-                            'address' => $address,
-                            'image' => $image,
-                        ]);
-                        
-                        if($hasUpdated){
-                            $action = "updated profile";
-                            $resp->message = Helper::getMessage('success', $action);
-                            $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                            $resp->data = User::count();
-                        }else{
-                            $resp->message ="Unable to update user account details!";
-                            $resp->statusCode = Globals::$STATUS_CODE_FAILED;
-                        }
-                    }
-                    else{
-                        $resp->message = "username ".$request->input('username')." has already been taken, choose another one";
-                        $resp->statusCode = Globals::$STATUS_CODE_FAILED; 
-                    }
-                    
-                }else {
-                    
-                    $user = new User();
-                    $name = $fname." ".$lname;
-                    $username = strtolower(Str::random(6).".".$fname);
-                    $bool_userExists = User::where('username' ,$username)->exists();
-                    if(!$bool_userExists){
-                        
-                        $password = Hash::make($defaultPwd, ['rounds' => 12]);
-                        $count = User::where('email', '=', $email)->count();
-                        if($count == 0){
-
-                            if($request->hasFile('photo')){
                             $file = $request->file('photo');
                             $file_name = $file->getClientOriginalName();
                             $file_extension = $file->extension();
                             $fileName = $file_name.''.time().'.'.$file_extension;
                             $filePath = $file->storeAs('images/users', $fileName, 'public');
                             $image = $filePath;
-                            }else{
-                                $image = null;
-                            }
-                            
-                            $user->first_name = $fname;
-                            $user->last_name = $lname;
-                            $user->username = $username;
-                            $user->gender = $gender;
-                            $user->email = $email;
-                            $user->role = $role;
-                            $user->phone_number = $telno;
-                            $user->address = $address;
-                            $user->image = $image;
-                            $user->password = $password;
-                            $user->is_active = 1;
-                            
-                            $save_status = $user->save();
-                            if($save_status){
-                                $name = $fname." ".$lname;
-                                $subject = 'User Registration';
-                                $registraPosition = 'User';
-                                $registraEmail = 'parksmartug@gmail.com'; //$request->user()->email;
-                                $default_password = $defaultPwd;
-                                $now = now();
-                                $registeredRole = Helper::getUserRole($role);
-                                $action =  "registered user ".$name." as ".$registeredRole."";
-                                $sendAction = "You have been registered as ".$registeredRole."  at parksmart today at ".$now."";
-                                Helper::logActivity($request, ['name' => $registra, 'role' => Helper::getUserRole($registra_id), 'action' => $action]);
-                                $data = array(
-                                    'name' => $name,
-                                    'username' => $username,
-                                    'password' => $default_password,
-                                    'user_position' => 'user',
-                                    'registra' => $registra,
-                                    'registraPosition' => $registraPosition,
-                                    'registraEmail' => $registraEmail,
-                                    'email' => $email,
-                                    'subject' => $subject,
-                                    'created_at' => $now,
-                                    'details' => $sendAction,
-                                    'activity' => 'registration',
-                                );
-                                
-                                if(Helper::is_connectedToInternet() == 1){
-                                    \Mail::to($email)->send(new RegistrationMailSender($data));
-                                    $message = $action." and email has been sent";
-                                    
-                                }else{
-                                    $message = $action;
-                                }
-                                
-                                $resp->message = Helper::getMessage('success', $message);
-                                $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                                $resp->data = User::count();
-                            }
-                            else
-                            {
-                                $resp->statusCode = Globals::$STATUS_CODE_FAILED;
-                                $resp->message = "User registration failed!";
-                            }
-                        } else{
-                            $message = "User with email ".$email." has been already registered";
-                            $responseInfo = Helper::getMessage('error', $message);
-                            $resp->statusCode = Globals::$STATUS_CODE_FAILED;
-                            $resp->message  = $responseInfo;
-                            
+                        }else{
+                            $image = null;
                         }
                         
+                        $user->first_name = $fname;
+                        $user->last_name = $lname;
+                        $user->username = $username;
+                        $user->gender = $gender;
+                        $user->email = $email;
+                        $user->role = $role;
+                        $user->phone_number = $telno;
+                        $user->address = $address;
+                        $user->image = $image;
+                        $user->password = $password;
+                        $user->is_active = 1;
                         
-                    }else{
-                        $resp->message = "username ".$username." has already been taken, choose another one";
+                        $save_status = $user->save();
+                        if($save_status){
+                            $name = $fname." ".$lname;
+                            $subject = 'User Registration';
+                            $registraPosition = 'User';
+                            $registraEmail = 'parksmartug@gmail.com'; //$request->user()->email;
+                            $default_password = $defaultPwd;
+                            $now = now();
+                            $registeredRole = Helper::getUserRole($role);
+                            $action =  "registered user ".$name." as ".$registeredRole."";
+                            $sendAction = "You have been registered as ".$registeredRole."  at parksmart today at ".$now."";
+                            Helper::logActivity($request, ['name' => $registra, 'role' => Helper::getUserRole($registra_id), 'action' => $action]);
+                            $data = array(
+                                'name' => $name,
+                                'username' => $username,
+                                'password' => $default_password,
+                                'user_position' => 'user',
+                                'registra' => $registra,
+                                'registraPosition' => $registraPosition,
+                                'registraEmail' => $registraEmail,
+                                'email' => $email,
+                                'subject' => $subject,
+                                'created_at' => $now,
+                                'details' => $sendAction,
+                                'activity' => 'registration',
+                            );
+                            
+                            if(Helper::is_connectedToInternet() == 1){
+                                \Mail::to($email)->send(new RegistrationMailSender($data));
+                                $message = $action." and email has been sent";
+                                
+                            }else{
+                                $message = $action;
+                            }
+                            
+                            $resp->message = Helper::getMessage('success', $message);
+                            $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                            $resp->data = User::count();
+                        }
+                        else
+                        {
+                            $resp->statusCode = Globals::$STATUS_CODE_FAILED;
+                            $resp->message = "User registration failed!";
+                        }
+                    } else{
+                        $message = "User with email ".$email." has been already registered";
+                        $responseInfo = Helper::getMessage('error', $message);
                         $resp->statusCode = Globals::$STATUS_CODE_FAILED;
+                        $resp->message  = $responseInfo;
+                        
                     }
+                    
+                    
+                }else{
+                    $resp->message = "username ".$username." has already been taken, choose another one";
+                    $resp->statusCode = Globals::$STATUS_CODE_FAILED;
                 }
-            } else{
-                $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-                $resp->message = "Unable to process request: missing parameters";
             }
-         
+        } else{
+            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
+            $resp->message = "Unable to process request: missing parameters";
+        }
+        
     } catch (\Exception $ex) {
         $resp->statusCode = Globals::$STATUS_CODE_ERROR;
         $resp->message = $message = $ex->getMessage();
@@ -465,45 +465,113 @@ public function stores(Request $request)
     $method = "UserController@store";
     
     try{
-           
-            $formData = $request->input('form-params');
-            $formData = json_decode($formData); // json object to array
-            
-            
-            if(
-                $formData->user_id &&
-                $formData->first_name &&
-                $formData->last_name &&
-                $formData->address &&
-                $formData->email &&
-                $formData->mobile_no &&
-                $formData->nin &&
-                $formData->gender &&
-                $formData->user_role)
-                {
+        
+        $formData = $request->input('form-params');
+        $formData = json_decode($formData); // json object to array
+        
+        
+        if(
+            $formData->user_id &&
+            $formData->first_name &&
+            $formData->last_name &&
+            $formData->address &&
+            $formData->email &&
+            $formData->mobile_no &&
+            $formData->nin &&
+            $formData->gender &&
+            $formData->user_role)
+            {
+                
+                
+                $fname = trim($formData->first_name);
+                $lname = trim($formData->last_name);
+                $address = trim($formData->address);
+                $email = trim($formData->email);
+                $telno = trim($formData->mobile_no);
+                $nin = trim($formData->nin);
+                $gender = trim($formData->gender);
+                $role = $formData->user_role;
+                $registra = User::where('id', $formData->user_id)->value('name');
+                $registra_id = User::where('id', $formData->user_id)->value('role');
+                $name = $fname." ".$lname;
+                $defaultPwd = '12345678';
+                
+                if($formData->id) {
+                    $userId = $formData->id;
+                    $user = User::find($userId);
+                    $username = $formData->username;
+                    $bool_userExists = $this->validateUsername($user->username, $username); // User::where('username' ,$username)->exists();
                     
-                    
-                    $fname = trim($formData->first_name);
-                    $lname = trim($formData->last_name);
-                    $address = trim($formData->address);
-                    $email = trim($formData->email);
-                    $telno = trim($formData->mobile_no);
-                    $nin = trim($formData->nin);
-                    $gender = trim($formData->gender);
-                    $role = $formData->user_role;
-                    $registra = User::where('id', $formData->user_id)->value('name');
-                    $registra_id = User::where('id', $formData->user_id)->value('role');
-                    $name = $fname." ".$lname;
-                    $defaultPwd = '12345678';
-                    
-                    if($formData->id) {
-                        $userId = $formData->id;
-                        $user = User::find($userId);
-                        $username = $formData->username;
-                        $bool_userExists = $this->validateUsername($user->username, $username); // User::where('username' ,$username)->exists();
+                    if(!$bool_userExists){
                         
-                        if(!$bool_userExists){
-                            
+                        if($request->hasFile('photo')){
+                            $photo = $request->file('photo');
+                            $k = $this->saveFile($photo, Helper::getUserRole($role));
+                            $photo_path = $k['file_path'];
+                            $photo_name = $k['filename'];
+                        }else{
+                            $photo_path = null;
+                            $photo_name = null;
+                        }
+                        
+                        $hasUpdated = User::where('id', '=', $userId)
+                        ->update([
+                            'first_name' => $fname,
+                            'last_name' => $lname,
+                            'name' => $name,
+                            'username' => $username,
+                            'gender' => $gender,
+                            'email' => $email,
+                            'role' => $role,
+                            'mobile_no' => $telno,
+                            'national_id_no' => $nin,
+                            'photo_path' => $photo_path,
+                            'photo_name' => $photo_name,
+                        ]);
+                        
+                        if($hasUpdated){
+                            $statusCode = Globals::$STATUS_CODE_SUCCESS;
+                            $action = "updated your profile";
+                            $dataArr = array("code" => $statusCode,
+                            "message" => Str::replaceFirst('your', '', $action),
+                            "method" => $method);
+                            Helper::LogRequest($request, $dataArr);
+                            $resp->message = Helper::getMessage('success', $action);
+                            $resp->statusCode = $statusCode;
+                            $resp->data = User::count();
+                        }else{
+                            $message = "Unable to update user account details!";
+                            $statusCode = Globals::$STATUS_CODE_FAILED;
+                            $dataArr = array("code" => $statusCode,
+                            "message" => $message,
+                            "method" => $method);
+                            Helper::LogRequest($request, $dataArr);
+                            $resp->statusCode = $statusCode;
+                            $resp->message = $message;
+                        }
+                        
+                    }
+                    
+                    else{
+                        $statusCode = Globals::$STATUS_CODE_FAILED;
+                        $message =  "username ".$formData->username." has already been taken, choose another one";
+                        $dataArr = array("code" => $statusCode,
+                        "message" => $message,
+                        "method" =>  $method);
+                        $resp->message = $message;
+                        $resp->statusCode = $statusCode; 
+                    }
+                    
+                }else {
+                    $user = new User();
+                    $name = $fname." ".$lname;
+                    $username = strtolower(Str::random(6).".".$fname);
+                    $bool_userExists = User::where('username' ,$username)->exists();
+                    if(!$bool_userExists){
+                        
+                        $password = Hash::make($defaultPwd, ['rounds' => 12]);
+                        $count = User::where('email', '=', $email)->count();
+                        if($count == 0){
                             if($request->hasFile('photo')){
                                 $photo = $request->file('photo');
                                 $k = $this->saveFile($photo, Helper::getUserRole($role));
@@ -514,163 +582,95 @@ public function stores(Request $request)
                                 $photo_name = null;
                             }
                             
-                            $hasUpdated = User::where('id', '=', $userId)
-                            ->update([
-                                'first_name' => $fname,
-                                'last_name' => $lname,
-                                'name' => $name,
-                                'username' => $username,
-                                'gender' => $gender,
-                                'email' => $email,
-                                'role' => $role,
-                                'mobile_no' => $telno,
-                                'national_id_no' => $nin,
-                                'photo_path' => $photo_path,
-                                'photo_name' => $photo_name,
-                            ]);
+                            $user->first_name = $fname;
+                            $user->last_name = $lname;
+                            $user->username = $username;
+                            $user->gender = $gender;
+                            $user->email = $email;
+                            $user->role = $role;
+                            $user->mobile_no = $telno;
+                            $user->address = $address;
+                            $user->national_id_no = $nin;
+                            $user->photo_path = $photo_path;
+                            $user->photo_name = $photo_name;
+                            $user->password = $password;
+                            $user->is_active = 1;
                             
-                            if($hasUpdated){
-                                $statusCode = Globals::$STATUS_CODE_SUCCESS;
-                                $action = "updated your profile";
-                                $dataArr = array("code" => $statusCode,
-                                "message" => Str::replaceFirst('your', '', $action),
-                                "method" => $method);
-                                Helper::LogRequest($request, $dataArr);
-                                $resp->message = Helper::getMessage('success', $action);
-                                $resp->statusCode = $statusCode;
-                                $resp->data = User::count();
-                            }else{
-                                $message = "Unable to update user account details!";
-                                $statusCode = Globals::$STATUS_CODE_FAILED;
-                                $dataArr = array("code" => $statusCode,
+                            $save_status = $user->save();
+                            if($save_status){
+                                
+                                $subject = 'User Registration';
+                                $registraPosition = 'Client';
+                                $registraEmail = 'codesolutionug@gmail.com'; //$request->user()->email;
+                                $default_password = $defaultPwd;
+                                $now = now();
+                                $action =  "registered user ".$name." as ".Helper::getUserRole($role)."";
+                                $sendAction = "You have been registered as a client at parksmart today at ".$now."";
+                                Helper::logActivity($request, ['name' => $registra, 'role' => Helper::getUserRole($registra_id), 'action' => $action]);
+                                $data = array(
+                                    'name' => $name,
+                                    'username' => $username,
+                                    'password' => $default_password,
+                                    'user_position' => 'user',
+                                    'registra' => $registra,
+                                    'registraPosition' => $registraPosition,
+                                    'registraEmail' => $registraEmail,
+                                    'email' => $email,
+                                    'subject' => $subject,
+                                    'created_at' => $now,
+                                    'details' => $sendAction,
+                                    'activity' => 'registration',
+                                );
+                                
+                                if(Helper::is_connectedToInternet() == 1){
+                                    \Mail::to($email)->send(new RegistrationMailSender($data));
+                                    $message = $action." and email has been sent";
+                                    
+                                }else{
+                                    $message = $action;
+                                }
+                                
+                                $dataArr = array("code" => Globals::$STATUS_CODE_SUCCESS,
                                 "message" => $message,
                                 "method" => $method);
                                 Helper::LogRequest($request, $dataArr);
-                                $resp->statusCode = $statusCode;
+                                $resp->message = Helper::getMessage('success', $message);
+                                $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                                $resp->data = User::count();
+                            }
+                            else
+                            {
+                                $message = "User registration failed!";
+                                Helper::LogRequest($request, $dataArr);
+                                $resp->statusCode = Globals::$STATUS_CODE_FAILED;
                                 $resp->message = $message;
                             }
-                            
-                        }
-                        
-                        else{
-                            $statusCode = Globals::$STATUS_CODE_FAILED;
-                            $message =  "username ".$formData->username." has already been taken, choose another one";
-                            $dataArr = array("code" => $statusCode,
-                            "message" => $message,
-                            "method" =>  $method);
-                            $resp->message = $message;
-                            $resp->statusCode = $statusCode; 
-                        }
-                        
-                    }else {
-                        $user = new User();
-                        $name = $fname." ".$lname;
-                        $username = strtolower(Str::random(6).".".$fname);
-                        $bool_userExists = User::where('username' ,$username)->exists();
-                        if(!$bool_userExists){
-                            
-                            $password = Hash::make($defaultPwd, ['rounds' => 12]);
-                            $count = User::where('email', '=', $email)->count();
-                            if($count == 0){
-                                if($request->hasFile('photo')){
-                                    $photo = $request->file('photo');
-                                    $k = $this->saveFile($photo, Helper::getUserRole($role));
-                                    $photo_path = $k['file_path'];
-                                    $photo_name = $k['filename'];
-                                }else{
-                                    $photo_path = null;
-                                    $photo_name = null;
-                                }
-                                
-                                $user->first_name = $fname;
-                                $user->last_name = $lname;
-                                $user->username = $username;
-                                $user->gender = $gender;
-                                $user->email = $email;
-                                $user->role = $role;
-                                $user->mobile_no = $telno;
-                                $user->address = $address;
-                                $user->national_id_no = $nin;
-                                $user->photo_path = $photo_path;
-                                $user->photo_name = $photo_name;
-                                $user->password = $password;
-                                $user->is_active = 1;
-                                
-                                $save_status = $user->save();
-                                if($save_status){
-                                    
-                                    $subject = 'User Registration';
-                                    $registraPosition = 'Client';
-                                    $registraEmail = 'codesolutionug@gmail.com'; //$request->user()->email;
-                                    $default_password = $defaultPwd;
-                                    $now = now();
-                                    $action =  "registered user ".$name." as ".Helper::getUserRole($role)."";
-                                    $sendAction = "You have been registered as a client at parksmart today at ".$now."";
-                                    Helper::logActivity($request, ['name' => $registra, 'role' => Helper::getUserRole($registra_id), 'action' => $action]);
-                                    $data = array(
-                                        'name' => $name,
-                                        'username' => $username,
-                                        'password' => $default_password,
-                                        'user_position' => 'user',
-                                        'registra' => $registra,
-                                        'registraPosition' => $registraPosition,
-                                        'registraEmail' => $registraEmail,
-                                        'email' => $email,
-                                        'subject' => $subject,
-                                        'created_at' => $now,
-                                        'details' => $sendAction,
-                                        'activity' => 'registration',
-                                    );
-                                    
-                                    if(Helper::is_connectedToInternet() == 1){
-                                        \Mail::to($email)->send(new RegistrationMailSender($data));
-                                        $message = $action." and email has been sent";
-                                        
-                                    }else{
-                                        $message = $action;
-                                    }
-                                    
-                                    $dataArr = array("code" => Globals::$STATUS_CODE_SUCCESS,
-                                    "message" => $message,
-                                    "method" => $method);
-                                    Helper::LogRequest($request, $dataArr);
-                                    $resp->message = Helper::getMessage('success', $message);
-                                    $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                                    $resp->data = User::count();
-                                }
-                                else
-                                {
-                                    $message = "User registration failed!";
-                                    Helper::LogRequest($request, $dataArr);
-                                    $resp->statusCode = Globals::$STATUS_CODE_FAILED;
-                                    $resp->message = $message;
-                                }
-                            } else{
-                                $message = "User with email ".$email." has been already registered";
-                                $dataArr = array("code" => Globals::$STATUS_CODE_FAILED,
-                                "message" => $message,
-                                "method" => $method);
-                                $responseInfo = Helper::getMessage('error', $message);
-                                $resp->statusCode = Globals::$STATUS_CODE_FAILED;
-                                $resp->message  = $responseInfo;
-                                
-                            }
-                            
-                            
-                        }else{
-                            $message =  "username ".$username." has already been taken, choose another one";
+                        } else{
+                            $message = "User with email ".$email." has been already registered";
                             $dataArr = array("code" => Globals::$STATUS_CODE_FAILED,
                             "message" => $message,
-                            "method" =>  $method);
-                            $resp->message = $message;
+                            "method" => $method);
+                            $responseInfo = Helper::getMessage('error', $message);
                             $resp->statusCode = Globals::$STATUS_CODE_FAILED;
+                            $resp->message  = $responseInfo;
+                            
                         }
+                        
+                        
+                    }else{
+                        $message =  "username ".$username." has already been taken, choose another one";
+                        $dataArr = array("code" => Globals::$STATUS_CODE_FAILED,
+                        "message" => $message,
+                        "method" =>  $method);
+                        $resp->message = $message;
+                        $resp->statusCode = Globals::$STATUS_CODE_FAILED;
                     }
-                } else{
-                    $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-                    $resp->message = "Unable to process request: missing parameters";
                 }
-              
+            } else{
+                $resp->statusCode = Globals::$STATUS_CODE_ERROR;
+                $resp->message = "Unable to process request: missing parameters";
+            }
+            
         } catch (\Exception $ex) {
             $resp->statusCode = Globals::$STATUS_CODE_ERROR;
             $resp->message = $message = $ex->getMessage();
@@ -693,7 +693,8 @@ public function stores(Request $request)
     */
     public function show($id)
     {
-        //
+        $user = User::find($id);
+        return response()->json($user, 200);
     }
     
     /**
@@ -716,7 +717,57 @@ public function stores(Request $request)
     */
     public function update(Request $request, $id)
     {
-        //
+        $validator = Validator::make($request->all(), [
+            'user_id' => 'required',
+            'first_name' => 'required',
+            'last_name' => 'required',
+            'phone_number' => 'required',
+            'gender' => 'required',
+            'email' => 'required',
+            'address' => 'required',
+        ]);
+        
+        try{
+            if($validator->fails()){
+                $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
+                $this->response['message'] = $validator->errors()->all();
+            }else{
+                
+                $author_id = $request->input('user_id');
+                $first_name = $request->input('first_name');
+                $last_name = $request->input('last_name');
+                $phone_number = $request->input('phone_number');
+                $gender = $request->input('gender');
+                $email = $request->input('email');
+                $address = $request->input('address');
+                $user = User::find($id);
+                $names = Helper::getUserNames($id);
+                
+                $user->first_name = $first_name;
+                $user->last_name = $last_name;
+                $user->gender = $gender;
+                $user->email = $email;
+                $user->phone_number = $phone_number;
+                $user->address = $address;
+                
+                if($user->save()){
+                    $author = Helper::getUserNames($author_id);
+                    $role = Helper::getUserRoleName($author_id);
+                    $action = "updated ".$names." details";
+                    Helper::logActivity($request, ['name' => $author, 'role' => $role, 'action' => $action]);
+                    $this->response['message'] = Helper::getMessage('success', $action);
+                    $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
+                }else{
+                    $this->response['message'] ="Unable to update user details!";
+                    $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
+                }
+            }
+        }catch(\Exception $ex){
+            $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
+            $this->response['message'] = $ex->getMessage();
+        }
+        
+        return response()->json($this->response, 200);       
     }
     
     /**
@@ -725,38 +776,40 @@ public function stores(Request $request)
     * @param  int  $id
     * @return \Illuminate\Http\Response
     */
-    public function destroy(Request $request)
+    public function destroy(Request $request, $id)
     {
         
-        $resp = new ApiResponse();
+        $validator = Validator::make($request->all(), [
+            'user_id' => 'required',
+        ]);
         
-        try {
-            
-            $id = $request->input('id');
-            $user = User::find($id);
-            $usernames = $user->name;
-            
-            if ($user->delete()) {
-                $action = "removed user ".$usernames." from the system";
-                Helper::logActivity($request, ['name' => 'Dallington', 'role' => 'admin', 'action' => $action]);
-                $responseInfo = Helper::getMessage('success', $action);
+        try{
+            if($validator->fails()){
+                $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
+                $this->response['message'] = $validator->errors()->all();
+            }else{
                 
-                $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                $resp->message = $responseInfo ;
-            } else {
-                $messageErr = "User not removed!";
-                $responseInfo = Helper::getMessage('error', $messageErr);
-                
-                $resp->statusCode = Globals::$STATUS_CODE_FAILED;
-                $resp->message = $responseInfo;
+                $author_id = $request->input('user_id');
+                $user = User::find($id);
+                $names = Helper::getUserNames($id); 
+                if($user->delete()){
+                    $author = Helper::getUserNames($author_id);
+                    $role = Helper::getUserRoleName($author_id);
+                    $action = "deleted ".$names."";
+                    Helper::logActivity($request, ['name' => $author, 'role' => $role, 'action' => $action]);
+                    $this->response['message'] = Helper::getMessage('success', $action);
+                    $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
+                }else{
+                    $this->response['message'] ="Unable to delete user!";
+                    $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
+                }
             }
-        } catch (\Exception $ex) {
-            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-            $resp->message = $ex->getMessage();
+        }catch(\Exception $ex){
+            $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
+            $this->response['message'] = $ex->getMessage();
         }
         
-        $resp->data = User::count();
-        return response()->json($resp);
+        return response()->json($this->response, 200);  
         
     }
     
@@ -765,47 +818,47 @@ public function stores(Request $request)
     {
         $resp = new ApiResponse();
         try {
-
-                if( ($request->has('user_id') && $request->filled('user_id')) &&
-                ($request->has('current_password') && $request->filled('current_password')) &&
-                ($request->has('new_password') && $request->filled('new_password')) &&
-                ($request->has('confirm_password') && $request->filled('confirm_password'))){
-                    
-                    $user_id = $request->input('user_id');
-                    $current_password = $request->input('current_password');
-                    $new_password = $request->input('new_password');
-                    $confirm_password = $request->input('confirm_password');
-                    
-                    $user = User::find($user_id);
-                    $old_password = $user->password;
-                    if($new_password == $confirm_password){
-                        if(Hash::check($current_password, $old_password)){
-                            $user->password = Hash::make($new_password);
-                            if($user->save()){
-                                $action = "changed your password";
-                                $name = $user->first_name." ".$user->last_name;
-                                Helper::logActivity($request, ['name' => $name, 'role' => Helper::getUserRole($user->role), 'action' => $action]);
-                                $message = Helper::getMessage('success', $action);
-                                $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                                $resp->message  = $message;
-                            }else{
-                                $resp->statusCode = Globals::$STATUS_CODE_FAILED;
-                                $resp->message = "Unable to change your password";
-                            }  
+            
+            if( ($request->has('user_id') && $request->filled('user_id')) &&
+            ($request->has('current_password') && $request->filled('current_password')) &&
+            ($request->has('new_password') && $request->filled('new_password')) &&
+            ($request->has('confirm_password') && $request->filled('confirm_password'))){
+                
+                $user_id = $request->input('user_id');
+                $current_password = $request->input('current_password');
+                $new_password = $request->input('new_password');
+                $confirm_password = $request->input('confirm_password');
+                
+                $user = User::find($user_id);
+                $old_password = $user->password;
+                if($new_password == $confirm_password){
+                    if(Hash::check($current_password, $old_password)){
+                        $user->password = Hash::make($new_password);
+                        if($user->save()){
+                            $action = "changed your password";
+                            $name = $user->first_name." ".$user->last_name;
+                            Helper::logActivity($request, ['name' => $name, 'role' => Helper::getUserRole($user->role), 'action' => $action]);
+                            $message = Helper::getMessage('success', $action);
+                            $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                            $resp->message  = $message;
                         }else{
                             $resp->statusCode = Globals::$STATUS_CODE_FAILED;
-                            $resp->message = "Incorrect old password";
-                        }
+                            $resp->message = "Unable to change your password";
+                        }  
                     }else{
                         $resp->statusCode = Globals::$STATUS_CODE_FAILED;
-                        $resp->message = "Enter new matching passwords";
+                        $resp->message = "Incorrect old password";
                     }
+                }else{
+                    $resp->statusCode = Globals::$STATUS_CODE_FAILED;
+                    $resp->message = "Enter new matching passwords";
                 }
-                else{
-                    $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-                    $resp->message = "Unable to process request";
-                }
-
+            }
+            else{
+                $resp->statusCode = Globals::$STATUS_CODE_ERROR;
+                $resp->message = "Unable to process request";
+            }
+            
         } catch (\Exception $ex) {
             $resp->statusCode = Globals::$STATUS_CODE_ERROR;
             $resp->message = $ex->getMessage();
@@ -814,10 +867,10 @@ public function stores(Request $request)
         
         return response()->json($resp);
     }
-
-
-
-
+    
+    
+    
+    
     
     
     

@@ -429,9 +429,10 @@ class CustomerController extends Controller
     * @param  int  $id
     * @return \Illuminate\Http\Response
     */
-    public function show($customer)
+    public function show($id)
     {
-        return response(['customer' => new CustomerResource($customer), 'message' => 'Retrieved successfully'], 200);
+        $customer = Customer::find($id);
+        return response()->json($customer, 200);
     }
     
     

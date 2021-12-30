@@ -3,6 +3,8 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
+
 
 class CreateVehicleCategories extends Migration
 {
@@ -16,6 +18,7 @@ class CreateVehicleCategories extends Migration
         Schema::create('vehicle_categories', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('name');
+            $table->boolean('is_deleted')->default(false);
             $table->timestamps();
         });
     }
@@ -27,6 +30,8 @@ class CreateVehicleCategories extends Migration
      */
     public function down()
     {
+        DB::statement('SET FOREIGN_KEY_CHECKS = 0');
         Schema::dropIfExists('vehicle_categories');
+        DB::statement('SET FOREIGN_KEY_CHECKS = 1');
     }
 }

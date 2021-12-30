@@ -58,8 +58,7 @@ class RolesController extends Controller
         
         try{
             
-            if( ($request->has('name') && $request->filled('name')) &&
-                ($request->has('user_id') && $request->filled('user_id'))){
+            if($request->filled(['name', 'user_id'])){
 
                 $user_id = $request->input('user_id');
                 $user = User::find($user_id);
@@ -195,7 +194,8 @@ class RolesController extends Controller
                     if ($role->delete()) {
                         $action = "removed role ".$name."";
                         $responseInfo = Helper::getMessage('success', $action);
-                        Helper::logActivity($request, ['name' => $user->name, 'role' => Helper::getUserRole($user->role), 'action' => $action]);
+                        $usernames = $user->first_name." ".$user->last_name;
+                        Helper::logActivity($request, ['name' => $usernames, 'role' => Helper::getUserRole($user->role), 'action' => $action]);
                         $resp->data = Role::count();
                         $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
                         $resp->message = $responseInfo; 

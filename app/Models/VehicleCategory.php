@@ -9,5 +9,8 @@ class VehicleCategory extends Model
 {
     use HasFactory;
     protected $table='vehicle_categories';
+    public $fillable = [
+        'name', 'is_deleted'
+     ];
     public $timestamps = true;
 }

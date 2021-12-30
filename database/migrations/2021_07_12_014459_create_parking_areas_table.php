@@ -27,6 +27,7 @@ class CreateParkingAreasTable extends Migration
             $table->double('rating')->default('0');
             $table->integer('total_space');
             $table->integer('current_free_space')->nullable();
+            $table->boolean('is_deleted')->default(false);
             $table->timestamps();
             $table->foreign('client_id')->references('id')->on('clients')->onDelete('cascade');
         });

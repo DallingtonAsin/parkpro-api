@@ -19,6 +19,7 @@ class CreateParkingFeesTable extends Migration
             $table->unsignedBigInteger('parking_area_id');
             $table->unsignedBigInteger('vehicle_cat_id');
             $table->double('fee_per_hour');
+            $table->boolean('is_deleted')->default(false);
             $table->timestamps();
             $table->foreign('parking_area_id')->references('id')->on('parking_areas')->onDelete('cascade');
             $table->foreign('vehicle_cat_id')->references('id')->on('vehicle_categories')->onDelete('cascade');

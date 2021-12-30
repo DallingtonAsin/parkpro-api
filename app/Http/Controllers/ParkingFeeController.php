@@ -10,9 +10,16 @@ use App\Models\Client;
 use App\Models\VehicleCategory;
 use Helper;
 use Globals;
+use Validator;
 
 class ParkingFeeController extends Controller
 {
+
+    public $response = [];
+    
+    public function __constructor(){
+        $this->response = new ApiResponse();
+    }
     /**
     * Display a listing of the resource.
     *
@@ -23,6 +30,13 @@ class ParkingFeeController extends Controller
         $resp = new ApiResponse();
         try {
             $parking_fees = ParkingFee::orderBy('id', 'desc')->get();
+            if(count((array)$parking_fees) > 0){
+                foreach($parking_fees as $fee){
+                    $parking = ParkingArea::find($fee->parking_area_id);
+                    $client = Client::find($parking->client_id);
+                    $fee->client_name = $client->name;
+                }
+            }
             $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
             $resp->message  = Globals::$STATUS_DESC_SUCCESS;
             $resp->data = $parking_fees;
@@ -179,7 +193,8 @@ class ParkingFeeController extends Controller
     */
     public function show($id)
     {
-        //
+        $parkingFee = ParkingFee::find($id);
+        return response()->json($parkingFee, 200);
     }
     
     /**
@@ -202,7 +217,46 @@ class ParkingFeeController extends Controller
     */
     public function update(Request $request, $id)
     {
-        //
+        $validator = Validator::make($request->all(), [
+            'user_id' => 'required',
+            'fee_per_hour' => 'required',
+        ]);
+        
+        try{
+            if($validator->fails()){
+                $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
+                $this->response['message'] = $validator->errors()->all();
+            }else{
+                
+                $author_id = $request->input('user_id');
+                $fee_per_hour = $request->input('fee_per_hour');
+
+                $parkingFee = ParkingFee::find($id);
+                $parking = ParkingArea::find($parkingFee->parking_area_id);
+                $vehicleType = VehicleCategory::find($parkingFee->vehicle_cat_id);
+            
+                $input = [
+                    'fee_per_hour' => $fee_per_hour,
+                ];
+
+                if($parkingFee->update($input)){
+                    $author = Helper::getUserNames($author_id);
+                    $role = Helper::getUserRoleName($author_id);
+                    $action = "updated fee for parking ".$parking->name." on vehicle type ".$vehicleType->name."";
+                    Helper::logActivity($request, ['name' => $author, 'role' => $role, 'action' => $action]);
+                    $this->response['message'] = Helper::getMessage('success', $action);
+                    $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
+                }else{
+                    $this->response['message'] ="Unable to update parking fee!";
+                    $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
+                }
+            }
+        }catch(\Exception $ex){
+            $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
+            $this->response['message'] = $ex->getMessage();
+        }
+        
+        return response()->json($this->response, 200);
     }
     
     /**
@@ -211,8 +265,43 @@ class ParkingFeeController extends Controller
     * @param  int  $id
     * @return \Illuminate\Http\Response
     */
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
-        //
+        $validator = Validator::make($request->all(), [
+            'user_id' => 'required',
+        ]);
+        
+        try{
+            if($validator->fails()){
+                $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
+                $this->response['message'] = $validator->errors()->all();
+            }else{
+                
+                $author_id = $request->input('user_id');
+                $parkingFee = ParkingFee::find($id);
+                $parking = ParkingArea::find($parkingFee->parking_area_id);
+                $vehicleType = VehicleCategory::find($parkingFee->vehicle_cat_id);
+
+                $input =[
+                    'is_deleted' => 1,
+                ];
+                if($parkingFee->update($input)){
+                    $author = Helper::getUserNames($author_id);
+                    $role = Helper::getUserRoleName($author_id);
+                    $action = "deleted fee for parking ".$parking->name." on vehicle type ".$vehicleType->name."";
+                    Helper::logActivity($request, ['name' => $author, 'role' => $role, 'action' => $action]);
+                    $this->response['message'] = Helper::getMessage('success', $action);
+                    $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
+                }else{
+                    $this->response['message'] ="Unable to delete parking fee!";
+                    $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
+                }
+            }
+        }catch(\Exception $ex){
+            $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
+            $this->response['message'] = $ex->getMessage();
+        }
+        
+        return response()->json($this->response, 200); 
     }
 }

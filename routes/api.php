@@ -64,9 +64,9 @@ Route::group(['middleware' => 'auth:api-users'], function(){
         'company' => CompanySettingsController::class,
 
         'requests' => ParkingRequestController::class,
-        'vehicle_category' => VehicleCategoryController::class,
-        'parking_fees' => ParkingFeeController::class,
-        'parking_areas' => ParkingAreaController::class,
+        'vehicle-category' => VehicleCategoryController::class,
+        'parking-fees' => ParkingFeeController::class,
+        'parking-areas' => ParkingAreaController::class,
         'payment' => PaymentController::class,
         'customers' => CustomerController::class,
 
