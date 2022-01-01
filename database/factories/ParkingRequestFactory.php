@@ -35,7 +35,7 @@ class ParkingRequestFactory extends Factory
         $fee_per_hour = ParkingFee::where('parking_area_id', $parking_area_id)->where('vehicle_cat_id', $vehicle_cat_id)->value('fee_per_hour');
         $amount = $fee_per_hour*$parking_hours;
         $status = $this->faker->randomElement(["PENDING", "REJECTED", "APPROVED"]);
-        $request_date = $this->getRandomDate('01-01-2021 00:00:00', '31-12-2021 00:00:00');
+        $request_date = $this->getRandomDate('01-01-2022 00:00:00', '31-12-2022 00:00:00');
         if($status == 'APPROVED'){
             $approved_at = $request_date;   
         }

@@ -8,11 +8,19 @@ use App\Models\User;
 use App\Helpers\ApiResponse;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 use Helper;
 use Globals;
 
 class RolesController extends Controller
 {
+
+    public $response = [];
+    
+    
+    public function __constructor(){
+        $this->response = new ApiResponse();
+    }
     /**
      * Display a listing of the resource.
      *
@@ -54,82 +62,56 @@ class RolesController extends Controller
      */
     public function store(Request $request)
     {
-        $resp = new ApiResponse();
+        $validator = Validator::make($request->all(), [
+            'user_id' => 'required',
+            'name' => 'required',
+        ]);
         
         try{
             
-            if($request->filled(['name', 'user_id'])){
+            if($validator->fails()){
+                $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
+                $this->response['message'] = $validator->errors()->all();
+            }else{
 
                 $user_id = $request->input('user_id');
                 $user = User::find($user_id);
-
-                if($request->filled('role_id')){
-                    $role_id = $request->input('role_id');
-                    $role = Role::find($role_id);
-                    $name = ucfirst($role->name);
-                    $action = "updated role ".$name."";
-                    $arr = $this->addUpdateRole($request, $role, $action, 'edit');
-                    $resp->statusCode = $arr['statusCode'];
-                    $resp->message = $arr['message'];
-                      
-                }else{
-
                 $name = ucfirst($request->input('name'));
                 $count = Role::where('name', '=', $name)->count();
+                $author = Helper::getUserNames($user_id);
 
                 if($count == 0){
                     $role = new Role();
+                    $role->name = $name;
+                    $role->created_by = $author;
+                    if($role->save()){
+                    $role = Helper::getUserRoleName($user_id);
                     $action = "added role ".$name."";
-                    $arr = $this->addUpdateRole($request, $role, $action, 'add');
-                    $resp->statusCode = $arr['statusCode'];
-                    $resp->message = $arr['message'];
+                    Helper::logActivity($request, ['name' => $author, 'role' => $role, 'action' => $action]);
+                    $this->response['message'] = Helper::getMessage('success', $action);
+                    $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
+                    }else{
+                        $this->response['message'] ="Unable to add role ".$name."!";
+                        $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED; 
+                    }
+
                 } else {
                     $messageErr = "role ".$name." has already been added";
                     $responseInfo = Helper::getMessage('error', $messageErr);
-                    $resp->statusCode = Globals::$STATUS_CODE_FAILED;
-                    $resp->message = $responseInfo;
+                    $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
+                    $this->response['message'] = $responseInfo;
                 }
+
             }
-                
-            }else{
-                $messageErr = "Unable to process request";
-                $responseInfo = Helper::getMessage('error', $messageErr);
-                $resp->statusCode = Globals::$STATUS_CODE_FAILED;
-                $resp->message = $responseInfo;
-            }
+            
         } catch (\Exception $ex) {
-            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-            $resp->message = $ex->getMessage();
+            $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
+            $this->response['message'] = $ex->getMessage();
         }
-        $resp->data = Role::count();
-        return response()->json($resp);
+     
+        return response()->json($this->response, 200);
     }
 
-
-    private function addUpdateRole(Request $request, $role, $action, $type){
-       
-        $user_id = $request->input('user_id');
-        $user = User::find($user_id);
-        $registra = $user->first_name." ".$user->last_name;
-        $registra_id = User::where('id', $user_id)->value('role');
-
-        $role->name = $request->input('name');
-        $role->created_by = $registra;
-
-        if ($role->save()) {
-            $responseInfo = Helper::getMessage('success', $action);
-            Helper::logActivity($request, ['name' => $registra, 'role' => Helper::getUserRole($registra_id), 'action' => $action]);
-            $statusCode = Globals::$STATUS_CODE_SUCCESS;
-            $message = $responseInfo; 
-        } else {
-            $messageErr = "Unable to ".$type." role";
-            $responseInfo = Helper::getMessage('error', $messageErr);
-            $statusCode = Globals::$STATUS_CODE_FAILED;
-            $message = $responseInfo;
-        }
-        return ['statusCode' => $statusCode, 'message' => $message];
-        
-    }
 
     /**
      * Display the specified resource.
@@ -139,7 +121,8 @@ class RolesController extends Controller
      */
     public function show($id)
     {
-        //
+        $role = Role::find($id);
+        return response()->json($role, 200);
     }
 
     /**
@@ -162,7 +145,43 @@ class RolesController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+        $validator = Validator::make($request->all(), [
+            'user_id' => 'required',
+            'name' => 'required',
+        ]);
+        
+        try{
+            if($validator->fails()){
+                $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
+                $this->response['message'] = $validator->errors()->all();
+            }else{
+                
+                $author_id = $request->input('user_id');
+                $role_name = $request->input('name');
+                $role = Role::find($id);
+                $name = $role->name;
+                $author = Helper::getUserNames($author_id);
+                
+                $role->name = $role_name;
+                $role->updated_by = $author;
+                
+                if($role->save()){
+                    $role = Helper::getUserRoleName($author_id);
+                    $action = "updated role ".$name." details";
+                    Helper::logActivity($request, ['name' => $author, 'role' => $role, 'action' => $action]);
+                    $this->response['message'] = Helper::getMessage('success', $action);
+                    $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
+                }else{
+                    $this->response['message'] ="Unable to update role details!";
+                    $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
+                }
+            }
+        }catch(\Exception $ex){
+            $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
+            $this->response['message'] = $ex->getMessage();
+        }
+        
+        return response()->json($this->response, 200);       
     }
 
     /**
@@ -171,57 +190,48 @@ class RolesController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Request $request)
+    public function destroy(Request $request, $id)
     {
-        $resp = new ApiResponse();
+        
+        $validator = Validator::make($request->all(), [
+            'user_id' => 'required',
+        ]);
         
         try{
-            
-            if( ($request->has('role_id') && $request->filled('role_id')) &&
-                ($request->has('user_id') && $request->filled('user_id'))){
-
-                $role_id = $request->input('role_id');
-                $user_id = $request->input('user_id');
-
-                $role = Role::find($role_id);
-                $user = User::find($user_id);
-
-                $count = Role::where('id', $role_id)->count();
-                $name = $role->name;
-              
-                if($count != 0){
-
-                    if ($role->delete()) {
-                        $action = "removed role ".$name."";
-                        $responseInfo = Helper::getMessage('success', $action);
-                        $usernames = $user->first_name." ".$user->last_name;
-                        Helper::logActivity($request, ['name' => $usernames, 'role' => Helper::getUserRole($user->role), 'action' => $action]);
-                        $resp->data = Role::count();
-                        $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                        $resp->message = $responseInfo; 
-                    } else {
-                        $messageErr = "removing role failed!";
-                        $responseInfo = Helper::getMessage('error', $messageErr);
-                        $resp->statusCode = Globals::$STATUS_CODE_FAILED;
-                        $resp->message = $responseInfo;
-                    }
-                } else {
-                    $messageErr = "Unable to find role ".$name."";
-                    $responseInfo = Helper::getMessage('error', $messageErr);
-                    $resp->statusCode = Globals::$STATUS_CODE_FAILED;
-                    $resp->message = $responseInfo;
-                }
-                
+            if($validator->fails()){
+                $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
+                $this->response['message'] = $validator->errors()->all();
             }else{
-                $messageErr = "Unable to process request";
-                $responseInfo = Helper::getMessage('error', $messageErr);
-                $resp->statusCode = Globals::$STATUS_CODE_FAILED;
-                $resp->message = $responseInfo;
+                
+                $author_id = $request->input('user_id');
+                $role = Role::find($id);
+                $role_name = $role->name; 
+                $author = Helper::getUserNames($author_id);
+                $role->is_deleted = 1;
+                $role->deleted_by = $author;
+
+
+                if($role->save()){
+                    $role = Helper::getUserRoleName($author_id);
+                    $action = "deleted role ".$role_name."";
+                    Helper::logActivity($request, ['name' => $author, 'role' => $role, 'action' => $action]);
+                    $this->response['message'] = Helper::getMessage('success', $action);
+                    $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
+                }else{
+                    $this->response['message'] ="Unable to delete role!";
+                    $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
+                }
             }
-        } catch (\Exception $ex) {
-            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-            $resp->message = $ex->getMessage();
+        }catch(\Exception $ex){
+            $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
+            $this->response['message'] = $ex->getMessage();
         }
-        return response()->json($resp);
+        
+        return response()->json($this->response, 200);  
+        
     }
+
+
+
+
 }

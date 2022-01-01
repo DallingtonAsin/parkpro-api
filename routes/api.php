@@ -55,8 +55,8 @@ Route::group(['prefix' => 'requests', 'middleware' => ['auth:api-users']], funct
 
 Route::group(['middleware' => 'auth:api-users'], function(){
 
-    Route::post('/roles/destroy', [RolesController::class, 'destroy']);
-    // Route::apiResource('/customer', CustomerController::class);
+    Route::post('/user/change-account/{id}', [UserController::class, 'changeAccountStatus']);
+
     Route::resources([
         'roles' => RolesController::class,
         'clients' => ClientController::class,

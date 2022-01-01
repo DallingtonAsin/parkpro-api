@@ -867,6 +867,54 @@ public function stores(Request $request)
         
         return response()->json($resp);
     }
+
+
+    public function changeAccountStatus(Request $request, $id)
+    {
+        
+        $validator = Validator::make($request->all(), [
+            'user_id' => 'required',
+            'status' => 'required',
+        ]);
+        
+        try{
+            if($validator->fails()){
+                $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
+                $this->response['message'] = $validator->errors()->all();
+            }else{
+                
+                $author_id = $request->input('user_id');
+                $status = $request->input('status');
+
+                $statusAction = $status == 1 ? 'activated' : 'deactivated';
+                if(User::where('id', $id)->exists()){
+                $user = User::find($id);
+                $names = Helper::getUserNames($id); 
+                $user->is_active = $status;
+                if($user->save()){
+                    $author = Helper::getUserNames($author_id);
+                    $role = Helper::getUserRoleName($author_id);
+                    $action = "".$statusAction." ".$names."'s account";
+                    Helper::logActivity($request, ['name' => $author, 'role' => $role, 'action' => $action]);
+                    $this->response['message'] = Helper::getMessage('success', $action);
+                    $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
+                }else{
+                    $this->response['message'] ="Unable to ".$statusAction." user account!";
+                    $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
+                }
+            }else{
+                $this->response['message'] ="User account doesn't exist!";
+                $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
+            }
+            }
+        }catch(\Exception $ex){
+            $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
+            $this->response['message'] = $ex->getMessage();
+        }
+        
+        return response()->json($this->response, 200);  
+        
+    }
     
     
     
