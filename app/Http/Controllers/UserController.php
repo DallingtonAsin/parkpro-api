@@ -61,8 +61,11 @@ class UserController extends Controller
             ], $remembered)){
                 
                 $userId = $this->getUserId($login);
+
+                $is_deleted = $this->isAccountDeleted($userId);
                 $status = $this->findAccountStatus($userId);
                 
+                if($is_deleted == 0){
                 if($status == 0){
                     $this->response['statusCode']  = Globals::$STATUS_CODE_FAILED;
                     $this->response['message']= 'Your account is inactivated, see admin';
@@ -75,6 +78,10 @@ class UserController extends Controller
                     $this->response['data'] = $user;
                     Helper::logActivity($request, ['name' => $login, 'role' => 'admin', 'action' => $action]);
                 }
+            }else{
+                $this->response['statusCode']  = Globals::$STATUS_CODE_FAILED;
+                $this->response['message']= 'Your account was removed, see admin';
+            }
             }else
             {
                 $this->response['statusCode']  = Globals::$STATUS_CODE_FAILED;
@@ -102,11 +109,14 @@ public function getUserId($login)
     return $userId;
 }
 
-private function findAccountStatus($id){
-    
+private function findAccountStatus($id){ 
     $accountStatus = User::where('email', $id)->value('is_active');
-    return $accountStatus;
-    
+    return $accountStatus; 
+}
+
+private function isAccountDeleted($id){ 
+    $is_deleted = User::where('email', $id)->value('is_deleted');
+    return $is_deleted; 
 }
 
 
@@ -790,10 +800,12 @@ public function stores(Request $request)
             }else{
                 
                 $author_id = $request->input('user_id');
+                $author = Helper::getUserNames($author_id);
                 $user = User::find($id);
                 $names = Helper::getUserNames($id); 
-                if($user->delete()){
-                    $author = Helper::getUserNames($author_id);
+                $user->is_deleted = 1;
+                $user->deleted_by = $author;
+                if($user->save()){
                     $role = Helper::getUserRoleName($author_id);
                     $action = "deleted ".$names."";
                     Helper::logActivity($request, ['name' => $author, 'role' => $role, 'action' => $action]);
