@@ -5,17 +5,18 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Helpers\ApiResponse;
-use App\Models\Customer;
-use Helper;
-use Globals;
-use LaramanBeyonic;
+use Illuminate\Support\Facades\Storage;
 use App\Notifications\PaymentMadeNotification;
-use Notification;
+use App\Models\Customer;
 use App\Models\Notifications;
 use App\Models\CustomersLedger;
-use Carbon\Carbon;
 use Hash;
-use Illuminate\Support\Facades\Storage;
+use Helper;
+use Globals;
+use Notification;
+use LaramanBeyonic;
+use Carbon\Carbon;
+use App\Jobs\ProcessCustomerPayment;
 
 
 
@@ -44,10 +45,8 @@ class PaymentController extends Controller
             'amount'      => '1000',
             'currency'    => 'UGX',
             'description' => 'Pay Dallington this money',
-            /* Information used by application to identify transaction */
             'metadata'    => "{ 'appId': '2952025', 'xactId': '1000000' }"
         );
-        // f62a81d491fb2921d99797f3825c3fbf014b2f17
         
         try {
           $response = LaramanBeyonic::createCollectionRequest($paymentData);
@@ -63,19 +62,62 @@ class PaymentController extends Controller
         return response()->json($resp);
     }
 
-    public function sendPaymentNotification($paymentData) {
 
-        try{
-        $customerSchema = Customer::where('id', $paymentData['id'])->first();
-        Notification::send($customerSchema, new PaymentMadeNotification($paymentData));
-       }catch(Exception $ex){
-        throw $ex;
-       }
-
-    }
 
 
     public function topupUserAccount(Request $request){
+        $resp = new ApiResponse();
+
+        try{
+                
+                if($request->filled(['customer_id', 'amount', 'phone_number'])){
+
+                    $customer_id = $request->input('customer_id');
+                    $amount = $request->input('amount');
+                    $phone_number = $request->input('phone_number');
+                    $exists = Customer::where('id', $customer_id)->where('phone_number', $phone_number)->exists();
+                    if($exists){
+                        $transData = [
+                            'customer_id' => $customer_id,
+                            'amount' => $amount,
+                        ];
+                         ProcessCustomerPayment::dispatch($transData)->onQueue('payments');
+                        // dd($result);
+                        // if($result->hasProcessed){
+                            $customer = Customer::find($customer_id);
+                            $customer_name = $customer->first_name." ".$customer->last_name;
+                            $action = "topped up your account with amount ".number_format($amount).". Your new balance is ".number_format($customer->account_balance)."";
+                            $responseInfo = Helper::getMessage('success', $action);
+                            Helper::logActivity($request, ['name' => 'System', 'role' => 'system', 'action' => $action]);
+                            $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                            $resp->message = $responseInfo; 
+                        // }else{
+                        //     $messageErr = "Unable to top up customer account!";
+                        //     $responseInfo = Helper::getMessage('error', $messageErr);
+                        //     $resp->statusCode = Globals::$STATUS_CODE_FAILED;
+                        //     $resp->message = $responseInfo;
+                        // }
+                    }else{
+                        $messageErr = "Failed to find customer with supplied details";
+                        $responseInfo = Helper::getMessage('error', $messageErr);
+                        $resp->statusCode = Globals::$STATUS_CODE_FAILED;
+                        $resp->message = $responseInfo;
+                    }
+                } else {
+                    $messageErr = "Unable to process request: missing parameters";
+                    $responseInfo = Helper::getMessage('error', $messageErr);
+                    $resp->statusCode = Globals::$STATUS_CODE_FAILED;
+                    $resp->message = $responseInfo;
+                }
+        } catch (\Exception $ex) {
+            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
+            $resp->message = $ex->getMessage();
+        }
+        return response()->json($resp);
+    }
+
+
+    public function topupUserAccounts(Request $request){
         $resp = new ApiResponse();
 
         try{
@@ -124,7 +166,7 @@ class PaymentController extends Controller
                                         'offerText' => 'Please keep using the app to get better offers',
                         ];
 
-                        $this->sendPaymentNotification($paymentNotificationData);
+                        $this->storePaymentNotification($paymentNotificationData);
 
                          if(isset($customer->image)){
                             $customer_image =  Storage::disk('public')->url($customer->image);
@@ -159,6 +201,16 @@ class PaymentController extends Controller
         }
         return response()->json($resp);
     }
+
+    private function storePaymentNotification($paymentData) {
+        try{
+        $customerSchema = Customer::where('id', $paymentData['id'])->first();
+        Notification::send($customerSchema, new PaymentMadeNotification($paymentData));
+       }catch(Exception $ex){
+        throw $ex;
+       }
+    }
+
 
     /**
      * Store a newly created resource in storage.
