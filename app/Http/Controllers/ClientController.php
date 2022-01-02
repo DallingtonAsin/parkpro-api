@@ -212,13 +212,18 @@ class ClientController extends Controller
                 $author_id = $request->input('user_id');
                 $client = Client::find($id);
                 $client_name = $client->name; 
-                $input =[
-                    'is_deleted' => 1,
-                ];
-                if($client->update($input)){
-                    $author = Helper::getUserNames($author_id);
+
+                $is_deleted = $client->is_deleted;
+                $undo = !$is_deleted;
+                $activity = $undo ? 'deleted': 'restored';
+                $author = Helper::getUserNames($author_id);
+                
+                $client->is_deleted = $undo;
+                $client->deleted_by = $author_id;
+
+                if($client->save()){
                     $role = Helper::getUserRoleName($author_id);
-                    $action = "deleted client ".$client_name."";
+                    $action = "".$activity." client ".$client_name."";
                     Helper::logActivity($request, ['name' => $author, 'role' => $role, 'action' => $action]);
                     $this->response['message'] = Helper::getMessage('success', $action);
                     $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;

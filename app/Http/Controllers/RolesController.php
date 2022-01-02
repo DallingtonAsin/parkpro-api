@@ -206,14 +206,18 @@ class RolesController extends Controller
                 $author_id = $request->input('user_id');
                 $role = Role::find($id);
                 $role_name = $role->name; 
-                $author = Helper::getUserNames($author_id);
-                $role->is_deleted = 1;
-                $role->deleted_by = $author;
 
+                $is_deleted = $role->is_deleted;
+                $undo = !$is_deleted;
+                $activity = $undo ? 'deleted': 'restored';
+                $author = Helper::getUserNames($author_id);
+
+                $role->is_deleted = $undo;
+                $role->deleted_by = $author;
 
                 if($role->save()){
                     $role = Helper::getUserRoleName($author_id);
-                    $action = "deleted role ".$role_name."";
+                    $action = "".$activity." role ".$role_name."";
                     Helper::logActivity($request, ['name' => $author, 'role' => $role, 'action' => $action]);
                     $this->response['message'] = Helper::getMessage('success', $action);
                     $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;

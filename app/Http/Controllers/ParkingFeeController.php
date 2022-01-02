@@ -282,13 +282,17 @@ class ParkingFeeController extends Controller
                 $parking = ParkingArea::find($parkingFee->parking_area_id);
                 $vehicleType = VehicleCategory::find($parkingFee->vehicle_cat_id);
 
-                $input =[
-                    'is_deleted' => 1,
-                ];
-                if($parkingFee->update($input)){
-                    $author = Helper::getUserNames($author_id);
+                $is_deleted = $parkingFee->is_deleted;
+                $undo = !$is_deleted;
+                $activity = $undo ? 'deleted': 'restored';
+                $author = Helper::getUserNames($author_id);
+                
+                $parkingFee->is_deleted = $undo;
+                $parkingFee->deleted_by = $author_id;
+
+                if($parkingFee->save()){
                     $role = Helper::getUserRoleName($author_id);
-                    $action = "deleted fee for parking ".$parking->name." on vehicle type ".$vehicleType->name."";
+                    $action = "".$activity." fee for parking ".$parking->name." on vehicle type ".$vehicleType->name."";
                     Helper::logActivity($request, ['name' => $author, 'role' => $role, 'action' => $action]);
                     $this->response['message'] = Helper::getMessage('success', $action);
                     $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;

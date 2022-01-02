@@ -19,7 +19,9 @@ class CreateVehicleCategories extends Migration
             $table->bigIncrements('id');
             $table->string('name');
             $table->boolean('is_deleted')->default(false);
+            $table->integer('deleted_by')->unsigned()->nullable();
             $table->timestamps();
+            $table->foreign('deleted_by')->references('id')->on('users')->onDelete('cascade');
         });
     }
 

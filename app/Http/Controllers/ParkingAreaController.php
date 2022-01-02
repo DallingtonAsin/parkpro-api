@@ -346,13 +346,18 @@ class ParkingAreaController extends Controller
                 $author_id = $request->input('user_id');
                 $parking = ParkingArea::find($id);
                 $parking_name = $parking->name; 
-                $input =[
-                    'is_deleted' => 1,
-                ];
-                if($parking->update($input)){
-                    $author = Helper::getUserNames($author_id);
+                
+                $is_deleted = $parking->is_deleted;
+                $undo = !$is_deleted;
+                $activity = $undo ? 'deleted': 'restored';
+                $author = Helper::getUserNames($author_id);
+                
+                $parking->is_deleted = $undo;
+                $parking->deleted_by = $author_id;
+
+                if($parking->save()){
                     $role = Helper::getUserRoleName($author_id);
-                    $action = "deleted parking ".$parking_name."";
+                    $action = "".$activity." parking ".$parking_name."";
                     Helper::logActivity($request, ['name' => $author, 'role' => $role, 'action' => $action]);
                     $this->response['message'] = Helper::getMessage('success', $action);
                     $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;

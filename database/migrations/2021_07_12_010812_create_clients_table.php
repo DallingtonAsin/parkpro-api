@@ -21,7 +21,9 @@ class CreateClientsTable extends Migration
             $table->string('mobile_number')->unique();
             $table->string('email')->unique();
             $table->boolean('is_deleted')->default(false);
+            $table->integer('deleted_by')->unsigned()->nullable();
             $table->timestamps();
+            $table->foreign('deleted_by')->references('id')->on('users')->onDelete('cascade');
         });
     }
 

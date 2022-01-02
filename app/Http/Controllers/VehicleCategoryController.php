@@ -197,13 +197,18 @@ class VehicleCategoryController extends Controller
                 $author_id = $request->input('user_id');
                 $vehicleType = VehicleCategory::find($id);
                 $vehicle_type = $vehicleType->name; 
-                $input =[
-                    'is_deleted' => 1,
-                ];
-                if($vehicleType->update($input)){
-                    $author = Helper::getUserNames($author_id);
+
+                $is_deleted = $vehicleType->is_deleted;
+                $undo = !$is_deleted;
+                $activity = $undo ? 'deleted': 'restored';
+                $author = Helper::getUserNames($author_id);
+                
+                $vehicleType->is_deleted = $undo;
+                $vehicleType->deleted_by = $author_id;
+              
+                if($vehicleType->save()){
                     $role = Helper::getUserRoleName($author_id);
-                    $action = "deleted vehicle category ".$vehicle_type."";
+                    $action = "".$activity." vehicle category ".$vehicle_type."";
                     Helper::logActivity($request, ['name' => $author, 'role' => $role, 'action' => $action]);
                     $this->response['message'] = Helper::getMessage('success', $action);
                     $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;

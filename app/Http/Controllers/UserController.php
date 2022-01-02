@@ -802,12 +802,16 @@ public function stores(Request $request)
                 $author_id = $request->input('user_id');
                 $author = Helper::getUserNames($author_id);
                 $user = User::find($id);
+                $is_deleted = $user->is_deleted;
+                $undo = !$is_deleted;
+                $activity = $undo ? 'deleted': 'restored';
+
                 $names = Helper::getUserNames($id); 
-                $user->is_deleted = 1;
+                $user->is_deleted = $undo;
                 $user->deleted_by = $author;
                 if($user->save()){
                     $role = Helper::getUserRoleName($author_id);
-                    $action = "deleted ".$names."";
+                    $action = "".$activity." ".$names."'s account";
                     Helper::logActivity($request, ['name' => $author, 'role' => $role, 'action' => $action]);
                     $this->response['message'] = Helper::getMessage('success', $action);
                     $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
