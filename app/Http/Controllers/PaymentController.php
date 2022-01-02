@@ -81,6 +81,7 @@ class PaymentController extends Controller
                             'customer_id' => $customer_id,
                             'amount' => $amount,
                         ];
+                        
                          ProcessCustomerPayment::dispatch($transData)->onQueue('payments');
                         // dd($result);
                         // if($result->hasProcessed){
