@@ -74,6 +74,9 @@ class CustomerController extends Controller
                 if($customer->account_balance >= 1000){
                     $customer->account_balance = number_format($customer->account_balance);
                 }
+                if(!empty($customer->image)){
+                    $customer->image =  Storage::disk('public')->url($customer->image);
+                }
                 $customer['access_token'] = $customer->createToken('Customer'.$customer->phone_number, ['customer'])->accessToken;
                 $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
                 $this->response['message'] = 'Login successful';

@@ -46,14 +46,9 @@ class SharedCommon
                 $customer = Customer::find($customer_id);
                 if($customer->account_balance >= 1000){
                       $customer->account_balance = number_format($customer->account_balance);
-                 }else{
-                     $customer->account_balance = $customer->account_balance;  
                  }
-                
-                if(isset($customer->image)){
+                if(!empty($customer->image)){
                     $customer->image =  Storage::disk('public')->url($customer->image);
-                }else{
-                    $customer->image = $customer->image;
                 }
             return $customer;
           }catch(\Exception $ex){
