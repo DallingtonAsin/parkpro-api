@@ -24,4 +24,8 @@ class CustomerService{
 
   }
 
+  private function getNextInvoiceNumber(){
+      return Customer::max('id') + 1;
+  }
+
 }
