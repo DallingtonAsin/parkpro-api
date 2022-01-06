@@ -10,6 +10,7 @@ use App\Models\ParkingArea;
 use App\Models\VehicleCategory;
 use App\Models\Customer;
 use App\Helpers\ApiResponse;
+use App\Repositories\ParkingRequestRepository;
 use Carbon\Carbon;
 use Helper;
 use TokenAuth;
@@ -32,25 +33,16 @@ class ParkingRequestController extends Controller
     *
     * @return \Illuminate\Http\Response
     */
-    public function index(Request $request)
+    public function index(ParkingRequestRepository $parkingReqRepo)
     {
         
         $resp = new ApiResponse();
         try {
-            $authToken   =   $request->header('AuthToken');
-            if (!empty($authToken) && TokenAuth::validate($authToken)) {
-                $parking_requests = ParkingRequest::all();
+                $parking_requests = $parkingReqRepo->getAll();
                 $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
                 $resp->message  = Globals::$STATUS_DESC_SUCCESS;
                 $resp->data = $parking_requests;
                 
-            }else{
-                $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-                $resp->message = "Unauthorized access";
-                $resp->data = "Unauthorized access";
-                
-            }
-            
         } catch (\Exception $ex) {
             $resp->statusCode = Globals::$STATUS_CODE_ERROR;
             $resp->message = $ex->getMessage();
