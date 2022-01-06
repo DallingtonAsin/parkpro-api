@@ -8,6 +8,4 @@ class ApiResponse {
   public $message;
   public $data;
    
-
-
 }
