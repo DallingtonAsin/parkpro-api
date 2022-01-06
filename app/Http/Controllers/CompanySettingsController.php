@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Company;
+use App\Repositories\CompanyRepository;
 use App\Models\User;
 use App\Helpers\ApiResponse;
 use Helper;
@@ -16,11 +17,11 @@ class CompanySettingsController extends Controller
     *
     * @return \Illuminate\Http\Response
     */
-    public function index(Request $request)
+    public function index(CompanyRepository $companyRepo)
     {
         $resp = new ApiResponse();
         try {
-                $company = Company::all();
+                $company = $companyRepo->getCompanyData();
                 $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
                 $resp->message  = Globals::$STATUS_DESC_SUCCESS;
                 $resp->data = $company;
