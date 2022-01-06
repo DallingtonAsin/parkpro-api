@@ -17,6 +17,7 @@ use Notification;
 use LaramanBeyonic;
 use Carbon\Carbon;
 use App\Jobs\ProcessCustomerPayment;
+use App\Repositories\NotificationRepository;
 
 
 
@@ -270,25 +271,18 @@ class PaymentController extends Controller
     }
 
 
-    public function getNotifications(Request $request){
+    public function getNotifications(NotificationRepository $notificationRepo, Request $request){
         $resp = new ApiResponse();
         try {
                 if($request->filled('id')){
-                $customer_id = $request->input('id');
-                $notifications = Notifications::where('notifiable_id', $customer_id)->orderBy('created_at', 'desc')->get();
-                $notifications->makeHidden(['notifiable_type']);
-                $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                if(count($notifications->toArray()) > 0){
-                    $resp->message  = Globals::$STATUS_DESC_SUCCESS;
-                    foreach($notifications as $item){
-                        $customer = Customer::find($item->notifiable_id);
-                        $item->name = $customer->first_name." ".$customer->last_name;
-                        $item->date = date('Y-m-d H:i A', strtotime($item->created_at));
-                    }
-                }else{
-                    $resp->message  = "No notifications found";
-                }
-                $resp->data = $notifications;
+                   $customer_id = $request->input('id');
+                   $data = $notificationRepo->getUserNotification($customer_id);
+                   if(count((array)$data) > 0){
+                      $resp->message  = "No notifications found";
+                   }
+                   $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                   $resp->data = $data;
+
                 }else {
                     $resp->statusCode = Globals::$STATUS_CODE_ERROR;
                     $resp->message = "Unable to process request: missing parameters";
