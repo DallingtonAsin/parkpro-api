@@ -30,20 +30,8 @@ class RolesController extends Controller
      */
     public function index(UserRoleRepository $roleRepo)
     {
-        $resp = new ApiResponse();
-        try {
-                $roles = $roleRepo->getRoles();
-                $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                $resp->message  = Globals::$STATUS_DESC_SUCCESS;
-                $resp->data = $roles;
-                
-        } catch (\Exception $ex) {
-            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-            $resp->message = $ex->getMessage();
-            $resp->data = $ex->getMessage();
-        }
-        
-        return response()->json($resp);
+        $roles = $roleRepo->getRoles();
+        return formattedApiResponse::getJson($roles);
     }
 
     /**

@@ -129,19 +129,8 @@ private function isAccountDeleted($id){
 */
 public function index(UserRepository $userrepo)
 {
-    $resp = new ApiResponse();
-    try {
-        $users = $userrepo->getUsers();
-        $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
-        $resp->message  = Globals::$STATUS_DESC_SUCCESS;
-        $resp->data = $users;
-    } catch (\Exception $ex) {
-        $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-        $resp->message = $ex->getMessage();
-        $resp->data = $ex->getMessage();
-    }
-    
-    return response()->json($resp);
+    $users = $userrepo->getUsers();
+    return formattedApiResponse::getJson($users);
 }
 
 /**

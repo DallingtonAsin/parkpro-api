@@ -21,11 +21,7 @@ use Helper;
 class ReportsController extends Controller
 {
 
-    public $apiResponse;
-    public function __construct(){
-      $this->apiResponse = new ApiResponse();
-    }
-    
+  
     public function index(ReportRepository $reportRepo){
 
         $data = $reportRepo->getIndexData();
