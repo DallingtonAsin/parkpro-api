@@ -14,7 +14,6 @@ use App\Helpers\formattedApiResponse;
 use App\Repositories\ParkingRequestRepository;
 use Carbon\Carbon;
 use Helper;
-use TokenAuth;
 use Globals;
 
 
@@ -105,8 +104,7 @@ class ParkingRequestController extends Controller
                 
                 $resp = new ApiResponse();
                 try {
-                    $authToken   =   $request->header('AuthToken');
-                    if (!empty($authToken) && TokenAuth::validate($authToken)) {
+                  
                         if($request->filled(['request_id', 'telephone_no', 'vehicle_number'])){
                             
                             $request_id = $request->input('request_id');
@@ -152,12 +150,7 @@ class ParkingRequestController extends Controller
                             $resp->statusCode = Globals::$STATUS_CODE_ERROR;
                             $resp->message = "Unable to process request: missing parameters";
                         }
-                        
-                    }else{
-                        $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-                        $resp->message = "Unauthorized access";
-                    }
-                    
+                       
                 } catch (\Exception $ex) {
                     $resp->statusCode = Globals::$STATUS_CODE_ERROR;
                     $resp->message = $ex->getMessage();
@@ -171,8 +164,7 @@ class ParkingRequestController extends Controller
                 
                 $resp = new ApiResponse();
                 try {
-                    $authToken   =   $request->header('AuthToken');
-                    if (!empty($authToken) && TokenAuth::validate($authToken)) {
+                  
                         if($request->filled(['request_id', 'telephone_no', 'vehicle_number'])){
                             
                             $request_id = $request->input('request_id');
@@ -217,12 +209,7 @@ class ParkingRequestController extends Controller
                             $resp->statusCode = Globals::$STATUS_CODE_ERROR;
                             $resp->message = "Unable to process request: missing parameters";
                         }
-                        
-                    }else{
-                        $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-                        $resp->message = "Unauthorized access";
-                    }
-                    
+                       
                 } catch (\Exception $ex) {
                     $resp->statusCode = Globals::$STATUS_CODE_ERROR;
                     $resp->message = $ex->getMessage();
