@@ -18,6 +18,7 @@ use LaramanBeyonic;
 use Carbon\Carbon;
 use App\Jobs\ProcessCustomerPayment;
 use App\Repositories\NotificationRepository;
+use App\Repositories\PaymentRepository;
 
 
 
@@ -297,39 +298,20 @@ class PaymentController extends Controller
         return response()->json($resp);
     }
 
-    public function getTransactionHistory(Request $request){
+    public function getTransactionHistory(PaymentRepository $paymentRepo, Request $request){
         $resp = new ApiResponse();
         try {
                 if($request->filled('id')){
                 $customer_id = $request->input('id');
-                $transactions = CustomersLedger::where('customer_id', $customer_id)->orderBy('created_at', 'desc')->get()->groupBy(function($val) {
-                                     return Carbon::parse($val->created_at)->format('Y');
-                            });
-                $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                $transactions = $paymentRepo->getTransactionRecords($customer_id);
                 if(count($transactions->toArray()) > 0){
                     $resp->message  = Globals::$STATUS_DESC_SUCCESS;
-                    foreach($transactions as $key){
-                        foreach($key as $item){
-                        $customer = Customer::find($customer_id);
-                        $item->name = $customer->first_name." ".$customer->last_name;
-                        $item->credit = number_format($item->credit);
-                        $item->debt = number_format($item->debt);
-                        $item->balance = number_format($item->balance);
-                        }
-                    }
                 }else{
                     $resp->message  = "No transactions found";
                 }
-
-                $data = $data1 = [];
-                foreach($transactions as $key => $value){
-                    $data = array(
-                        'year' => $key,
-                        'data' => $value,
-                    );
-                    array_push($data1, $data);
-                }
-                $resp->data = $data1;
+                $tranRecords = $paymentRepo->mapNotifications($transactions);
+                $resp->data = $tranRecords;
+                $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
                 }else {
                     $resp->statusCode = Globals::$STATUS_CODE_ERROR;
                     $resp->message = "Unable to process request: missing parameters";
