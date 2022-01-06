@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Models\Role;
 use App\Models\CustomersLedger;
+use App\Models\Customer;
 use Carbon\Carbon;
 
 class PaymentRepository{
