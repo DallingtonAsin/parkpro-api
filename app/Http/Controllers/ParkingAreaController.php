@@ -7,6 +7,7 @@ use App\Helpers\ApiResponse;
 use App\Models\ParkingArea;
 use App\Models\Client;
 use App\Repositories\ParkingAreaRepository;
+use App\Helpers\formattedApiResponse;
 use Helper;
 use Globals;
 use Validator;
@@ -26,19 +27,10 @@ class ParkingAreaController extends Controller
     */
     public function index(ParkingAreaRepository $parkingAreaRepo)
     {
-        $resp = new ApiResponse();
-        try {
-            $parking_areas = $parkingAreaRepo->getParkingAreas();
-            $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
-            $resp->message  = Globals::$STATUS_DESC_SUCCESS;
-            $resp->data = $parking_areas;
-        } catch (\Exception $ex) {
-            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-            $resp->message = Globals::$STATUS_DESC_ERROR;
-            $resp->data = $ex->getMessage();
-        }
-        
-        return response()->json($resp);
+
+        $parking_areas = $parkingAreaRepo->getParkingAreas();
+        return formattedApiResponse::getJson($parking_areas);
+
     }
 
 

@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Resources\CustomerResource;
 use App\Repositories\CustomerRepository;
+use App\Helpers\formattedApiResponse;
 use Helper;
 use Globals;
 use Mail;
@@ -39,7 +40,8 @@ class CustomerController extends Controller
     public function index(CustomerRepository $customerRepo)
     {
        $customers = $customerRepo->getCustomers();
-       return response()->json($customers, 200);
+       return formattedApiResponse::getJson($customers);
+
     }
  
     private function getCustomerId($phone_number){

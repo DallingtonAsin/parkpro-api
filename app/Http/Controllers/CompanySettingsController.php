@@ -7,6 +7,7 @@ use App\Models\Company;
 use App\Repositories\CompanyRepository;
 use App\Models\User;
 use App\Helpers\ApiResponse;
+use App\Helpers\formattedApiResponse;
 use Helper;
 use Globals;
 
@@ -19,19 +20,10 @@ class CompanySettingsController extends Controller
     */
     public function index(CompanyRepository $companyRepo)
     {
-        $resp = new ApiResponse();
-        try {
-                $company = $companyRepo->getCompanyData();
-                $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                $resp->message  = Globals::$STATUS_DESC_SUCCESS;
-                $resp->data = $company;
-        } catch (\Exception $ex) {
-            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-            $resp->message = $ex->getMessage();
-            $resp->data = $ex->getMessage();
-        }
-        
-        return response()->json($resp);
+
+       $company = $companyRepo->getCompanyData();
+       return formattedApiResponse::getJson($company);
+              
     }
     
     /**
