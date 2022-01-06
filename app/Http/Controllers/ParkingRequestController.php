@@ -10,6 +10,7 @@ use App\Models\ParkingArea;
 use App\Models\VehicleCategory;
 use App\Models\Customer;
 use App\Helpers\ApiResponse;
+use App\Helpers\formattedApiResponse;
 use App\Repositories\ParkingRequestRepository;
 use Carbon\Carbon;
 use Helper;
@@ -35,79 +36,30 @@ class ParkingRequestController extends Controller
     */
     public function index(ParkingRequestRepository $parkingReqRepo)
     {
-        
-        $resp = new ApiResponse();
-        try {
-                $parking_requests = $parkingReqRepo->getAll();
-                $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                $resp->message  = Globals::$STATUS_DESC_SUCCESS;
-                $resp->data = $parking_requests;
-                
-        } catch (\Exception $ex) {
-            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-            $resp->message = $ex->getMessage();
-            $resp->data = $ex->getMessage();
-        }
-        
-        return response()->json($resp);
+        $parking_requests = $parkingReqRepo->getAll();
+        return formattedApiResponse::getJson($parking_requests);
     }
 
    // pending parking requests
     public function pendingRequests(ParkingRequestRepository $parkingReqRepo)
     {
-        $resp = new ApiResponse();
-        try {
-            $parking_requests = $parkingReqRepo->getPendingRequests();
-            $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
-            $resp->message  = Globals::$STATUS_DESC_SUCCESS;
-            $resp->data = $parking_requests;
-        } catch (\Exception $ex) {
-            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-            $resp->message = $ex->getMessage();
-            $resp->data = $ex->getMessage();
-        }
-        
-        return response()->json($resp);
+        $pending_requests = $parkingReqRepo->getPendingRequests();
+        return formattedApiResponse::getJson($pending_requests);
     }
 
-
+  // approved parking requests
     public function approvedRequests(ParkingRequestRepository $parkingReqRepo)
     {
-        
-        try {
-            $approved_parking_requests = $parkingReqRepo->getApprovedRequests();
-            $this->response['data'] = $approved_parking_requests;
-            $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
-            $this->response['message']  = Globals::$STATUS_DESC_SUCCESS;
-            
-        } catch (\Exception $ex) {
-            $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
-            $this->response['message'] = $ex->getMessage();
-            $this->response['data'] = $ex->getMessage();
-        }
-        
-        return response()->json($this->response, 200);
+        $approved_parking_requests = $parkingReqRepo->getApprovedRequests();
+        return formattedApiResponse::getJson($approved_parking_requests);
     }
     
-    
+      // rejected parking requests
     public function rejectedRequests(ParkingRequestRepository $parkingReqRepo){
         
-        $resp = new ApiResponse();
-        try {
-            $rejected_requests = $parkingReqRepo->getRejectedRequests();
-            $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
-            $resp->message  = Globals::$STATUS_DESC_SUCCESS;
-            $resp->data = $rejected_requests;
-        } catch (\Exception $ex) {
-            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-            $resp->message = $ex->getMessage();
-            $resp->data = $ex->getMessage();
-        }
-        
-        return response()->json($resp);
+        $rejected_requests = $parkingReqRepo->getRejectedRequests();
+        return formattedApiResponse::getJson($rejected_requests);
     }
-
-
 
 
     

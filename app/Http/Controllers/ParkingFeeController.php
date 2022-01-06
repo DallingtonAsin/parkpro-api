@@ -9,6 +9,7 @@ use App\Models\ParkingArea;
 use App\Models\Client;
 use App\Models\VehicleCategory;
 use App\Repositories\ParkingFeeRepository;
+use App\Helpers\formattedApiResponse;
 use Helper;
 use Globals;
 use Validator;
@@ -28,20 +29,8 @@ class ParkingFeeController extends Controller
     */
     public function index(ParkingFeeRepository $parkingFeeRepo)
     {
-        $resp = new ApiResponse();
-        try {
-            
-            $parking_fees = $parkingFeeRepo->getParkingFees();
-            $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
-            $resp->message  = Globals::$STATUS_DESC_SUCCESS;
-            $resp->data = $parking_fees;
-        } catch (\Exception $ex) {
-            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-            $resp->message = Globals::$STATUS_DESC_ERROR;
-            $resp->data = $ex->getMessage();
-        }
-        
-        return response()->json($resp);
+        $parking_fees = $parkingFeeRepo->getParkingFees();
+        return formattedApiResponse::getJson($parking_fees);
     }
 
 
