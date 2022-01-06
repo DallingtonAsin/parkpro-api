@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Helpers\ApiResponse;
 use App\Models\Client;
+use App\Repositories\ClientRepository;
 use Helper;
 use Globals;
 use Validator;
@@ -24,11 +25,11 @@ class ClientController extends Controller
     *
     * @return \Illuminate\Http\Response
     */
-    public function index()
+    public function index(ClientRepository $clientRepo)
     {
         $resp = new ApiResponse();
         try {
-            $clients = Client::orderBy('id', 'desc')->get();
+            $clients = $clientRepo->getClients();
             $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
             $resp->message  = Globals::$STATUS_DESC_SUCCESS;
             $resp->data = $clients;

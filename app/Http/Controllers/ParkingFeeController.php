@@ -8,6 +8,7 @@ use App\Models\ParkingFee;
 use App\Models\ParkingArea;
 use App\Models\Client;
 use App\Models\VehicleCategory;
+use App\Repositories\ParkingFeeRepository;
 use Helper;
 use Globals;
 use Validator;
@@ -25,18 +26,12 @@ class ParkingFeeController extends Controller
     *
     * @return \Illuminate\Http\Response
     */
-    public function index()
+    public function index(ParkingFeeRepository $parkingFeeRepo)
     {
         $resp = new ApiResponse();
         try {
-            $parking_fees = ParkingFee::orderBy('id', 'desc')->get();
-            if(count((array)$parking_fees) > 0){
-                foreach($parking_fees as $fee){
-                    $parking = ParkingArea::find($fee->parking_area_id);
-                    $client = Client::find($parking->client_id);
-                    $fee->client_name = $client->name;
-                }
-            }
+            
+            $parking_fees = $parkingFeeRepo->getParkingFees();
             $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
             $resp->message  = Globals::$STATUS_DESC_SUCCESS;
             $resp->data = $parking_fees;

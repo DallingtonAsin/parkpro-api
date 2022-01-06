@@ -9,6 +9,7 @@ use App\Helpers\ApiResponse;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use App\Repositories\UserRoleRepository;
 use Helper;
 use Globals;
 
@@ -26,11 +27,11 @@ class RolesController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index(Request $request)
+    public function index(UserRoleRepository $roleRepo)
     {
         $resp = new ApiResponse();
         try {
-                $roles = Role::all();
+                $roles = $roleRepo->getRoles();
                 $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
                 $resp->message  = Globals::$STATUS_DESC_SUCCESS;
                 $resp->data = $roles;
