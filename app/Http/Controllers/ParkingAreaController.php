@@ -5,9 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Helpers\ApiResponse;
 use App\Models\ParkingArea;
-use App\Models\ParkingFee;
 use App\Models\Client;
-use App\Models\VehicleCategory;
+use App\Repositories\ParkingAreaRepository;
 use Helper;
 use Globals;
 use Validator;
@@ -25,30 +24,11 @@ class ParkingAreaController extends Controller
     *
     * @return \Illuminate\Http\Response
     */
-    public function index()
+    public function index(ParkingAreaRepository $parkingAreaRepo)
     {
         $resp = new ApiResponse();
         try {
-            $parking_areas = ParkingArea::orderBy('id', 'desc')->get();
-            $num = 1000;
-            foreach($parking_areas as $parking){
-                $parking->spots = $parking->total_space;
-                $parking->free = $parking->current_free_space;
-                $parking->client = Client::where('id', $parking->client_id)->value('name');
-                $parking->image = "https://picsum.photos/".$num++."";
-                $parking->coordinate = array("latitude" => $parking->latitude, "longitude" => $parking->longitude);
-                $parking->distance = 35;
-                $parking->fees = $this->getParkingFees($parking->id);
-                $parking->is_open = date('H') < date('H', strtotime($parking->closes_at)) ? true : false;
-                $parking->opens_at = date('H:i', strtotime($parking->opens_at));
-                $parking->closes_at = date('H:i', strtotime($parking->closes_at));
-
-                // unset($parking->total_space);
-                // unset($parking->current_free_space);
-                // unset($parking->created_at);
-                // unset($parking->updated_at);
-
-            }
+            $parking_areas = $parkingAreaRepo->getParkingAreas();
             $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
             $resp->message  = Globals::$STATUS_DESC_SUCCESS;
             $resp->data = $parking_areas;
@@ -62,21 +42,7 @@ class ParkingAreaController extends Controller
     }
 
 
-    private function getParkingFees($parking_area_id){
-       try{
-        $vehicleCats = VehicleCategory::all();
-        $fees = [];
-        foreach($vehicleCats as $cat){
-         $fee_per_hour = ParkingFee::where('parking_area_id', $parking_area_id)
-                ->where('vehicle_cat_id', $cat->id)->value('fee_per_hour');
-        $fees[strtolower($cat->name)] = $fee_per_hour; 
-        }
-       return $fees;
-       }catch(Exception $e){
-           throw $e;
-       }
-    }
-    
+
     public function getParkingSpots(Request $request)
     {
         $resp = new ApiResponse();

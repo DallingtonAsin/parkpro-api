@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Helpers\ApiResponse;
 use App\Models\VehicleCategory;
+use App\Repositories\VehicleCategoryRepository;
 use Helper;
 use Globals;
 use Validator;
@@ -22,14 +23,11 @@ class VehicleCategoryController extends Controller
     *
     * @return \Illuminate\Http\Response
     */
-    public function index()
+    public function index(VehicleCategoryRepository $vehicleRepo)
     {
         $resp = new ApiResponse();
         try {
-            $vehicle_categories = VehicleCategory::all();
-            foreach($vehicle_categories as $cat){
-                $cat->name = strtolower($cat->name);
-            }
+            $vehicle_categories = $vehicleRepo->getVehicleCategories();
             $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
             $resp->message  = Globals::$STATUS_DESC_SUCCESS;
             $resp->data = $vehicle_categories;

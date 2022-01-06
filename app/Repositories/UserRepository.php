@@ -10,15 +10,16 @@ class UserRepository{
 
    public $users;
 
+   // Method
    public function getUsers(){
 
-    $users = User::orderBy('id', 'desc')->get();
-    if(count((array)$users) > 0){
-        foreach($users as $user){
+    $this->users = User::orderBy('id', 'desc')->get();
+    if(count((array)$this->users) > 0){
+        foreach($this->users as $user){
             $user->name = $user->first_name." ".$user->last_name;
         }
     }
-    return $users;
+    return $this->users;
 
    }
 
