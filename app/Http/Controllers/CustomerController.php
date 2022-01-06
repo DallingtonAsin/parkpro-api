@@ -91,6 +91,9 @@ class CustomerController extends Controller
          return response()->json($this->response, 200);
     }
 
+
+    
+
     public function authenticate(Request $request){ 
         if($request->isMethod('post')){
                 if ($request->filled(['phone_number', 'password'])) {

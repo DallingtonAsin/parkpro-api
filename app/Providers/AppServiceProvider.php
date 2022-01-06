@@ -5,6 +5,7 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use App\Channels\CustomPaymentDbChannel;
 use Illuminate\Support\Facades\Notification;
+use App\Repositories\UserRepository;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -15,6 +16,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
+
+
+    $this->app->bind('UserRepository', function(){
+        return new UserRepository();
+    });
        
     }
 
@@ -29,4 +35,6 @@ class AppServiceProvider extends ServiceProvider
             return new CustomPaymentDbChannel();
         });
     }
+
+
 }

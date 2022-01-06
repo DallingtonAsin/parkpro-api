@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Hash;
 use App\Mail\RegistrationMailSender;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use App\Repositories\UserRepository;
 use Validator;
 use Helper;
 use Globals;
@@ -125,16 +126,11 @@ private function isAccountDeleted($id){
 *
 * @return \Illuminate\Http\Response
 */
-public function index(Request $request)
+public function index(UserRepository $userrepo)
 {
     $resp = new ApiResponse();
     try {
-        $users = User::orderBy('id', 'desc')->get();
-        if(count((array)$users) > 0){
-            foreach($users as $user){
-                $user->name = $user->first_name." ".$user->last_name;
-            }
-        }
+        $users = $userrepo->getUsers();
         $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
         $resp->message  = Globals::$STATUS_DESC_SUCCESS;
         $resp->data = $users;
