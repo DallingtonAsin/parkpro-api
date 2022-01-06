@@ -38,18 +38,22 @@ Route::post('/user/login', [UserController::class, 'authenticate'])->name('login
 
 // USER ACCOUNT 
 Route::group(['prefix' => 'user', 'middleware' => ['auth:api-users']], function(){
+
         Route::post('/password/edit', [UserController::class, 'changePassword']);
         Route::get('/image/path', [UserController::class, 'getImageStoragePath']);
+        
 });
 
 
 // PARKING REQUESTS 
 Route::group(['prefix' => 'requests', 'middleware' => ['auth:api-users']], function(){
+
     Route::get('/pending', [ParkingRequestController::class, 'pendingRequests']);
     Route::get('/approved', [ParkingRequestController::class, 'approvedRequests']);
     Route::get('/rejected', [ParkingRequestController::class, 'rejectedRequests']);
     Route::post('/approve', [ParkingRequestController::class, 'approveRequest']);
     Route::post('/reject', [ParkingRequestController::class, 'rejectRequest']);
+
 });
 
 
@@ -62,7 +66,6 @@ Route::group(['middleware' => 'auth:api-users'], function(){
         'clients' => ClientController::class,
         'users' => UserController::class,
         'company' => CompanySettingsController::class,
-
         'requests' => ParkingRequestController::class,
         'vehicle-category' => VehicleCategoryController::class,
         'parking-fees' => ParkingFeeController::class,
@@ -83,6 +86,8 @@ Route::group(['prefix' => 'reports', 'middleware' => ['auth:api-users']], functi
     Route::get('/incomes/review', [ReportsController::class, 'incomeMonthlyReview']);
     Route::get('/requests/data', [ReportsController::class, 'GetMonthlyRequestsData']);
     Route::get('/incomes/data', [ReportsController::class, 'GetMonthlyIncomeData']);
+    Route::get('/system-audit', [ReportsController::class, 'fetchLogs']);
+
 });
 
 

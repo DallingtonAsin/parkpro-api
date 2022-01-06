@@ -12,6 +12,7 @@ use App\Models\MonthlyReview;
 use App\Models\ActivityLog;
 use App\Helpers\ApiResponse;
 use App\Repositories\ReportRepository;
+use App\Repositories\SystemAuditRepository;
 use Carbon\Carbon;
 use Globals;
 use Helper;
@@ -111,11 +112,11 @@ class ReportsController extends Controller
 
     }
 
-    public function fetchLogs(ReportRepository $reportRepo)
+    public function fetchLogs(SystemAuditRepository $auditRepo)
     {
         $resp = new ApiResponse();
         try {
-                $logs = ActivityLog::orderBy('id', 'desc')->get();
+                $logs = $auditRepo->getLogs();
                 $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
                 $resp->message  = Globals::$STATUS_DESC_SUCCESS;
                 $resp->data = $logs; 
