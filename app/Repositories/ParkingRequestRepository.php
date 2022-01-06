@@ -8,7 +8,8 @@ class ParkingRequestRepository{
     
     // property
     
-    public $parking_requests, $pending_requests, $approved_requests;
+    public $parking_requests, $pending_requests,
+     $approved_requests, $rejected_requests;
     
     // Method
     public function getAll(){
@@ -37,6 +38,18 @@ class ParkingRequestRepository{
         return $this->approved_requests;
         
     }
+
+    // rejected requests
+    public function getRejectedRequests(){
+        
+        $this->rejected_requests = ParkingRequest::where('status', '=', 'REJECTED')
+        ->orderBy('reject_date', 'desc')
+        ->wherenotNull('reject_date')->get();
+        return $this->rejected_requests;
+        
+    }
+
+    
     
     
     

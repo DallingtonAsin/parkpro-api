@@ -71,18 +71,12 @@ class ParkingRequestController extends Controller
     }
 
 
-    public function approvedRequests(Request $request)
+    public function approvedRequests(ParkingRequestRepository $parkingReqRepo)
     {
         
         try {
-            $approved_parking_requests = getApprovedRequests();
-
-            if(count($approved_parking_requests->toArray()) > 0){
-                $this->response['data'] = $approved_parking_requests;
-
-            }else{
-                $this->response['data'] = [];
-            }
+            $approved_parking_requests = $parkingReqRepo->getApprovedRequests();
+            $this->response['data'] = $approved_parking_requests;
             $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
             $this->response['message']  = Globals::$STATUS_DESC_SUCCESS;
             
@@ -96,16 +90,14 @@ class ParkingRequestController extends Controller
     }
     
     
-    public function rejectedRequests(Request $request){
+    public function rejectedRequests(ParkingRequestRepository $parkingReqRepo){
         
         $resp = new ApiResponse();
         try {
-            $approved_parking_requests = ParkingRequest::where('status', '=', 'REJECTED')
-            ->orderBy('reject_date', 'desc')
-            ->wherenotNull('reject_date')->get();
+            $rejected_requests = $parkingReqRepo->getRejectedRequests();
             $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
             $resp->message  = Globals::$STATUS_DESC_SUCCESS;
-            $resp->data = $approved_parking_requests;
+            $resp->data = $rejected_requests;
         } catch (\Exception $ex) {
             $resp->statusCode = Globals::$STATUS_CODE_ERROR;
             $resp->message = $ex->getMessage();
