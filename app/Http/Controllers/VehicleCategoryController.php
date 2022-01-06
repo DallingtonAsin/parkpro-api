@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Helpers\ApiResponse;
 use App\Models\VehicleCategory;
 use App\Repositories\VehicleCategoryRepository;
+use App\Helpers\formattedApiResponse;
 use Helper;
 use Globals;
 use Validator;

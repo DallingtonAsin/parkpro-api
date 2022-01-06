@@ -14,6 +14,7 @@ use App\Mail\RegistrationMailSender;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use App\Repositories\UserRepository;
+use App\Helpers\formattedApiResponse;
 use Validator;
 use Helper;
 use Globals;
