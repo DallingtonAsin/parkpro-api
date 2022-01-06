@@ -51,6 +51,73 @@ class ParkingRequestController extends Controller
         
         return response()->json($resp);
     }
+
+   // pending parking requests
+    public function pendingRequests(ParkingRequestRepository $parkingReqRepo)
+    {
+        $resp = new ApiResponse();
+        try {
+            $parking_requests = $parkingReqRepo->getPendingRequests();
+            $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
+            $resp->message  = Globals::$STATUS_DESC_SUCCESS;
+            $resp->data = $parking_requests;
+        } catch (\Exception $ex) {
+            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
+            $resp->message = $ex->getMessage();
+            $resp->data = $ex->getMessage();
+        }
+        
+        return response()->json($resp);
+    }
+
+
+    public function approvedRequests(Request $request)
+    {
+        
+        try {
+            $approved_parking_requests = getApprovedRequests();
+
+            if(count($approved_parking_requests->toArray()) > 0){
+                $this->response['data'] = $approved_parking_requests;
+
+            }else{
+                $this->response['data'] = [];
+            }
+            $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
+            $this->response['message']  = Globals::$STATUS_DESC_SUCCESS;
+            
+        } catch (\Exception $ex) {
+            $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
+            $this->response['message'] = $ex->getMessage();
+            $this->response['data'] = $ex->getMessage();
+        }
+        
+        return response()->json($this->response, 200);
+    }
+    
+    
+    public function rejectedRequests(Request $request){
+        
+        $resp = new ApiResponse();
+        try {
+            $approved_parking_requests = ParkingRequest::where('status', '=', 'REJECTED')
+            ->orderBy('reject_date', 'desc')
+            ->wherenotNull('reject_date')->get();
+            $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
+            $resp->message  = Globals::$STATUS_DESC_SUCCESS;
+            $resp->data = $approved_parking_requests;
+        } catch (\Exception $ex) {
+            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
+            $resp->message = $ex->getMessage();
+            $resp->data = $ex->getMessage();
+        }
+        
+        return response()->json($resp);
+    }
+
+
+
+
     
     public function getTransactionHistory(Request $request)
     {
@@ -88,78 +155,7 @@ class ParkingRequestController extends Controller
                 return response()->json($resp);
             }
             
-            
-            
-            public function pendingRequests(Request $request)
-            {
-                $resp = new ApiResponse();
-                try {
-                    $parking_requests = ParkingRequest::where('status', '=', 'PENDING')
-                    ->orderBy('request_date', 'desc')
-                    ->get();
-                    $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                    $resp->message  = Globals::$STATUS_DESC_SUCCESS;
-                    $resp->data = $parking_requests;
-                } catch (\Exception $ex) {
-                    $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-                    $resp->message = $ex->getMessage();
-                    $resp->data = $ex->getMessage();
-                }
-                
-                return response()->json($resp);
-            }
-            
-            
-            public function approvedRequests(Request $request)
-            {
-                
-                try {
-                    $approved_parking_requests = ParkingRequest::where('status', '=', 'APPROVED')
-                    ->orderBy('approval_date', 'desc')
-                    ->wherenotNull('approval_date')->get();
-
-                    if(count($approved_parking_requests->toArray()) > 0){
-                        // foreach($approved_parking_requests as $request){
-                        // }
-                        $this->response['data'] = $approved_parking_requests;
-
-                    }else{
-                        $this->response['data'] = [];
-                    }
-                    $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
-                    $this->response['message']  = Globals::$STATUS_DESC_SUCCESS;
-                    
-                } catch (\Exception $ex) {
-                    $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
-                    $this->response['message'] = $ex->getMessage();
-                    $this->response['data'] = $ex->getMessage();
-                }
-                
-                return response()->json($this->response, 200);
-            }
-            
-            
-            public function rejectedRequests(Request $request)
-            {
-                
-                $resp = new ApiResponse();
-                try {
-                    $approved_parking_requests = ParkingRequest::where('status', '=', 'REJECTED')
-                    ->orderBy('reject_date', 'desc')
-                    ->wherenotNull('reject_date')->get();
-                    $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                    $resp->message  = Globals::$STATUS_DESC_SUCCESS;
-                    $resp->data = $approved_parking_requests;
-                } catch (\Exception $ex) {
-                    $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-                    $resp->message = $ex->getMessage();
-                    $resp->data = $ex->getMessage();
-                }
-                
-                return response()->json($resp);
-            }
-            
-            
+        
             public function approveRequest(Request $request)
             {
                 
