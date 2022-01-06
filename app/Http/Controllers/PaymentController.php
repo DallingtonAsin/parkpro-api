@@ -8,17 +8,16 @@ use App\Helpers\ApiResponse;
 use Illuminate\Support\Facades\Storage;
 use App\Notifications\PaymentMadeNotification;
 use App\Models\Customer;
-use App\Models\Notifications;
 use App\Models\CustomersLedger;
+use App\Jobs\ProcessCustomerPayment;
+use App\Repositories\NotificationRepository;
+use App\Repositories\PaymentRepository;
+use Carbon\Carbon;
 use Hash;
 use Helper;
 use Globals;
 use Notification;
 use LaramanBeyonic;
-use Carbon\Carbon;
-use App\Jobs\ProcessCustomerPayment;
-use App\Repositories\NotificationRepository;
-use App\Repositories\PaymentRepository;
 
 
 
