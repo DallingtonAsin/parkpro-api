@@ -1,6 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Services\Billing\PaymentGateway;
+use App\Facades\Payment;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -16,4 +19,12 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     // return view('welcome');
     dd(app());
+});
+
+Route::get('/facade', function () {
+
+    // $paymentService = new PaymentGateway();
+    // $paymentService->hello();
+
+    Payment::hello("Hey");
 });

@@ -6,6 +6,7 @@ use Illuminate\Support\ServiceProvider;
 use App\Channels\CustomPaymentDbChannel;
 use Illuminate\Support\Facades\Notification;
 use App\Repositories\UserRepository;
+use App\Services\Billing\PaymentGateway;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,6 +20,10 @@ class AppServiceProvider extends ServiceProvider
 
     $this->app->bind('UserRepository', function(){
         return new UserRepository();
+    });
+
+    $this->app->singleton('Payment', function(){
+        return new PaymentGateway();
     });
        
     }
