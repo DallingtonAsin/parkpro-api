@@ -93,6 +93,7 @@ class PaymentController extends Controller
                             Helper::logActivity($request, ['name' => 'System', 'role' => 'system', 'action' => $action]);
                             $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
                             $resp->message = $responseInfo; 
+                            $resp->data = Helper::getCustomerData($customer_id);
                         // }else{
                         //     $messageErr = "Unable to top up customer account!";
                         //     $responseInfo = Helper::getMessage('error', $messageErr);
