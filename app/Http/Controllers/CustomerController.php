@@ -72,18 +72,14 @@ class CustomerController extends Controller
                 'password' => request('password'),
             ])){
                 config(['auth.guards.api.provider' => 'customer']);
-                $customer = Customer::select('customers.*')
-                           ->find(auth()->guard('customer')->user()->id);
-                if($customer->account_balance >= 1000){
-                    $customer->account_balance = number_format($customer->account_balance);
-                }
-                if(!empty($customer->image)){
-                    $customer->image =  Storage::disk('public')->url($customer->image);
-                }
-                $customer['access_token'] = $customer->createToken('Customer'.$customer->phone_number, ['customer'])->accessToken;
+
+                $customer_id = auth()->guard('customer')->user()->id;
+                $customer = Customer::select('customers.*')->find($customer_id);
+                $customerData = Helper::getCustomerData($customer_id);
+                $customerData['access_token'] = $customer->createToken('Customer'.$customer->phone_number, ['customer'])->accessToken;
                 $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
                 $this->response['message'] = 'Login successful';
-                $this->response['data'] = $customer;
+                $this->response['data'] = $customerData;
 
             }else{
                 $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
@@ -608,7 +604,7 @@ class CustomerController extends Controller
             $resp->data = $ex->getMessage();
         }
         
-        return response()->json($resp);
+        return response()->json($resp, 200);
     }
     
     
