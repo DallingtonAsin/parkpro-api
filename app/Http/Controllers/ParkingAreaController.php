@@ -115,12 +115,13 @@ class ParkingAreaController extends Controller
         
         try{
             
-                if($request->filled(['client_id', 'name', 'address',
+                if($request->filled(['client_id', 'name', 'phone_number', 'address',
                  'description', 'opens_at', 'closes_at', 'latitude',
                  'longitude', 'total_space'])){
                     
                     $client_id = $request->input('client_id');
                     $name = $request->input('name');
+                    $phone_number = $request->input('phone_number');
                     $address = $request->input('address');
                     $description = $request->input('description');
                     $opens_at = $request->input('opens_at');
@@ -142,6 +143,7 @@ class ParkingAreaController extends Controller
                                 
                                 $parkingArea->client_id = $client_id;
                                 $parkingArea->name = $name;
+                                $parkingArea->phone_number = $phone_number;
                                 $parkingArea->address = $address;
                                 $parkingArea->description = $description;
                                 $parkingArea->opens_at = date('H:i:s', strtotime($opens_at));
@@ -225,6 +227,7 @@ class ParkingAreaController extends Controller
         $validator = Validator::make($request->all(), [
             'user_id' => 'required',
             'name' => 'required',
+            'phone_number' => 'required',
             'address' => 'required',
             'description' => 'required',
             'opens_at' => 'required',
@@ -242,6 +245,7 @@ class ParkingAreaController extends Controller
                 
                 $author_id = $request->input('user_id');
                 $name = $request->input('name');
+                $phone_number = $request->input('phone_number');
                 $address = $request->input('address');
                 $description = $request->input('description');
                 $opens_at = $request->input('opens_at');
@@ -255,6 +259,7 @@ class ParkingAreaController extends Controller
                 $parking_name = $parking->name;
                 
                 $parking->name = $name;
+                $parking->phone_number = $phone_number;
                 $parking->address = $address;
                 $parking->description = $description;
                 $parking->opens_at = $opens_at;
