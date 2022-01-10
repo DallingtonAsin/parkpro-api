@@ -278,11 +278,11 @@ class ParkingRequestController extends Controller
         $minutes = floor($seconds / 60);
         $seconds -= $minutes * 60;
         $hrLabel = $hours > 1 ? 'hrs' : 'hr';
-        return $this->lz($hours)." ".$hrLabel." ".$this->lz($minutes)." min"; // .$this->lz($seconds);
+        return $this->lz($hours)."".$hrLabel."".$this->lz($minutes)."min"; // .$this->lz($seconds);
     }
     
     private function lz($num){
-        return (strlen($num) < 2) ? "0{$num}" : $num;
+        return (strlen($num) < 2) ? "{$num}" : $num;
     }
     
     public function getRequestOrderInfo(Request $request) {
