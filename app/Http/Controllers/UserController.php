@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Role;
+use App\Models\Company;
 use App\Helpers\ApiResponse;
 use Illuminate\Hashing\BcryptHasher;
 use Illuminate\Support\Str;
@@ -337,15 +338,25 @@ public function store(Request $request)
                             $name = $fname." ".$lname;
                             $subject = 'User Registration';
                             $registraPosition = 'User';
-                            $registraEmail = 'parksmartug@gmail.com'; //$request->user()->email;
+                            $registraEmail = 'info@parkproug.com'; //$request->user()->email;
                             $default_password = $defaultPwd;
                             $now = now();
                             $registeredRole = Helper::getUserRole($role);
                             $action =  "registered user ".$name." as ".$registeredRole."";
-                            $sendAction = "You have been registered as ".$registeredRole."  at parksmart today at ".$now."";
+
+                            $company = Company::whereNotNull('name')->first();
+                            if(isset($company->name)){
+                                $company_name = $company->name;
+                            }else{
+                                $company_name = env('APP_NAME');
+                            }
+
+                            $sendAction = "You have been registered as ".$registeredRole."  at ".$company_name." today at ".$now."";
                             Helper::logActivity($request, ['name' => $registra, 'role' => Helper::getUserRole($registra_id), 'action' => $action]);
                             $data = array(
                                 'name' => $name,
+                                'first_name' => $fname,
+                                'last_name' => $lname,
                                 'username' => $username,
                                 'password' => $default_password,
                                 'user_position' => 'user',
@@ -357,6 +368,7 @@ public function store(Request $request)
                                 'created_at' => $now,
                                 'details' => $sendAction,
                                 'activity' => 'registration',
+                                'company' => $company_name,
                             );
                             
                             if(Helper::is_connectedToInternet() == 1){

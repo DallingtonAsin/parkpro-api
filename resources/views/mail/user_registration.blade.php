@@ -6,31 +6,23 @@
 	</strong>
 </p>
 
-<p>Hi  <strong>{{ $name }}</strong> <br>
+<p>Hello  <strong>{{ $first_name }},</strong> <br/>
 {{ $details }}
 </p>
 
 @if($activity == 'registration')
-<p>You will be able to login into the system using the following details<br>
-<strong>Username</strong>: <span>{{ $username }}</span><br>
-<strong>Password</strong>: <span>{{ $password }}</span><br>
+<p>You will be able to login into the system using the following details<br/>
+<strong>Email</strong>: <span>{{ $email }}</span><br/>
+<strong>Password</strong>: <span>{{ $password }}</span><br/>
 </p>
 @endif
 
-<br>
-<a href="{{ config('app.domain') }}">Click this link to login and start using the system</a>
-<br>
+<p><a href="{{ config('app.domain') }}">Click this link to login and start using the system</a></p>
 
-
-Thanks & Regards,<br>
-{{ $registra }}<br>
-{{ $registraPosition }}, 
- @if(isset($companyData))
-     {{ $companyData['company_name'] }}
-     @else
-     {{ env('APP_NAME') }}
-     @endif
-<br>
+Thanks & Regards,<br/>
+{{ $registra }}<br/>
+{{ $company }}
+<br/>
 {{ $registraEmail }}
 
 @endcomponent

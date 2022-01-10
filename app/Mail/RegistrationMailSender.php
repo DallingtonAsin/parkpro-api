@@ -32,6 +32,8 @@ class RegistrationMailSender extends Mailable
         return $this->markdown('mail.user_registration')
         ->subject($this->data['subject'])
         ->with([
+            'first_name' => $this->data['first_name'],
+            'last_name' => $this->data['last_name'],
             'name' => $this->data['name'],
             'username' => $this->data['username'],
             'password' => $this->data['password'],
@@ -44,6 +46,7 @@ class RegistrationMailSender extends Mailable
             'created_at' => $this->data['created_at'],
             'details' => $this->data['details'],
             'activity' => $this->data['activity'],
+            'company' => $this->data['company'],
     ]);
 
     }
