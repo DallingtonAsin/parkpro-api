@@ -277,7 +277,8 @@ class ParkingRequestController extends Controller
         $seconds -= $hours * 3600;
         $minutes = floor($seconds / 60);
         $seconds -= $minutes * 60;
-        return $this->lz($hours)." hours ".$this->lz($minutes)." minutes"; // .$this->lz($seconds);
+        $hrLabel = $hours > 1 ? 'hrs' : 'hr';
+        return $this->lz($hours)." ".$hrLabel." ".$this->lz($minutes)." min"; // .$this->lz($seconds);
     }
     
     private function lz($num){
