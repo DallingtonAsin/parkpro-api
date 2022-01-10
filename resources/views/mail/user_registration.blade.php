@@ -2,7 +2,7 @@
 @component("mail::panel")
 <p>
 	<strong class="text-success">
-		{{ $subject }} at {{ config('app.name') }}
+		{{ $subject }} at {{ $company }}
 	</strong>
 </p>
 
