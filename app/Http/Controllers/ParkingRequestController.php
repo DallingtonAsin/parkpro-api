@@ -277,7 +277,7 @@ class ParkingRequestController extends Controller
         $seconds -= $hours * 3600;
         $minutes = floor($seconds / 60);
         $seconds -= $minutes * 60;
-        return lz($hours).":".lz($minutes).":".lz($seconds);
+        return $this->lz($hours).":".$this->lz($minutes).":".$this->lz($seconds);
     }
     
     private function lz($num){
