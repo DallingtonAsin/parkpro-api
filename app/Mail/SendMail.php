@@ -28,6 +28,7 @@ class SendMail extends Mailable
         ->with([
             'subject' => $this->data['subject'],
             'name' => $this->data['name'],
+            'reaction' => $this->data['reaction'],
             'email' => $this->data['email'],
             'description' => $this->data['description'],
     ]);

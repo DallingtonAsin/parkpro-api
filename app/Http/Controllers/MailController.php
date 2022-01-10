@@ -19,9 +19,10 @@ class MailController extends Controller
     public function postCustomerSuggestion(Request $request){
         $resp = new ApiResponse();
         try {
-                if($request->filled(['id','email','subject','description'])){
+                if($request->filled(['id', 'reaction', 'email','subject','description'])){
 
                     $customer_id = $request->input('id');
+                    $reaction = $request->input('reaction');
                     $email = $request->input('email');
                     $subject = $request->input('subject');
                     $description = $request->input('description');
@@ -34,6 +35,7 @@ class MailController extends Controller
                         $data = array(
                            'name' => $name,
                            'email' => $email,
+                           'reaction' => $reaction,
                            'subject' => $subject,
                            'description' => $description,
                         );
