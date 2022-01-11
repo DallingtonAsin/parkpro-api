@@ -234,7 +234,7 @@ class ParkingRequestController extends Controller
     }
     
     private function generateOrderNo($customer_id){
-        $orderNo = time() . '' . $customer_id;
+        $orderNo = ParkingRequest::max('id') + 1; // time() . '' . $customer_id;
         return $orderNo;
     }
     
