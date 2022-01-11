@@ -15,7 +15,7 @@ class ParkingAreaRepository{
     # Methods
     public function getParkingAreas(){
         
-        $this->parking_areas = ParkingArea::orderBy('request_date', 'desc')->get();
+        $this->parking_areas = ParkingArea::orderBy('id', 'desc')->get();
         $num = 1000;
         foreach($this->parking_areas as $parking){
             $parking->spots = $parking->total_space;
