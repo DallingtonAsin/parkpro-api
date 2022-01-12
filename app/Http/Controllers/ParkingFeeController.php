@@ -38,6 +38,7 @@ class ParkingFeeController extends Controller
     public function getParkingFees(Request $request){
         $resp = new ApiResponse();
         try {
+            dd("Yes");
             $parking_area_id = $request->input('parking_area_id');
             $parking_fees = ParkingFee::where('parking_area_id', $parking_area_id)->get();
             foreach ($parking_fees as $item){

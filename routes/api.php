@@ -120,7 +120,7 @@ Route::group(['prefix' => 'customer', 'middleware' => ['auth:api-customers']], f
 
 Route::group(['prefix' => 'device', 'middleware' => ['auth:api-customers']], function(){
 
-        Route::get('parking-fees', [ParkingFeeController::class, 'getParkingFees']); // done
+        Route::get('parking-area/fees', [ParkingFeeController::class, 'getParkingFees']); // done
         Route::get('parking-spots', [ParkingAreaController::class, 'getParkingSpots']); // done
         Route::get('parking-areas/search', [ParkingAreaController::class, 'searchParkingArea']); // done
         Route::get('parking-request/myrequests', [ParkingRequestController::class, 'getMyParkingRequests']);
