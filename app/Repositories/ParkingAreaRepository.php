@@ -6,6 +6,7 @@ use App\Models\ParkingArea;
 use App\Models\VehicleCategory;
 use App\Models\ParkingFee;
 use App\Models\Client;
+use Illuminate\Support\Facades\Storage;
 
 class ParkingAreaRepository{
     
@@ -21,7 +22,11 @@ class ParkingAreaRepository{
             $parking->spots = $parking->total_space;
             $parking->free = $parking->current_free_space;
             $parking->client = Client::where('id', $parking->client_id)->value('name');
-            $parking->image = "https://picsum.photos/".$num++."";
+            if(!empty($parking->photo)){
+                $parking->photo =  Storage::disk('public')->url($parking->photo);
+            }else{
+                $parking->photo = "https://picsum.photos/".$num++."";
+            }
             $parking->coordinate = array("latitude" => $parking->latitude, "longitude" => $parking->longitude);
             $parking->distance = 35;
             $parking->fees = $this->getParkingFees($parking->id);

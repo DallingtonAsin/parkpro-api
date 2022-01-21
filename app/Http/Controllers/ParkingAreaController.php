@@ -12,6 +12,7 @@ use Helper;
 use Globals;
 use Validator;
 
+
 class ParkingAreaController extends Controller
 {
 
