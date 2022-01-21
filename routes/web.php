@@ -17,8 +17,8 @@ use App\Facades\Payment;
 */
 
 Route::get('/', function () {
-    // return view('welcome');
-    dd(app());
+    return view('welcome');
+    // dd(app());
 });
 
 Route::get('/facade', function () {

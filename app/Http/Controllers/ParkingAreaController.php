@@ -140,6 +140,17 @@ class ParkingAreaController extends Controller
                             if($count == 0){
                                 
                                 $parkingArea = new ParkingArea();
+
+                                if($request->hasFile('photo')){
+                                    $file = $request->file('photo');
+                                    $file_name = $file->getClientOriginalName();
+                                    $file_extension = $file->extension();
+                                    $fileName = time().'.'.$file_extension;
+                                    $filePath = $file->storeAs('images/parking-areas', $fileName, 'public');
+                                    $photo = $filePath;
+                                }else{
+                                    $photo = null;
+                                }
                                 
                                 $parkingArea->client_id = $client_id;
                                 $parkingArea->name = $name;
@@ -152,6 +163,8 @@ class ParkingAreaController extends Controller
                                 $parkingArea->longitude = floatval($longitude);
                                 $parkingArea->total_space = $total_space;
                                 $parkingArea->current_free_space = $total_space;
+                                $parkingArea->photo = $photo;
+
                                 
                                 if ($parkingArea->save()) {
                                     $action = "added parking area ".$name." for client ".$client_name."";
@@ -254,9 +267,20 @@ class ParkingAreaController extends Controller
                 $longitude = $request->input('longitude');
                 $slots = $request->input('slots');
 
-
                 $parking = ParkingArea::find($id);
                 $parking_name = $parking->name;
+                if($request->hasFile('photo')){
+                    $file = $request->file('photo');
+                    $file_extension = $file->extension();
+                    if(!empty($parking->photo)){
+                        Storage::disk('public')->delete($parking->photo);
+                    }
+                    $fileName = $userId.''.time().'.'.$file_extension;
+                    $filePath = $file->storeAs('images/parking-areas', $fileName, 'public');
+                    $photo = $filePath;
+                }else{
+                    $photo  = $parking->photo;
+                }
                 
                 $parking->name = $name;
                 $parking->phone_number = $phone_number;
@@ -267,6 +291,8 @@ class ParkingAreaController extends Controller
                 $parking->latitude = $latitude;
                 $parking->longitude = $longitude;
                 $parking->total_space = $slots;
+                $parking->photo = $photo;
+
 
                 if($parking->save()){
                     $author = Helper::getUserNames($author_id);
