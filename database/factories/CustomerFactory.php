@@ -28,7 +28,7 @@ class CustomerFactory extends Factory
                 'last_name' => $this->faker->lastName,
                 'phone_number' => $this->faker->e164phoneNumber,
                 'email' => $this->faker->unique()->safeEmail,
-                'password' => Hash::make('12345678'),
+                'otp' => $this->faker->numberBetween(1000, 9000),
                 'email_verified_at' => now(),
                 'remember_token' => Str::random(10),
   ];

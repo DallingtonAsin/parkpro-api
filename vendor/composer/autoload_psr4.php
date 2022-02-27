@@ -98,4 +98,6 @@ return array(
     'Brick\\Math\\' => array($vendorDir . '/brick/math/src'),
     'Asm89\\Stack\\' => array($vendorDir . '/asm89/stack-cors/src'),
     'App\\' => array($baseDir . '/app'),
+    'AfricasTalking\\SDK\\Tests\\' => array($vendorDir . '/africastalking/africastalking/tests'),
+    'AfricasTalking\\SDK\\' => array($vendorDir . '/africastalking/africastalking/src'),
 );

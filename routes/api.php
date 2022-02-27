@@ -96,8 +96,9 @@ Route::get('/parking/fee/{client_id}/{parking_area_id}/{vehicle_type_id}', [Park
 
 
 // Customer Login and Registration (done)
-Route::post('/customer/login', [CustomerController::class, 'customerLogin']); // done
-Route::post('/customer/register', [CustomerController::class, 'register']); // done
+Route::post('/customer/send-otp', [CustomerController::class, 'InsertOrUpdateCustomerOTP']); // done
+Route::post('/customer/verify-otp', [CustomerController::class, 'verifyOTP']); // done
+Route::post('/customer/profile/create', [CustomerController::class, 'createProfile']); // done
 
 
 // Customer Routes

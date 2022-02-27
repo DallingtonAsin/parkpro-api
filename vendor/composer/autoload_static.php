@@ -21,9 +21,9 @@ class ComposerStaticInitb4e83dd425a8c855f480f938ea59714b
         'def43f6c87e4f8dfd0c9e1b1bab14fe8' => __DIR__ . '/..' . '/symfony/polyfill-iconv/bootstrap.php',
         '2c102faa651ef8ea5874edb585946bce' => __DIR__ . '/..' . '/swiftmailer/swiftmailer/lib/swift_required.php',
         '7b11c4dc42b3b3023073cb14e519683c' => __DIR__ . '/..' . '/ralouphie/getallheaders/src/getallheaders.php',
-        'a1105708a18b76903365ca1c4aa61b02' => __DIR__ . '/..' . '/symfony/translation/Resources/functions.php',
         'c964ee0ededf28c96ebd9db5099ef910' => __DIR__ . '/..' . '/guzzlehttp/promises/src/functions_include.php',
         'a0edc8309cc5e1d60e3047b5df6b7052' => __DIR__ . '/..' . '/guzzlehttp/psr7/src/functions_include.php',
+        'a1105708a18b76903365ca1c4aa61b02' => __DIR__ . '/..' . '/symfony/translation/Resources/functions.php',
         '37a3dc5111fe8f707ab4c132ef1dbc62' => __DIR__ . '/..' . '/guzzlehttp/guzzle/src/functions_include.php',
         '538ca81a9a966a6716601ecf48f4eaef' => __DIR__ . '/..' . '/opis/closure/functions.php',
         'e39a8b23c42d4e1452234d762b03835a' => __DIR__ . '/..' . '/ramsey/uuid/src/functions.php',
@@ -194,6 +194,8 @@ class ComposerStaticInitb4e83dd425a8c855f480f938ea59714b
         array (
             'Asm89\\Stack\\' => 12,
             'App\\' => 4,
+            'AfricasTalking\\SDK\\Tests\\' => 25,
+            'AfricasTalking\\SDK\\' => 19,
         ),
     );
 
@@ -570,6 +572,14 @@ class ComposerStaticInitb4e83dd425a8c855f480f938ea59714b
         array (
             0 => __DIR__ . '/../..' . '/app',
         ),
+        'AfricasTalking\\SDK\\Tests\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/africastalking/africastalking/tests',
+        ),
+        'AfricasTalking\\SDK\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/africastalking/africastalking/src',
+        ),
     );
 
     public static $prefixesPsr0 = array (
@@ -583,6 +593,23 @@ class ComposerStaticInitb4e83dd425a8c855f480f938ea59714b
     );
 
     public static $classMap = array (
+        'AfricasTalking\\SDK\\AfricasTalking' => __DIR__ . '/..' . '/africastalking/africastalking/src/AfricasTalking.php',
+        'AfricasTalking\\SDK\\Airtime' => __DIR__ . '/..' . '/africastalking/africastalking/src/Airtime.php',
+        'AfricasTalking\\SDK\\Application' => __DIR__ . '/..' . '/africastalking/africastalking/src/Application.php',
+        'AfricasTalking\\SDK\\Content' => __DIR__ . '/..' . '/africastalking/africastalking/src/Content.php',
+        'AfricasTalking\\SDK\\Payments' => __DIR__ . '/..' . '/africastalking/africastalking/src/Payments.php',
+        'AfricasTalking\\SDK\\SMS' => __DIR__ . '/..' . '/africastalking/africastalking/src/SMS.php',
+        'AfricasTalking\\SDK\\Service' => __DIR__ . '/..' . '/africastalking/africastalking/src/Service.php',
+        'AfricasTalking\\SDK\\Tests\\AfricasTalkingTest' => __DIR__ . '/..' . '/africastalking/africastalking/tests/AfricasTalkingTest.php',
+        'AfricasTalking\\SDK\\Tests\\AirtimeTest' => __DIR__ . '/..' . '/africastalking/africastalking/tests/AirtimeTest.php',
+        'AfricasTalking\\SDK\\Tests\\ApplicationTest' => __DIR__ . '/..' . '/africastalking/africastalking/tests/ApplicationTest.php',
+        'AfricasTalking\\SDK\\Tests\\ContentTest' => __DIR__ . '/..' . '/africastalking/africastalking/tests/ContentTest.php',
+        'AfricasTalking\\SDK\\Tests\\PaymentsTest' => __DIR__ . '/..' . '/africastalking/africastalking/tests/PaymentsTest.php',
+        'AfricasTalking\\SDK\\Tests\\SMSTest' => __DIR__ . '/..' . '/africastalking/africastalking/tests/SMSTest.php',
+        'AfricasTalking\\SDK\\Tests\\TokenTest' => __DIR__ . '/..' . '/africastalking/africastalking/tests/TokenTest.php',
+        'AfricasTalking\\SDK\\Tests\\VoiceTest' => __DIR__ . '/..' . '/africastalking/africastalking/tests/VoiceTest.php',
+        'AfricasTalking\\SDK\\Token' => __DIR__ . '/..' . '/africastalking/africastalking/src/Token.php',
+        'AfricasTalking\\SDK\\Voice' => __DIR__ . '/..' . '/africastalking/africastalking/src/Voice.php',
         'App\\Channels\\CustomPaymentDbChannel' => __DIR__ . '/../..' . '/app/Channels/CustomPaymentDbChannel.php',
         'App\\Console\\Kernel' => __DIR__ . '/../..' . '/app/Console/Kernel.php',
         'App\\Events\\PaymentProcessed' => __DIR__ . '/../..' . '/app/Events/PaymentProcessed.php',

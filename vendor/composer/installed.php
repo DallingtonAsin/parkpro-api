@@ -5,11 +5,20 @@
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
-        'reference' => '155cd0b6d3251be94254ce2e534f31bf7c87bb6f',
+        'reference' => 'b47d63785d380037333806760a303dbb26c348c0',
         'name' => 'laravel/laravel',
         'dev' => true,
     ),
     'versions' => array(
+        'africastalking/africastalking' => array(
+            'pretty_version' => 'v3.0.0',
+            'version' => '3.0.0.0',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../africastalking/africastalking',
+            'aliases' => array(),
+            'reference' => '94e17a13eaaf782cf7697bfc7da020398a2b6f13',
+            'dev_requirement' => false,
+        ),
         'asm89/stack-cors' => array(
             'pretty_version' => 'v2.0.3',
             'version' => '2.0.3.0',
@@ -445,7 +454,7 @@
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
-            'reference' => '155cd0b6d3251be94254ce2e534f31bf7c87bb6f',
+            'reference' => 'b47d63785d380037333806760a303dbb26c348c0',
             'dev_requirement' => false,
         ),
         'laravel/passport' => array(

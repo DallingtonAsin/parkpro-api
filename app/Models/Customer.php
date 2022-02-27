@@ -22,11 +22,9 @@ class Customer extends Authenticatable
        'phone_number',
        'email',
        'account_balance',
-       'password'
     ];
 
     protected $hidden = [
-        'password',
         'remember_token',
     ];
 
@@ -35,7 +33,7 @@ class Customer extends Authenticatable
     ];
 
     public function getAuthPassword(){
-        return $this->password;
+        return $this->otp;
     }
 
 }

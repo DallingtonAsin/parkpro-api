@@ -6,6 +6,23 @@ $vendorDir = dirname(dirname(__FILE__));
 $baseDir = dirname($vendorDir);
 
 return array(
+    'AfricasTalking\\SDK\\AfricasTalking' => $vendorDir . '/africastalking/africastalking/src/AfricasTalking.php',
+    'AfricasTalking\\SDK\\Airtime' => $vendorDir . '/africastalking/africastalking/src/Airtime.php',
+    'AfricasTalking\\SDK\\Application' => $vendorDir . '/africastalking/africastalking/src/Application.php',
+    'AfricasTalking\\SDK\\Content' => $vendorDir . '/africastalking/africastalking/src/Content.php',
+    'AfricasTalking\\SDK\\Payments' => $vendorDir . '/africastalking/africastalking/src/Payments.php',
+    'AfricasTalking\\SDK\\SMS' => $vendorDir . '/africastalking/africastalking/src/SMS.php',
+    'AfricasTalking\\SDK\\Service' => $vendorDir . '/africastalking/africastalking/src/Service.php',
+    'AfricasTalking\\SDK\\Tests\\AfricasTalkingTest' => $vendorDir . '/africastalking/africastalking/tests/AfricasTalkingTest.php',
+    'AfricasTalking\\SDK\\Tests\\AirtimeTest' => $vendorDir . '/africastalking/africastalking/tests/AirtimeTest.php',
+    'AfricasTalking\\SDK\\Tests\\ApplicationTest' => $vendorDir . '/africastalking/africastalking/tests/ApplicationTest.php',
+    'AfricasTalking\\SDK\\Tests\\ContentTest' => $vendorDir . '/africastalking/africastalking/tests/ContentTest.php',
+    'AfricasTalking\\SDK\\Tests\\PaymentsTest' => $vendorDir . '/africastalking/africastalking/tests/PaymentsTest.php',
+    'AfricasTalking\\SDK\\Tests\\SMSTest' => $vendorDir . '/africastalking/africastalking/tests/SMSTest.php',
+    'AfricasTalking\\SDK\\Tests\\TokenTest' => $vendorDir . '/africastalking/africastalking/tests/TokenTest.php',
+    'AfricasTalking\\SDK\\Tests\\VoiceTest' => $vendorDir . '/africastalking/africastalking/tests/VoiceTest.php',
+    'AfricasTalking\\SDK\\Token' => $vendorDir . '/africastalking/africastalking/src/Token.php',
+    'AfricasTalking\\SDK\\Voice' => $vendorDir . '/africastalking/africastalking/src/Voice.php',
     'App\\Channels\\CustomPaymentDbChannel' => $baseDir . '/app/Channels/CustomPaymentDbChannel.php',
     'App\\Console\\Kernel' => $baseDir . '/app/Console/Kernel.php',
     'App\\Events\\PaymentProcessed' => $baseDir . '/app/Events/PaymentProcessed.php',

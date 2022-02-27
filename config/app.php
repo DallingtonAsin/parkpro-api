@@ -15,7 +15,14 @@ return [
 
     'name' => env('APP_NAME', 'Laravel'),
     'email' => env('MAIL_FROM_ADDRESS'),
+    'company_name' => env('COMPANY_NAME', 'ParkPro'),
     'domain' => env('APP_URL', 'http://dashboard.parkproug.com'),
+
+    'AfricasTalking_Sandbox_Username' => env('AFRICASTALKING_SANDBOX_USERNAME'),
+    'AfricasTalking_Sandbox_ApiKey' => env('AFRICASTALKING_SANDBOX_APIKEY'),
+    'AfricasTalking_Live_Username' => env('AFRICASTALKING_LIVE_USERNAME'),
+    'AfricasTalking_Live_ApiKey' => env('AFRICASTALKING_LIVE_APIKEY'),
+
 
 
     /*
