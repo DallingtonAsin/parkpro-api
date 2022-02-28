@@ -332,8 +332,8 @@ class CustomerController extends Controller
         return response()->json($this->response, 200);
         
     }
-
-
+    
+    
     public function createProfile(Request $request){
         
         $validator = Validator::make($request->all(), [
@@ -364,36 +364,36 @@ class CustomerController extends Controller
                 }else{
                     $email = null;
                 }
-
+                
                 $exists = Customer::where("id", "=", $customerId)->where("phone_number", "=", $phone_number)->exists();
                 if($exists){
-                $customer = Customer::find($customerId);
-                $hasUpdated = Customer::where('id', '=', $customerId)
-                ->update([
-                    'first_name' => $first_name,
-                    'last_name' => $last_name,
-                    'phone_number' => $phone_number,
-                    'email' => $email,
-                    'is_active' => true,
-                ]);
-                
-                if($hasUpdated){
                     $customer = Customer::find($customerId);
-                    config(['auth.guards.api.provider' => 'customer']);
-                    $action = "created your profile";
-                    $this->response['message'] = Helper::getMessage('success', $action);
-                    $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
-                    $customerData = Helper::getCustomerData($customerId);
-                    $customerData['access_token'] = $customer->createToken('Customer'.$customer->phone_number, ['customer'])->accessToken;
-                    $this->response['data'] = $customerData;
+                    $hasUpdated = Customer::where('id', '=', $customerId)
+                    ->update([
+                        'first_name' => $first_name,
+                        'last_name' => $last_name,
+                        'phone_number' => $phone_number,
+                        'email' => $email,
+                        'is_active' => true,
+                    ]);
+                    
+                    if($hasUpdated){
+                        $customer = Customer::find($customerId);
+                        config(['auth.guards.api.provider' => 'customer']);
+                        $action = "created your profile";
+                        $this->response['message'] = Helper::getMessage('success', $action);
+                        $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
+                        $customerData = Helper::getCustomerData($customerId);
+                        $customerData['access_token'] = $customer->createToken('Customer'.$customer->phone_number, ['customer'])->accessToken;
+                        $this->response['data'] = $customerData;
+                    }else{
+                        $this->response['message'] ="Unable to update customer account profile!";
+                        $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
+                    }
                 }else{
-                    $this->response['message'] ="Unable to update customer account profile!";
-                    $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
+                    $this->response['message'] ="Unable to find customer with supplied details.";
+                    $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED; 
                 }
-            }else{
-                $this->response['message'] ="Unable to find customer with supplied details.";
-                $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED; 
-            }
                 
             }
             
@@ -437,34 +437,34 @@ class CustomerController extends Controller
                 }else{
                     $email = null;
                 }
-
+                
                 $exists = Customer::where("id", "=", $customerId)->where("phone_number", "=", $phone_number)->exists();
                 if($exists){
-                $customer = Customer::find($customerId);
-                $hasUpdated = Customer::where('id', '=', $customerId)
-                ->update([
-                    'first_name' => $first_name,
-                    'last_name' => $last_name,
-                    'phone_number' => $phone_number,
-                    'email' => $email,
-                    'is_active' => true,
-                ]);
-                
-                if($hasUpdated){
                     $customer = Customer::find($customerId);
-                    $action = "updated your profile";
-                    $this->response['message'] = Helper::getMessage('success', $action);
-                    $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
-                    $customerData = Helper::getCustomerData($customerId);
-                    $this->response['data'] = $customerData;
+                    $hasUpdated = Customer::where('id', '=', $customerId)
+                    ->update([
+                        'first_name' => $first_name,
+                        'last_name' => $last_name,
+                        'phone_number' => $phone_number,
+                        'email' => $email,
+                        'is_active' => true,
+                    ]);
+                    
+                    if($hasUpdated){
+                        $customer = Customer::find($customerId);
+                        $action = "updated your profile";
+                        $this->response['message'] = Helper::getMessage('success', $action);
+                        $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
+                        $customerData = Helper::getCustomerData($customerId);
+                        $this->response['data'] = $customerData;
+                    }else{
+                        $this->response['message'] ="Unable to update customer account profile!";
+                        $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
+                    }
                 }else{
-                    $this->response['message'] ="Unable to update customer account profile!";
-                    $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
+                    $this->response['message'] ="Unable to find customer with supplied details.";
+                    $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED; 
                 }
-            }else{
-                $this->response['message'] ="Unable to find customer with supplied details.";
-                $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED; 
-            }
                 
             }
             
@@ -785,6 +785,59 @@ class CustomerController extends Controller
         }
         
         return response()->json($resp, 200);
+    }
+    
+    
+    public function removeProfilePicture(Request $request){
+        
+        $validator = Validator::make($request->all(), [
+            'id' => 'required',
+            'phone_number' => 'required'
+        ]);
+        
+        try{
+            
+            if($validator->fails()){
+                $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
+                $this->response['message'] =  $validator->errors()->all();
+            }
+            else{
+                
+                $customerId = $request->input('id');
+                $phone_number = trim($request->input('phone_number'));
+                $exists = Customer::where("id", "=", $customerId)->where("phone_number", "=", $phone_number)->exists();
+                
+                if($exists){
+                    $customer = Customer::find($customerId);
+                    $hasUpdated = Customer::where('id', '=', $customerId)
+                    ->update([
+                        'image' => null,
+                    ]);
+                    if($hasUpdated){
+                        $customer = Customer::find($customerId);
+                        $action = "removed your profile picture";
+                        $this->response['message'] = Helper::getMessage('success', $action);
+                        $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
+                        $customerData = Helper::getCustomerData($customerId);
+                        $this->response['data'] = $customerData;
+                    }else{
+                        $this->response['message'] ="Unable to remove profile picture";
+                        $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
+                    }
+                }else{
+                    $this->response['message'] ="Unable to find customer with supplied details.";
+                    $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED; 
+                }
+                
+            }
+            
+        }catch(\Exception $ex){
+            $this->response['message'] = $ex->getMessage();
+            $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
+        }
+        
+        return response()->json($this->response, 200);
+        
     }
     
     

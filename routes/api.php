@@ -112,6 +112,7 @@ Route::group(['prefix' => 'customer', 'middleware' => ['auth:api-customers']], f
 
     Route::post('/password/change', [CustomerController::class, 'changePassword']); // done
     Route::put('/profile/update', [CustomerController::class, 'updateProfile']); // done
+    Route::post('/profile/picture/remove', [CustomerController::class, 'removeProfilePicture']); // done
     Route::post('/change/profile-picture', [CustomerController::class, 'uploadProfilePicture']); // done
     Route::post('/suggestion', [MailController::class, 'postCustomerSuggestion']); // done
     Route::post('/payment/create', [PaymentController::class, 'create']); // done
