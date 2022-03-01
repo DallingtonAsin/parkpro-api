@@ -90,7 +90,7 @@ class PaymentController extends Controller
                             $isTransactionRecorded = $airtimeService->recordAirtimeTransaction($customerId, $phone_number, $amount);
                             if($isTransactionRecorded){
                                 $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
-                                $this->response['message'] = 'Airtime sent successfully to '.$phone_number.'';
+                                $this->response['message'] = 'Airtime loaded successfully on '.$phone_number.'';
                                 $this->response['data'] = Helper::getCustomerData($customerId);
                                 $this->response['airtimeResponse'] = $resp;
                             }else{
