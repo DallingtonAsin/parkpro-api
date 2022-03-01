@@ -91,7 +91,8 @@ class PaymentController extends Controller
                             if($isTransactionRecorded){
                                 $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
                                 $this->response['message'] = 'Airtime sent successfully to '.$phone_number.'';
-                                $this->response['data'] = $resp;
+                                $this->response['data'] = Helper::getCustomerData($customerId);
+                                $this->response['airtimeResponse'] = $resp;
                             }else{
                                 $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
                                 $this->response['message'] = "Unable to log airtime transaction in the customer ledger";
