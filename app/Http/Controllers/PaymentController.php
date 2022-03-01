@@ -12,13 +12,14 @@ use App\Models\CustomersLedger;
 use App\Jobs\ProcessCustomerPayment;
 use App\Repositories\NotificationRepository;
 use App\Repositories\PaymentRepository;
+use App\Services\Transaction\Airtime\AirtimeService;
 use Carbon\Carbon;
 use Hash;
 use Helper;
 use Globals;
 use Notification;
 use LaramanBeyonic;
-
+use Validator;
 
 
 class PaymentController extends Controller
@@ -61,6 +62,62 @@ class PaymentController extends Controller
         }
 
         return response()->json($resp);
+    }
+
+
+    public function dispatchAirtime(Request $request, AirtimeService $airtimeService){
+        $validator = Validator::make($request->all(), [
+            'id' => 'required',
+            'phone_number' => 'required',
+            'amount' => 'required',
+        ]);
+        
+        try{
+            if($validator->fails()){
+                $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
+                $this->response['message'] = $validator->errors()->all();
+            }else{
+                $customerId = $request->input("id");
+                $phone_number = $request->input("phone_number");
+                $exists = Customer::where("id", $customerId)->exists();
+                if($exists){
+                    $customer = Customer::find($customerId);
+                    $amount = $request->input("amount");
+                    $resp = $airtimeService->sendAirtime($phone_number, $amount);
+                    if($resp['status'] == "success"){
+                        $hasDeductedCustomerBal = Helper::deductCustomerBalance($customer->id, $amount);
+                        if($hasDeductedCustomerBal){
+                            $isTransactionRecorded = $airtimeService->recordAirtimeTransaction($customerId, $phone_number, $amount);
+                            if($isTransactionRecorded){
+                                $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
+                                $this->response['message'] = 'Airtime sent successfully to '.$phone_number.'';
+                                $this->response['data'] = $resp;
+                            }else{
+                                $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
+                                $this->response['message'] = "Unable to log airtime transaction in the customer ledger";
+                            }
+                        }else{
+                            $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
+                            $this->response['message'] = "Unable to deduct customer balance";
+                        }
+
+                    }else{
+                        $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
+                        $this->response['message'] =$resp['data'];
+                    }
+                 
+                }else{
+                    $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
+                    $this->response['message'] = "Unable to get customer's identity";
+                }
+
+            }
+        }catch(\Exception $ex){
+            $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
+            $this->response['message'] = $ex->getMessage();
+        }
+        return response()->json($this->response, 200);   
+
     }
 
 

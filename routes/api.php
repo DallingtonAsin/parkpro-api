@@ -116,6 +116,8 @@ Route::group(['prefix' => 'customer', 'middleware' => ['auth:api-customers']], f
     Route::post('/change/profile-picture', [CustomerController::class, 'uploadProfilePicture']); // done
     Route::post('/suggestion', [MailController::class, 'postCustomerSuggestion']); // done
     Route::post('/payment/create', [PaymentController::class, 'create']); // done
+    Route::post('/send/airtime', [PaymentController::class, 'dispatchAirtime']); // done
+    
 
 });
 

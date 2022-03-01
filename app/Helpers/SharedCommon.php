@@ -16,93 +16,94 @@ use Carbon\Carbon;
 use Globals;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use App\Models\CustomersLedger;
 
 class SharedCommon
 {
-
+    
     public static function getParkingAreaName($areaId){
-           $resp = new ApiResponse();
-            try{
-                $exists = ParkingArea::where('id', '=', $areaId)->exists();
-                if($exists){
-                    $name = ParkingArea::where('id', '=', $areaId)->value('name');
-                    $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                    $resp->message = "Results found";
-                    $resp->data = $name;
-                }else{
-                    $resp->statusCode = Globals::$STATUS_CODE_FAILED;
-                    $resp->message = "No parking area found";
-                }
-
-            }catch(Exception $ex){
-                $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-                $resp->message = $ex->getMessage();
-            }
-            return $resp;
-      }
-
-      public static function getCustomerData($customer_id){
-          try{
-                $customer = Customer::find($customer_id);
-                if($customer->account_balance >= 1000){
-                      $customer->account_balance = number_format($customer->account_balance);
-                 }
-                if(!empty($customer->image)){
-                    $customer->image =  Storage::disk('public')->url($customer->image);
-                }
-            return $customer;
-          }catch(\Exception $ex){
-              throw $ex;
-          }
-      }
-
-      public static function getClientName($id){
         $resp = new ApiResponse();
-         try{
-             $exists = Client::where('id', '=', $id)->exists();
-             if($exists){
-                 $name = Client::where('id', '=', $id)->value('name');
-                 $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                 $resp->message = "Results found";
-                 $resp->data = $name;
-             }else{
-                 $resp->statusCode = Globals::$STATUS_CODE_FAILED;
-                 $resp->message = "No client found";
-             }
-
-         }catch(Exception $ex){
-             $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-             $resp->message = $ex->getMessage();
-         }
-         return $resp;
-   }
-
-
-   public static function getVehicleTypeName($id){
-    $resp = new ApiResponse();
-     try{
-         $exists = VehicleCategory::where('id', '=', $id)->exists();
-         if($exists){
-             $name = VehicleCategory::where('id', '=', $id)->value('name');
-             $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
-             $resp->message = "Results found";
-             $resp->data = $name;
-         }else{
-             $resp->statusCode = Globals::$STATUS_CODE_FAILED;
-             $resp->message = "No vehicle type found";
-         }
-
-     }catch(Exception $ex){
-         $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-         $resp->message = $ex->getMessage();
-     }
-     return $resp;
-}
-
-
-
-
-
+        try{
+            $exists = ParkingArea::where('id', '=', $areaId)->exists();
+            if($exists){
+                $name = ParkingArea::where('id', '=', $areaId)->value('name');
+                $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                $resp->message = "Results found";
+                $resp->data = $name;
+            }else{
+                $resp->statusCode = Globals::$STATUS_CODE_FAILED;
+                $resp->message = "No parking area found";
+            }
+            
+        }catch(Exception $ex){
+            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
+            $resp->message = $ex->getMessage();
+        }
+        return $resp;
+    }
+    
+    public static function getCustomerData($customer_id){
+        try{
+            $customer = Customer::find($customer_id);
+            if($customer->account_balance >= 1000){
+                $customer->account_balance = number_format($customer->account_balance);
+            }
+            if(!empty($customer->image)){
+                $customer->image =  Storage::disk('public')->url($customer->image);
+            }
+            return $customer;
+        }catch(\Exception $ex){
+            throw $ex;
+        }
+    }
+    
+    public static function getClientName($id){
+        $resp = new ApiResponse();
+        try{
+            $exists = Client::where('id', '=', $id)->exists();
+            if($exists){
+                $name = Client::where('id', '=', $id)->value('name');
+                $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                $resp->message = "Results found";
+                $resp->data = $name;
+            }else{
+                $resp->statusCode = Globals::$STATUS_CODE_FAILED;
+                $resp->message = "No client found";
+            }
+            
+        }catch(Exception $ex){
+            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
+            $resp->message = $ex->getMessage();
+        }
+        return $resp;
+    }
+    
+    
+    public static function getVehicleTypeName($id){
+        $resp = new ApiResponse();
+        try{
+            $exists = VehicleCategory::where('id', '=', $id)->exists();
+            if($exists){
+                $name = VehicleCategory::where('id', '=', $id)->value('name');
+                $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                $resp->message = "Results found";
+                $resp->data = $name;
+            }else{
+                $resp->statusCode = Globals::$STATUS_CODE_FAILED;
+                $resp->message = "No vehicle type found";
+            }
+            
+        }catch(Exception $ex){
+            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
+            $resp->message = $ex->getMessage();
+        }
+        return $resp;
+    }
+    
+    
+    
+    
+    
     public static function logError($data)
     {
         try {
@@ -178,18 +179,18 @@ class SharedCommon
         : $message = "You have successfully ".$activity."";
         return $message;
     }
-
+    
     public static function getUserRole($id){
         $role = Role::find($id);
         return $role->name;
     }
-
+    
     public static function getUserRoleName($user_id){
         $user = User::find($user_id);
         $role = Role::find($user->role);
         return $role->name;
     }
-
+    
     public static function getUserNames($user_id){
         $doesUserExist = User::where('id', $user_id)->exists();
         $userNames = null;
@@ -198,6 +199,36 @@ class SharedCommon
             $userNames = $user->first_name." ".$user->last_name;
         }
         return $userNames;
+    }
+    
+    
+    public static function recordTransaction($transactionDetails){
+        $isInserted = false;
+        try{
+            if(CustomersLedger::create($transactionDetails)){
+                $isInserted = true;
+            }
+            return $isInserted;
+        }catch(Exception $ex){
+            throw $ex;
+        }
+    }
+    
+    public static function deductCustomerBalance($customerId, $amount){
+        $isDeducted = false;
+        try{
+            if(Customer::where("id", $customerId)->exists()){
+                $customer = Customer::find($customerId);
+                $newBalance = ($customer->account_balance) - $amount;
+                $customer->account_balance = $newBalance;
+                if($customer->save()){
+                    $isDeducted = true;
+                }
+            }
+            return $isDeducted;
+        }catch(Exception $ex){
+            throw $ex;
+        }
     }
     
     

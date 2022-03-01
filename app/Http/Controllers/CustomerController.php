@@ -16,8 +16,8 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Resources\CustomerResource;
 use App\Repositories\CustomerRepository;
+use App\Services\Transaction\Sms\SmsService;
 use App\Helpers\formattedApiResponse;
-use AfricasTalking\SDK\AfricasTalking;
 use Helper;
 use Globals;
 use Mail;
@@ -58,34 +58,9 @@ class CustomerController extends Controller
         return $accountStatus;
         
     }
-    
-    
-    private function generateNumericOTP($n) { 
-        $generator = "1357902468"; 
-        $result = ""; 
-        for ($i = 1; $i <= $n; $i++) { 
-            $result .= substr($generator, (rand()%(strlen($generator))), 1); 
-        }  
-        return $result; 
-    } 
-    
-    private function sendOtpToCustomer($phone_number, $otp){
-        try{
-            $username = config("app.AfricasTalking_Sandbox_Username"); 
-            $apiKey   = config("app.AfricasTalking_Sandbox_ApiKey");
-            $service       = new AfricasTalking($username, $apiKey);
-            $sms      = $service->sms();
-            $result   = $sms->send([
-                'to'      => $phone_number,
-                'message' => "Your ".config('app.company_name')." verification code is: ".$otp.""
-            ]);
-            return $result;
-        }catch(\Exception $ex){
-            throw $ex;
-        }
-    }
-    
-    public function InsertOrUpdateCustomerOTP(Request $request){
+   
+
+    public function InsertOrUpdateCustomerOTP(Request $request, SmsService $smsService){
         $validator = Validator::make($request->all(), [
             'phone_number' => 'required',
         ]);
@@ -96,17 +71,17 @@ class CustomerController extends Controller
                 $this->response['message'] = $validator->errors()->all();
             }else{
                 $phone_number = request('phone_number');
-                $otp = $this->generateNumericOTP(4);
+                $otp = $smsService->generateNumericOTP(4);
                 $exists = Customer::where("phone_number", "=", $phone_number)->exists();
                 if($exists){
                     $customer = Customer::where("phone_number", "=", $phone_number)->first();
-                    $this->response = $this->sendVerificationCode($customer, $otp);
+                    $this->response = $this->sendVerificationCode($smsService, $customer, $otp);
                 }else{
                     $customer = new Customer();
                     $customer->phone_number = $phone_number;
                     $customer->otp = $otp;
                     if($customer->save()){
-                        $this->response = $this->sendVerificationCode($customer, $otp);
+                        $this->response = $this->sendVerificationCode($smsService, $customer, $otp);
                     } else{
                         $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
                         $this->response['message'] = "Unable to register customer phone number";
@@ -121,9 +96,10 @@ class CustomerController extends Controller
         return response()->json($this->response, 200);
     }
     
-    private function sendVerificationCode($customer, $otp){
+    private function sendVerificationCode($smsService, $customer, $otp){
         try{
-            $this->sendOtpToCustomer($customer->phone_number, $otp);
+           
+            $data = $smsService->sendOTP($customer->phone_number, $otp);
             $customerData["otp"] = $otp;
             $customerData['access_token'] = $customer->createToken('Customer'.$customer->phone_number, ['customer'])->accessToken;
             $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
@@ -180,7 +156,7 @@ class CustomerController extends Controller
     
     
     
-    public function signup(Request $request){
+    public function signup(Request $request, SmsService $smsService){
         $validator = Validator::make($request->all(), [
             'phone_number' => 'required',
         ]);
@@ -192,11 +168,11 @@ class CustomerController extends Controller
             }else{
                 $phone_number = request('phone_number');
                 $exists = Customer::where("phone_number", "=", $phone_number)->exists();
-                $otp = $this->generateNumericOTP(4);
+                $otp = $smsService->generateNumericOTP(4);
                 if($exists){
                     $customer = Customer::where("phone_number", "=", $phone_number)->first();
                     if($customer->first_name){
-                        $this->response = $this->sendVerificationCode($customer, $otp);
+                        $this->response = $this->sendVerificationCode($smsService, $customer, $otp);
                     }else{
                         $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
                         $this->response['message'] = "Customer with phone number ".$phone_number." is already registered.";
@@ -206,7 +182,7 @@ class CustomerController extends Controller
                     $customer->phone_number = $phone_number;
                     $customer->otp = $otp;
                     if($customer->save()){
-                        $this->response = $this->sendVerificationCode($customer, $otp);
+                        $this->response = $this->sendVerificationCode($smsService, $customer, $otp);
                     } else{
                         $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
                         $this->response['message'] = "Unable to register customer phone number";

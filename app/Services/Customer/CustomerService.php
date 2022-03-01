@@ -1,7 +1,7 @@
 <?php
 
 
-namespace App\Services\CustomerService;
+namespace App\Services\Customer\CustomerService;
 use App\Models\Customer;
 
 class CustomerService{
