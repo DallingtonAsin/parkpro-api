@@ -653,6 +653,7 @@ class ComposerStaticInitb4e83dd425a8c855f480f938ea59714b
         'App\\Models\\Company' => __DIR__ . '/../..' . '/app/Models/Company.php',
         'App\\Models\\Customer' => __DIR__ . '/../..' . '/app/Models/Customer.php',
         'App\\Models\\CustomersLedger' => __DIR__ . '/../..' . '/app/Models/CustomersLedger.php',
+        'App\\Models\\MobileMoneyTransaction' => __DIR__ . '/../..' . '/app/Models/MobileMoneyTransaction.php',
         'App\\Models\\MonthlyReview' => __DIR__ . '/../..' . '/app/Models/MonthlyReview.php',
         'App\\Models\\Notifications' => __DIR__ . '/../..' . '/app/Models/Notifications.php',
         'App\\Models\\ParkingArea' => __DIR__ . '/../..' . '/app/Models/ParkingArea.php',

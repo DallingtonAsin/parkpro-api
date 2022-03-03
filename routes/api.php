@@ -117,8 +117,10 @@ Route::group(['prefix' => 'customer', 'middleware' => ['auth:api-customers']], f
     Route::post('/suggestion', [MailController::class, 'postCustomerSuggestion']); // done
     Route::post('/payment/create', [PaymentController::class, 'create']); // done
     Route::post('/send/airtime', [PaymentController::class, 'dispatchAirtime']); // done
-    
+    Route::post('/account/topup/money', [PaymentController::class, 'creditCustomerAccount']); // done
 
+    
+    
 });
 
 

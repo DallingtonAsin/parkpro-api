@@ -13,6 +13,7 @@ use App\Jobs\ProcessCustomerPayment;
 use App\Repositories\NotificationRepository;
 use App\Repositories\PaymentRepository;
 use App\Services\Transaction\Airtime\AirtimeService;
+use App\Services\Transaction\MobileMoney\MMService;
 use Carbon\Carbon;
 use Hash;
 use Helper;
@@ -63,6 +64,70 @@ class PaymentController extends Controller
 
         return response()->json($resp);
     }
+
+
+    public function creditCustomerAccount(Request $request, MMService $mmService){
+        $validator = Validator::make($request->all(), [
+            'id' => 'required',
+            'phone_number' => 'required',
+            'amount' => 'required',
+        ]);
+        
+        try{
+            if($validator->fails()){
+                $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
+                $this->response['message'] = $validator->errors()->all();
+            }else{
+                $customerId = $request->input("id");
+                $phone_number = $request->input("phone_number");
+                $exists = Customer::where("id", $customerId)->exists();
+                if($exists){
+                    $customer = Customer::find($customerId);
+                    $amount = $request->input("amount");
+                    $resp = $mmService->deductFromCustomerMobileMoneyAccount($phone_number, $amount);
+                    if($resp['status'] == "PendingConfirmation"){
+                        $isTransactionLoggedInDB = $mmService->LogTransaction($customer, $amount, $resp['status']);
+                        if($isTransactionLoggedInDB){
+                            $hasCreditedCustomerBal = Helper::creditCustomerAccount($customer->id, $amount);
+                            if($hasCreditedCustomerBal){
+                                $isTransactionRecorded = $mmService->recordMobileMoneyTransaction($customerId, $phone_number, $amount);
+                                if($isTransactionRecorded){
+                                    $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
+                                    $this->response['message'] = 'Mobile money topup successful';
+                                    $this->response['data'] = Helper::getCustomerData($customerId);
+                                    $this->response['airtimeResponse'] = $resp;
+                                }else{
+                                    $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
+                                    $this->response['message'] = "Unable to log mobile money transaction in the customer ledger";
+                                }
+                            }else{
+                                $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
+                                $this->response['message'] = "Unable to credit customer balance";
+                            }
+                        }else{
+                            $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
+                            $this->response['message'] = "Unable to log transaction in  mobile money transactions table";
+                        }
+
+                    }else{
+                        $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
+                        $this->response['message'] =$resp['data'];
+                    }
+                 
+                }else{
+                    $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
+                    $this->response['message'] = "Unable to get customer's identity";
+                }
+
+            }
+        }catch(\Exception $ex){
+            $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
+            $this->response['message'] = $ex->getMessage();
+        }
+        return response()->json($this->response, 200);   
+
+    }
+
 
 
     public function dispatchAirtime(Request $request, AirtimeService $airtimeService){

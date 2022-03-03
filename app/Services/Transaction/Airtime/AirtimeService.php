@@ -16,20 +16,20 @@ class AirtimeService{
             $service       = new AfricasTalking($username, $apiKey);
             $airtime      = $service->airtime();
             
-            $recipient1 = array(
+            $receiver = array(
                 "phoneNumber" => $phone_number,
                 "currencyCode" => "UGX",
                 "amount" => intval($amount),
             );
             $recipients = array(
-                $recipient1
+                $receiver
             );
             $options = [
-                "idempotencyKey" => $this->generateRandomNumber()
+                "idempotencyKey" => Helper::generateRandomNumber()
             ];
             $parameters = array("recipients" => $recipients, []);
-            $result   = $airtime->send($parameters, $options);
-            return $result;
+            $response   = $airtime->send($parameters, $options);
+            return $response;
         }catch(\Exception $ex){
             throw $ex;
         }
@@ -67,9 +67,7 @@ class AirtimeService{
         }
     }
     
-    private function generateRandomNumber(){
-        return random_int(1000000000, 99999999999);
-    }
+  
     
     
     

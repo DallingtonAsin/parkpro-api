@@ -66,6 +66,7 @@ return array(
     'App\\Models\\Company' => $baseDir . '/app/Models/Company.php',
     'App\\Models\\Customer' => $baseDir . '/app/Models/Customer.php',
     'App\\Models\\CustomersLedger' => $baseDir . '/app/Models/CustomersLedger.php',
+    'App\\Models\\MobileMoneyTransaction' => $baseDir . '/app/Models/MobileMoneyTransaction.php',
     'App\\Models\\MonthlyReview' => $baseDir . '/app/Models/MonthlyReview.php',
     'App\\Models\\Notifications' => $baseDir . '/app/Models/Notifications.php',
     'App\\Models\\ParkingArea' => $baseDir . '/app/Models/ParkingArea.php',

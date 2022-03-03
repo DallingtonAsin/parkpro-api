@@ -230,6 +230,27 @@ class SharedCommon
             throw $ex;
         }
     }
+
+    public static function creditCustomerAccount($customerId, $amount){
+        $isDeducted = false;
+        try{
+            if(Customer::where("id", $customerId)->exists()){
+                $customer = Customer::find($customerId);
+                $newBalance = ($customer->account_balance) + $amount;
+                $customer->account_balance = $newBalance;
+                if($customer->save()){
+                    $isDeducted = true;
+                }
+            }
+            return $isDeducted;
+        }catch(Exception $ex){
+            throw $ex;
+        }
+    }
+
+    public static function generateRandomNumber(){
+        return random_int(1000000000, 99999999999);
+    }
     
     
 }
