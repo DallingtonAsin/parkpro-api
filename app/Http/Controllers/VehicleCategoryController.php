@@ -58,7 +58,7 @@ class VehicleCategoryController extends Controller
                 if($count == 0){
                     
                     $vehicleCat = new VehicleCategory();
-                    $vehicleCat->name = $name;
+                    $vehicleCat->name = ucfirst($name);
                     if ($vehicleCat->save()) {
                         $action = "added vehicle category ".$name."";
                         $responseInfo = Helper::getMessage('success', $action);
@@ -141,7 +141,7 @@ class VehicleCategoryController extends Controller
                 $vehicleType = VehicleCategory::find($id);
                 $vehicle_type = $vehicleType->name;
                 
-                $vehicleType->name = $name;
+                $vehicleType->name = ucfirst($name);
 
                 if($vehicleType->save()){
                     $author = Helper::getUserNames($author_id);

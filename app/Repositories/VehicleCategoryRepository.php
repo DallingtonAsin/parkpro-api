@@ -14,7 +14,7 @@ class VehicleCategoryRepository{
         
         $this->vehicle_categories = VehicleCategory::all();
         foreach($this->vehicle_categories as $cat){
-            $cat->name = strtolower($cat->name);
+            $cat->name = ucfirst($cat->name);
         }
     
         return $this->vehicle_categories;
