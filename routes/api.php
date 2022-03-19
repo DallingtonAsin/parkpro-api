@@ -131,6 +131,8 @@ Route::group(['prefix' => 'device', 'middleware' => ['auth:api-customers']], fun
         Route::get('parking-areas/search', [ParkingAreaController::class, 'searchParkingArea']); // done
         Route::get('parking-request/myrequests', [ParkingRequestController::class, 'getMyParkingRequests']);
         Route::get('parking-request/details', [ParkingRequestController::class, 'getRequestOrderInfo']);
+        Route::get('parking-area/find-by-id', [ParkingAreaController::class, 'findParking']);
+
 
         Route::resources([
             'vehicle-category' => VehicleCategoryController::class, // done

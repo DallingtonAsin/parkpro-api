@@ -15,7 +15,7 @@ use Validator;
 
 class ParkingAreaController extends Controller
 {
-
+    
     public $response = [];
     
     public function __constructor(){
@@ -28,14 +28,37 @@ class ParkingAreaController extends Controller
     */
     public function index(ParkingAreaRepository $parkingAreaRepo)
     {
-
         $parking_areas = $parkingAreaRepo->getParkingAreas();
         return formattedApiResponse::getJson($parking_areas);
-
     }
-
-
-
+    
+    public function findParking(ParkingAreaRepository $parkingAreaRepo, Request $request)
+    {
+        $resp = new ApiResponse();
+        try{
+            if($request->filled(['id'])){
+                $id = $request->input('id');
+                $data = $parkingAreaRepo->searchParking($id);
+                $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                $resp->message  = Globals::$STATUS_DESC_SUCCESS;
+                $resp->data = $data;
+            }else{
+                $messageErr = "Unable to process request:missing parameters";
+                $responseInfo = Helper::getMessage('error', $messageErr);
+                $resp->statusCode = Globals::$STATUS_CODE_FAILED;
+                $resp->message = $responseInfo;
+            } 
+            
+        }catch (\Exception $ex) {
+            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
+            $resp->message = Globals::$STATUS_DESC_ERROR;
+            $resp->data = $ex->getMessage();
+        }
+        return response()->json($resp);
+    }
+    
+    
+    
     public function getParkingSpots(Request $request)
     {
         $resp = new ApiResponse();
@@ -60,7 +83,7 @@ class ParkingAreaController extends Controller
         
         return response()->json($resp);
     }
-
+    
     public function searchParkingArea(Request $request)
     {
         $resp = new ApiResponse();
@@ -116,70 +139,70 @@ class ParkingAreaController extends Controller
         
         try{
             
-                if($request->filled(['client_id', 'name', 'phone_number', 'address',
-                 'description', 'opens_at', 'closes_at', 'latitude',
-                 'longitude', 'total_space'])){
+            if($request->filled(['client_id', 'name', 'phone_number', 'address',
+            'description', 'opens_at', 'closes_at', 'latitude',
+            'longitude', 'total_space'])){
+                
+                $client_id = $request->input('client_id');
+                $name = $request->input('name');
+                $phone_number = $request->input('phone_number');
+                $address = $request->input('address');
+                $description = $request->input('description');
+                $opens_at = $request->input('opens_at');
+                $closes_at = $request->input('closes_at');
+                $latitude = $request->input('latitude');
+                $longitude = $request->input('longitude');
+                $total_space = $request->input('total_space');
+                
+                $doesClientExist  = Client::where('id', '=', $client_id)->exists();
+                if($doesClientExist){
                     
-                    $client_id = $request->input('client_id');
-                    $name = $request->input('name');
-                    $phone_number = $request->input('phone_number');
-                    $address = $request->input('address');
-                    $description = $request->input('description');
-                    $opens_at = $request->input('opens_at');
-                    $closes_at = $request->input('closes_at');
-                    $latitude = $request->input('latitude');
-                    $longitude = $request->input('longitude');
-                    $total_space = $request->input('total_space');
+                    $client = Client::find($client_id);
+                    $client_name = $client->name;
                     
-                    $doesClientExist  = Client::where('id', '=', $client_id)->exists();
-                    if($doesClientExist){
-
-                            $client = Client::find($client_id);
-                            $client_name = $client->name;
-                            
-                            $count = ParkingArea::where('client_id', '=', $client_id)->where('name', '=', $name)->count();
-                            if($count == 0){
-                                
-                                $parkingArea = new ParkingArea();
-
-                                if($request->hasFile('photo')){
-                                    $file = $request->file('photo');
-                                    $file_name = $file->getClientOriginalName();
-                                    $file_extension = $file->extension();
-                                    $fileName = time().'.'.$file_extension;
-                                    $filePath = $file->storeAs('images/parking-areas', $fileName, 'public');
-                                    $photo = $filePath;
-                                }else{
-                                    $photo = null;
-                                }
-                                
-                                $parkingArea->client_id = $client_id;
-                                $parkingArea->name = $name;
-                                $parkingArea->phone_number = $phone_number;
-                                $parkingArea->address = $address;
-                                $parkingArea->description = $description;
-                                $parkingArea->opens_at = date('H:i:s', strtotime($opens_at));
-                                $parkingArea->closes_at = date('H:i:s', strtotime($closes_at));
-                                $parkingArea->latitude = floatval($latitude);
-                                $parkingArea->longitude = floatval($longitude);
-                                $parkingArea->total_space = $total_space;
-                                $parkingArea->current_free_space = $total_space;
-                                $parkingArea->photo = $photo;
-
-                                
-                                if ($parkingArea->save()) {
-                                    $action = "added parking area ".$name." for client ".$client_name."";
-                                    $responseInfo = Helper::getMessage('success', $action);
-                                    Helper::logActivity($request, ['name' => 'Dallington', 'role' => 'admin', 'action' => $action]);
-                                    $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                                    $resp->message = $responseInfo; 
-                                } else {
-                                    $messageErr = "Adding parking area ".$name." for client '.$client_name.' failed!";
-                                    $responseInfo = Helper::getMessage('error', $messageErr);
-                                    $resp->statusCode = Globals::$STATUS_CODE_FAILED;
-                                    $resp->message = $responseInfo;
-                                }
-                                
+                    $count = ParkingArea::where('client_id', '=', $client_id)->where('name', '=', $name)->count();
+                    if($count == 0){
+                        
+                        $parkingArea = new ParkingArea();
+                        
+                        if($request->hasFile('photo')){
+                            $file = $request->file('photo');
+                            $file_name = $file->getClientOriginalName();
+                            $file_extension = $file->extension();
+                            $fileName = time().'.'.$file_extension;
+                            $filePath = $file->storeAs('images/parking-areas', $fileName, 'public');
+                            $photo = $filePath;
+                        }else{
+                            $photo = null;
+                        }
+                        
+                        $parkingArea->client_id = $client_id;
+                        $parkingArea->name = $name;
+                        $parkingArea->phone_number = $phone_number;
+                        $parkingArea->address = $address;
+                        $parkingArea->description = $description;
+                        $parkingArea->opens_at = date('H:i:s', strtotime($opens_at));
+                        $parkingArea->closes_at = date('H:i:s', strtotime($closes_at));
+                        $parkingArea->latitude = floatval($latitude);
+                        $parkingArea->longitude = floatval($longitude);
+                        $parkingArea->total_space = $total_space;
+                        $parkingArea->current_free_space = $total_space;
+                        $parkingArea->photo = $photo;
+                        
+                        
+                        if ($parkingArea->save()) {
+                            $action = "added parking area ".$name." for client ".$client_name."";
+                            $responseInfo = Helper::getMessage('success', $action);
+                            Helper::logActivity($request, ['name' => 'Dallington', 'role' => 'admin', 'action' => $action]);
+                            $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                            $resp->message = $responseInfo; 
+                        } else {
+                            $messageErr = "Adding parking area ".$name." for client '.$client_name.' failed!";
+                            $responseInfo = Helper::getMessage('error', $messageErr);
+                            $resp->statusCode = Globals::$STATUS_CODE_FAILED;
+                            $resp->message = $responseInfo;
+                        }
+                        
                     }else{
                         $messageErr = "Parking area ".$name." for client ".$client_name." has been already added";
                         $responseInfo = Helper::getMessage('error', $messageErr);
@@ -192,12 +215,12 @@ class ParkingAreaController extends Controller
                     $resp->statusCode = Globals::$STATUS_CODE_FAILED;
                     $resp->message = $responseInfo;
                 }
-                } else {
-                    $messageErr = "Unable to process request:missing parameters";
-                    $responseInfo = Helper::getMessage('error', $messageErr);
-                    $resp->statusCode = Globals::$STATUS_CODE_FAILED;
-                    $resp->message = $responseInfo;
-                }
+            } else {
+                $messageErr = "Unable to process request:missing parameters";
+                $responseInfo = Helper::getMessage('error', $messageErr);
+                $resp->statusCode = Globals::$STATUS_CODE_FAILED;
+                $resp->message = $responseInfo;
+            }
         } catch (\Exception $ex) {
             $resp->statusCode = Globals::$STATUS_CODE_ERROR;
             $resp->message = $ex->getMessage();
@@ -267,7 +290,7 @@ class ParkingAreaController extends Controller
                 $latitude = $request->input('latitude');
                 $longitude = $request->input('longitude');
                 $slots = $request->input('slots');
-
+                
                 $parking = ParkingArea::find($id);
                 $parking_name = $parking->name;
                 if($request->hasFile('photo')){
@@ -293,8 +316,8 @@ class ParkingAreaController extends Controller
                 $parking->longitude = $longitude;
                 $parking->total_space = $slots;
                 $parking->photo = $photo;
-
-
+                
+                
                 if($parking->save()){
                     $author = Helper::getUserNames($author_id);
                     $role = Helper::getUserRoleName($author_id);
@@ -344,7 +367,7 @@ class ParkingAreaController extends Controller
                 
                 $parking->is_deleted = $undo;
                 $parking->deleted_by = $author_id;
-
+                
                 if($parking->save()){
                     $role = Helper::getUserRoleName($author_id);
                     $action = "".$activity." parking ".$parking_name."";
@@ -363,7 +386,7 @@ class ParkingAreaController extends Controller
         
         return response()->json($this->response, 200);  
     }
-
-
-
+    
+    
+    
 }
