@@ -238,7 +238,32 @@ class ParkingRequestController extends Controller
         return $orderNo;
     }
     
-    private function  isParkingAreaOpen($id){
+    private function isParkingAreaOpen($id){
+        try{
+            $isParkingOpen = false;
+            if(ParkingArea::where('id', $id)->exists()){
+                $parking = ParkingArea::find($id);
+                $now = date("H:i:s");
+                $start = date('H:i:s', strtotime($parking->opens_at));
+                $end = date('H:i:s', strtotime($parking->closes_at));
+                
+                if($start > $end) {
+                    if($now >= $start || $now < $end){
+                        $isParkingOpen = true;
+                    }
+                }
+                else if ($now >= $start && $now <= $end) {
+                    $isParkingOpen =  true;
+                }
+                return $isParkingOpen;
+            }
+        }catch(Exception $e){
+            throw $e;
+        }
+        
+    }
+    
+    private function  isParkingAreaOpenOld($id){
         $isParkingOpen = false;
         try{
             if(ParkingArea::where('id', $id)->exists()){
@@ -412,7 +437,7 @@ class ParkingRequestController extends Controller
                             
                             if($parkingRequest->save()){
                                 $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                                $resp->message  = "Your request has been submitted and approved successfully";
+                                $resp->message  = "Your request has been submitted and approved successfully.";
                                 $data = array(
                                     'customer_id' => $customer_id,
                                     'order_no' => $orderNo,
