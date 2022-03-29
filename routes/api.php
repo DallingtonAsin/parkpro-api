@@ -100,6 +100,7 @@ Route::post('/customer/send-otp', [CustomerController::class, 'InsertOrUpdateCus
 Route::post('/customer/verify-otp', [CustomerController::class, 'verifyOTP']); // done
 Route::post('/customer/profile/create', [CustomerController::class, 'createProfile']); // done
 
+Route::get('africastkng/account/details', [PaymentController::class, 'afafricasTkngAccountDetails']);
 
 // Customer Routes
 Route::group(['prefix' => 'customer', 'middleware' => ['auth:api-customers']], function(){
