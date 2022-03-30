@@ -120,8 +120,6 @@ Route::group(['prefix' => 'customer', 'middleware' => ['auth:api-customers']], f
     Route::post('/send/airtime', [PaymentController::class, 'dispatchAirtime']); // done
     Route::post('/account/topup/money', [PaymentController::class, 'creditCustomerAccount']); // done
 
-    
-    
 });
 
 
@@ -135,7 +133,6 @@ Route::group(['prefix' => 'device', 'middleware' => ['auth:api-customers']], fun
         Route::get('parking-area/find-by-id', [ParkingAreaController::class, 'findParking']);
         Route::get('parking-area/near-by', [ParkingAreaController::class, 'getNearByParkings']);
         Route::get('parking-area/top-rated', [ParkingAreaController::class, 'getTopRatedParkingAreas']);
-
 
         Route::resources([
             'vehicle-category' => VehicleCategoryController::class, // done
