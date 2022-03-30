@@ -133,6 +133,8 @@ Route::group(['prefix' => 'device', 'middleware' => ['auth:api-customers']], fun
         Route::get('parking-request/myrequests', [ParkingRequestController::class, 'getMyParkingRequests']);
         Route::get('parking-request/details', [ParkingRequestController::class, 'getRequestOrderInfo']);
         Route::get('parking-area/find-by-id', [ParkingAreaController::class, 'findParking']);
+        Route::get('parking-area/near-by', [ParkingAreaController::class, 'getNearByParkings']);
+        Route::get('parking-area/top-rated', [ParkingAreaController::class, 'getTopRatedParkingAreas']);
 
 
         Route::resources([

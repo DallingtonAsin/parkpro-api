@@ -388,5 +388,47 @@ class ParkingAreaController extends Controller
     }
     
     
+    public function getNearByParkings(Request $request, ParkingAreaRepository $parkingAreaRepo){
+        $validator = Validator::make($request->all(), [
+            'latitude' => 'required',
+            'longitude' => 'required',
+        ]);
+        
+        try{
+            if($validator->fails()){
+                $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
+                $this->response['message'] = $validator->errors()->all();
+            }else{
+                $latitude = floatval($request->input("latitude"));
+                $longitude = floatval($request->input("longitude"));
+                $nearByParkings = $parkingAreaRepo->fetchNearByParkingAreas($latitude, $longitude);
+                $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
+                $this->response['message']  = Globals::$STATUS_DESC_SUCCESS;
+                $this->response['data'] = $nearByParkings;
+            }
+            
+        }catch(\Exception $ex){
+            $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
+            $this->response['message'] = $ex->getMessage();
+        }
+        return response()->json($this->response);
+    }
+    
+    
+    public function getTopRatedParkingAreas(Request $request, ParkingAreaRepository $parkingAreaRepo){
+        try{
+            $topRatedParkings = $parkingAreaRepo->fetchTopRatedParkingAreas();
+            $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
+            $this->response['message']  = Globals::$STATUS_DESC_SUCCESS;
+            $this->response['data'] = $topRatedParkings;
+            
+        }catch(\Exception $ex){
+            $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
+            $this->response['message'] = $ex->getMessage();
+        }
+        return response()->json($this->response);
+    }
+    
+    
     
 }
