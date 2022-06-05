@@ -117,7 +117,7 @@ use App\Http\Controllers\MailController;
         Route::put('/profile/update', [CustomerController::class, 'updateProfile']); // done
         Route::post('/profile/picture/remove', [CustomerController::class, 'removeProfilePicture']); // done
         Route::post('/change/profile-picture', [CustomerController::class, 'uploadProfilePicture']); // done
-        Route::post('/suggestion', [MailController::class, 'postCustomerSuggestion']); // done
+        Route::post('/feedback', [MailController::class, 'postFeedback']); // done
         Route::post('/payment/create', [PaymentController::class, 'create']); // done
         Route::post('/send/airtime', [PaymentController::class, 'dispatchAirtime']); // done
         Route::post('/account/topup/money', [PaymentController::class, 'creditCustomerAccount']); // done
