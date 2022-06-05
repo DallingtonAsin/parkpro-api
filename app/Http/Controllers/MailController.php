@@ -14,18 +14,24 @@ use Mail;
 class MailController extends Controller
 {
     
-
-
-    public function postCustomerSuggestion(Request $request){
+    public function postFeedback(Request $request){
         $resp = new ApiResponse();
         try {
-                if($request->filled(['id', 'reaction', 'email','subject','description'])){
+                if($request->filled(['id', 'reaction' ,'description'])){
 
                     $customer_id = $request->input('id');
                     $reaction = $request->input('reaction');
                     $email = $request->input('email');
                     $subject = $request->input('subject');
                     $description = $request->input('description');
+
+                    if(empty($email)){
+                       $email = "Didn't supply email";
+                    }
+
+                    if(empty($subject)){
+                        $subject = "Customer Feedback";
+                     }
 
                     $doesCustomerExist = Customer::where('id', $customer_id)->exists();
 
