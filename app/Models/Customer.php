@@ -22,6 +22,8 @@ class Customer extends Authenticatable
        'phone_number',
        'email',
        'account_balance',
+       'fcm_token',
+       'device_language'
     ];
 
     protected $hidden = [
