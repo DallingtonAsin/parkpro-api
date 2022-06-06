@@ -6,44 +6,74 @@ use Illuminate\Http\Request;
 use App\Services\Firebase\FCMService;
 use Illuminate\Support\Facades\Validator;
 use App\Helpers\ApiResponse;
+use App\Models\Customer;
 use Globals;
 
 
 class NotificationController extends Controller
 {
     protected $firebaseService;
+    private $response;
     
     public function __construct(FCMService $firebaseService)
     {
         $this->firebaseService = $firebaseService;
+        $this->response = [];
     }
-
+    
+     /**
+    * Send push notification to a given device.
+    *
+    * @return \Illuminate\Http\Response
+    */
     public function sendPushNotificationToUser(Request $request){
         $validator = Validator::make($request->all(), [
-            'fcm_token' => 'required',
+            'id' => 'required',
         ]);
         
         try{
+            $resp = new ApiResponse();
             if($validator->fails()){
-                $response['statusCode'] = Globals::$STATUS_CODE_ERROR;
-                $response['message'] = $validator->errors()->all();
+                $resp->statusCode = Globals::$STATUS_CODE_ERROR;
+                $resp->message = $validator->errors()->all();
             }else{
+                
+                $userId = $request->input('id');
+                $exists = Customer::where("id", $userId)->exists();
+                if($exists){
+                    
+                    $customer = Customer::find($userId);
+                    $fcmToken = $customer->fcm_token;
+                    
+                    $notification = [
+                        'title' => 'Goodnight',
+                        'body' => 'Have a blessed night sir?',
+                    ];
+                    $res = $this->firebaseService->send($fcmToken, $notification);
+                    $respCode= $res->getStatusCode();
 
-                $fcmToken = $request->input('fcm_token');
-                $notification = [
-                    'title' => 'Greeting',
-                    'body' => 'How are you sir',
-                ];
-                $resp = $this->firebaseService->send($fcmToken, $notification);
-                dd($resp);
+                    if($respCode == '200'){
+                        $resp->statusCode = $respCode;
+                        $resp->message = "Notification sent successfully";
+                        $resp->data['fcm_token'] = $fcmToken;
+                    }else{
+                        $resp->statusCode = $respCode;
+                        $resp->message = Globals::$STATUS_CODE_ERROR;
+                    }
+                    
+                }else{
+                    $resp->statusCode = Globals::$STATUS_CODE_ERROR;
+                    $resp->message = "Unable to find customer";
+                }
+                
             }
         }catch(\Exception $ex){
-            $response['statusCode'] = Globals::$STATUS_CODE_ERROR;
-            $response['message'] = $ex->getMessage();
+            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
+            $resp->message = $ex->getMessage();
         }
-        return response()->json($response, 200);
+        return response()->json($resp);
     }
-
-
-
+    
+    
+    
 }
