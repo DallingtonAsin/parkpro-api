@@ -66,6 +66,7 @@ class CustomerController extends Controller
             'countryCode' => 'required',
             'number' => 'required',
             'uniqueDeviceId' => 'required',
+            'deviceToken' => 'required',
             'currentVersion' => 'required',
         ]);
         
@@ -79,14 +80,19 @@ class CustomerController extends Controller
                 $country_code = request('countryCode');
                 $phone_number = request('number');
                 $unique_device_id = request('uniqueDeviceId');
+                $fcm_token = request('deviceToken');
                 $current_version = request('currentVersion');
 
 
                 $request->filled('ipAddress')
                 ? $ip_address = $request->input('ipAddress')
                 : $ip_address = null;
-                
-                
+
+                $request->filled('deviceLanguage')
+                ? $device_language = $request->input('deviceLanguage')
+                : $device_language = null;
+
+
                 $otp = $smsService->generateNumericOTP(4);
                 $exists = Customer::where("country_code", "=", $country_code)
                 ->where("phone_number", "=", $phone_number)
@@ -97,7 +103,10 @@ class CustomerController extends Controller
                     ->first();
                     $customer->update(['unique_device_id' => $unique_device_id, 
                                        'ip_address' => $ip_address,
-                                       'current_version' => $current_version]);
+                                       'current_version' => $current_version,
+                                       'fcm_token' => $fcm_token,
+                                       'device_language' => $device_language,
+                                    ]);
 
                     $this->response = $this->sendVerificationCode($smsService, $customer, $otp);
                 }else{
@@ -108,6 +117,8 @@ class CustomerController extends Controller
                     $customer->phone_number = $phone_number;
                     $customer->otp = $otp;
                     $customer->unique_device_id = $unique_device_id;
+                    $customer->fcm_token = $fcm_token;
+                    $customer->device_language = $device_language;
                     $customer->current_version = $current_version;
                     $customer->ip_address = $ip_address;
 

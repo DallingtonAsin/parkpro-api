@@ -16,6 +16,8 @@ use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\Payments\PaymentController;
 use App\Http\Controllers\Payments\FlutterwaveController;
 use App\Http\Controllers\MailController;
+use App\Http\Controllers\NotificationController;
+
 
 
 /*
@@ -139,7 +141,9 @@ use App\Http\Controllers\MailController;
         Route::get('parking-area/find-by-id', [ParkingAreaController::class, 'findParking']);
         Route::get('parking-area/near-by', [ParkingAreaController::class, 'getNearByParkings']);
         Route::get('parking-area/top-rated', [ParkingAreaController::class, 'getTopRatedParkingAreas']);
+        Route::post('push-notification/send', [NotificationController::class, 'sendPushNotificationToUser']);
         
+
         Route::resources([
             'vehicle-category' => VehicleCategoryController::class, // done
             'parking-fees' => ParkingFeeController::class, // done
