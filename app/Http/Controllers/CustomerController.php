@@ -178,7 +178,7 @@ public function updateAppDetails(Request $request){
                 if($isUpdated){
                     $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
                     $this->response['message'] = Globals::$STATUS_DESC_SUCCESS;
-                    $this->response['data'] = $customer;
+                    $this->response['data'] = Helper::getCustomerData($user_id);;
                 }else{
                     $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
                     $this->response['message'] = Globals::$STATUS_DESC_FAILED;
