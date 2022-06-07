@@ -19,11 +19,22 @@ class Customer extends Authenticatable
     protected $fillable = [
        'first_name',
        'last_name',
+       'country_iso_code',
+       'country_code',
        'phone_number',
        'email',
        'account_balance',
+       'image',
+       'otp',
+       'pin',
+       'unique_device_id',
        'fcm_token',
-       'device_language'
+       'current_version',
+       'ip_address',
+       'device_language',
+       'profile_status',
+       'is_active',
+       'is_blocked',
     ];
 
     protected $hidden = [

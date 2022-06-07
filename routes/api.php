@@ -110,6 +110,7 @@ use App\Http\Controllers\NotificationController;
     Route::group(['prefix' => 'customer', 'middleware' => ['auth:api-customers']], function(){
         
         Route::get('/details', [CustomerController::class, 'findCustomer']); //done
+        Route::post('/app/details', [CustomerController::class, 'updateAppDetails']); //done
         Route::get('/transactions', [PaymentController::class, 'getTransactionHistory']); // done
         Route::get('/transaction/history', [ParkingRequestController::class, 'getTransactionHistory']); //done
         Route::get('/notifications', [PaymentController::class, 'getNotifications']); // done
