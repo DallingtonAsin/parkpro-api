@@ -11,6 +11,7 @@ use App\Models\VehicleCategory;
 use App\Models\Customer;
 use App\Helpers\ApiResponse;
 use App\Helpers\formattedApiResponse;
+use Illuminate\Support\Facades\DB;
 use App\Repositories\Parking\ParkingRequestRepository;
 use Carbon\Carbon;
 use Globals;
@@ -233,9 +234,16 @@ class ParkingRequestController extends Controller
         return $difference;
     }
     
-    private function generateOrderNo($customer_id){
-        $orderNo = ParkingRequest::max('id') + 1; // time() . '' . $customer_id;
-        return $orderNo;
+    private function generateOrderNo(){
+        try{
+
+            $query = DB::select("SELECT GenerateParkingRequestOrderNo() as orderNo");
+            $order_no =  $query[0]->orderNo;
+            return $order_no;
+
+        }catch(\Exception $ex){
+            throw $ex;
+        }
     }
     
     private function isParkingAreaOpen($id){
@@ -419,7 +427,7 @@ class ParkingRequestController extends Controller
                             
                             $amount = floatval($parking_hours)*floatval($fee);
                             $amount = round($amount);
-                            $orderNo = $this->generateOrderNo($customer_id);
+                            $orderNo = $this->generateOrderNo();
                             $parkingRequest = new ParkingRequest();
                             
                             $parkingRequest->order_no = $orderNo;
