@@ -17,10 +17,10 @@ use Validator;
 class ParkingFeeController extends Controller
 {
 
-    public $response = [];
+    protected $response ;
     
-    public function __constructor(){
-        $this->response = new ApiResponse();
+    public function __construct(ApiResponse $response){
+        $this->response = $response;
     }
     /**
     * Display a listing of the resource.
@@ -36,7 +36,7 @@ class ParkingFeeController extends Controller
 
 
     public function getParkingFees(Request $request){
-        $resp = new ApiResponse();
+        ;
         try {
             $parking_area_id = $request->input('parking_area_id');
             $parking_fees = ParkingFee::where('parking_area_id', $parking_area_id)->get();
@@ -45,16 +45,16 @@ class ParkingFeeController extends Controller
                 $item->vehicle_type = VehicleCategory::where('id', $item->vehicle_cat_id)->value('name');
             }
 
-            $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
-            $resp->message  = Globals::$STATUS_DESC_SUCCESS;
-            $resp->data = $parking_fees;
+            $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
+            $this->response->message  = Globals::$STATUS_DESC_SUCCESS;
+            $this->response->data = $parking_fees;
         } catch (\Exception $ex) {
-            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-            $resp->message = Globals::$STATUS_DESC_ERROR;
-            $resp->data = $ex->getMessage();
+            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+            $this->response->message = Globals::$STATUS_DESC_ERROR;
+            $this->response->data = $ex->getMessage();
         }
         
-        return response()->json($resp);
+        return response()->json($this->response);
     }
     
     /**
@@ -75,7 +75,7 @@ class ParkingFeeController extends Controller
     */
     public function store(Request $request)
     {
-        $resp = new ApiResponse();
+        ;
         
         try{
             
@@ -102,38 +102,38 @@ class ParkingFeeController extends Controller
                             $action = "added parking fee for vehicle category ".$vehicleCatName." for parking area ".$parkingAreaName." ";
                             $responseInfo = Helper::getMessage('success', $action);
                             Helper::logActivity($request, ['name' => 'Dallington', 'role' => 'admin', 'action' => $action]);
-                            $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                            $resp->message = $responseInfo; 
+                            $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                            $this->response->message = $responseInfo; 
                         } else {
                             $messageErr = "Failed to add parking fee for vehicle category '.$vehicleCatName.' for parking area ".$parkingAreaName."!";
                             $responseInfo = Helper::getMessage('error', $messageErr);
-                            $resp->statusCode = Globals::$STATUS_CODE_FAILED;
-                            $resp->message = $responseInfo;
+                            $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
+                            $this->response->message = $responseInfo;
                         }
                         
                     }else{
                         $messageErr = "Fee for vehicle category ".$vehicleCatName." parking area ".$parkingAreaName." has been already added";
                         $responseInfo = Helper::getMessage('error', $messageErr);
-                        $resp->statusCode = Globals::$STATUS_CODE_FAILED;
-                        $resp->message = $responseInfo;
+                        $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
+                        $this->response->message = $responseInfo;
                     }
                 } else {
                     $messageErr = "Failed to get details from request for adding fee";
                     $responseInfo = Helper::getMessage('error', $messageErr);
-                    $resp->statusCode = Globals::$STATUS_CODE_FAILED;
-                    $resp->message = $responseInfo;
+                    $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
+                    $this->response->message = $responseInfo;
                 }
         } catch (\Exception $ex) {
-            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-            $resp->message = $ex->getMessage();
+            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+            $this->response->message = $ex->getMessage();
         }
-        $resp->data = ParkingFee::count();
-        return response()->json($resp);
+        $this->response->data = ParkingFee::count();
+        return response()->json($this->response);
     }
     
     
     public function getParkingFee($parking_area_id, $vehicle_category_id){
-        $resp = new ApiResponse();
+        ;
         try{
             
             $doesRequestExist = ParkingFee::where('parking_area_id', $parking_area_id)
@@ -144,28 +144,28 @@ class ParkingFeeController extends Controller
                 $parking_fee = ParkingFee::where('parking_area_id', $parking_area_id)
                 ->where('vehicle_cat_id', $vehicle_category_id)
                 ->value('fee_per_hour');
-                $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                $resp->message  = Globals::$STATUS_DESC_SUCCESS;
+                $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                $this->response->message  = Globals::$STATUS_DESC_SUCCESS;
                 $data = array(
                     'parking_area' => Helper::getParkingAreaName($parking_area_id)->data,
                     'vehicle_type' => Helper::getVehicleTypeName($vehicle_category_id)->data,
-                    'statusCode' => $resp->statusCode,
-                    'message' => $resp->message,
+                    'statusCode' => $this->response->statusCode,
+                    'message' => $this->response->message,
                     'fee' => $parking_fee,
                 );
-                $resp->data = $data;
+                $this->response->data = $data;
                 
             }else{
-                $resp->statusCode = Globals::$STATUS_CODE_FAILED;
-                $resp->message = "No results found";
+                $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
+                $this->response->message = "No results found";
             }
             
         }catch(Exception $ex){
-            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-            $resp->message = $ex->getMessage();
+            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+            $this->response->message = $ex->getMessage();
         }
         
-        return response()->json($resp);
+        return response()->json($this->response);
         
     }
     
@@ -208,8 +208,8 @@ class ParkingFeeController extends Controller
         
         try{
             if($validator->fails()){
-                $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
-                $this->response['message'] = $validator->errors()->all();
+                $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                $this->response->message = $validator->errors()->all();
             }else{
                 
                 $author_id = $request->input('user_id');
@@ -228,16 +228,16 @@ class ParkingFeeController extends Controller
                     $role = Helper::getUserRoleName($author_id);
                     $action = "updated fee for parking ".$parking->name." on vehicle type ".$vehicleType->name."";
                     Helper::logActivity($request, ['name' => $author, 'role' => $role, 'action' => $action]);
-                    $this->response['message'] = Helper::getMessage('success', $action);
-                    $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
+                    $this->response->message = Helper::getMessage('success', $action);
+                    $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
                 }else{
-                    $this->response['message'] ="Unable to update parking fee!";
-                    $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
+                    $this->response->message ="Unable to update parking fee!";
+                    $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
                 }
             }
         }catch(\Exception $ex){
-            $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
-            $this->response['message'] = $ex->getMessage();
+            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+            $this->response->message = $ex->getMessage();
         }
         
         return response()->json($this->response, 200);
@@ -257,8 +257,8 @@ class ParkingFeeController extends Controller
         
         try{
             if($validator->fails()){
-                $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
-                $this->response['message'] = $validator->errors()->all();
+                $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                $this->response->message = $validator->errors()->all();
             }else{
                 
                 $author_id = $request->input('user_id');
@@ -278,16 +278,16 @@ class ParkingFeeController extends Controller
                     $role = Helper::getUserRoleName($author_id);
                     $action = "".$activity." fee for parking ".$parking->name." on vehicle type ".$vehicleType->name."";
                     Helper::logActivity($request, ['name' => $author, 'role' => $role, 'action' => $action]);
-                    $this->response['message'] = Helper::getMessage('success', $action);
-                    $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
+                    $this->response->message = Helper::getMessage('success', $action);
+                    $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
                 }else{
-                    $this->response['message'] ="Unable to delete parking fee!";
-                    $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
+                    $this->response->message ="Unable to delete parking fee!";
+                    $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
                 }
             }
         }catch(\Exception $ex){
-            $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
-            $this->response['message'] = $ex->getMessage();
+            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+            $this->response->message = $ex->getMessage();
         }
         
         return response()->json($this->response, 200); 

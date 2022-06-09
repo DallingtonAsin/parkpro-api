@@ -12,13 +12,12 @@ use Globals;
 
 class NotificationController extends Controller
 {
-    protected $firebaseService;
-    private $response;
+    protected $firebaseService, $response;
     
-    public function __construct(FCMService $firebaseService)
+    public function __construct(FCMService $firebaseService, ApiResponse $response)
     {
         $this->firebaseService = $firebaseService;
-        $this->response = [];
+        $this->response = $response;
     }
     
      /**
@@ -32,10 +31,10 @@ class NotificationController extends Controller
         ]);
         
         try{
-            $resp = new ApiResponse();
+           
             if($validator->fails()){
-                $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-                $resp->message = $validator->errors()->all();
+                $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                $this->response->message = $validator->errors()->all();
             }else{
                 
                 $userId = $request->input('id');
@@ -53,25 +52,25 @@ class NotificationController extends Controller
                     $respCode= $res->getStatusCode();
 
                     if($respCode == '200'){
-                        $resp->statusCode = $respCode;
-                        $resp->message = "Notification sent successfully";
-                        $resp->data['fcm_token'] = $fcmToken;
+                        $this->response->statusCode = $respCode;
+                        $this->response->message = "Notification sent successfully";
+                        $this->response->data['fcm_token'] = $fcmToken;
                     }else{
-                        $resp->statusCode = $respCode;
-                        $resp->message = Globals::$STATUS_CODE_ERROR;
+                        $this->response->statusCode = $respCode;
+                        $this->response->message = Globals::$STATUS_CODE_ERROR;
                     }
                     
                 }else{
-                    $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-                    $resp->message = "Unable to find customer";
+                    $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                    $this->response->message = "Unable to find customer";
                 }
                 
             }
         }catch(\Exception $ex){
-            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-            $resp->message = $ex->getMessage();
+            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+            $this->response->message = $ex->getMessage();
         }
-        return response()->json($resp);
+        return response()->json($this->response);
     }
     
     

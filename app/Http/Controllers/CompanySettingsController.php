@@ -13,6 +13,15 @@ use Globals;
 
 class CompanySettingsController extends Controller
 {
+
+
+    protected $response;
+    
+    public function __construct(ApiResponse $response)
+    {
+        $this->response = $response;
+    }
+    
     /**
     * Display a listing of the resource.
     *
@@ -44,7 +53,7 @@ class CompanySettingsController extends Controller
     */
     public function store(Request $request)
     {
-        $resp = new ApiResponse();
+
         $method = "UserController@store";
         
         try{
@@ -60,12 +69,12 @@ class CompanySettingsController extends Controller
                             $name = $company->name;
                             $action = "updated details of company ".$name."";
                             $arr = $this->addUpdateCompany($request, $company, $action, 'edit');
-                            $resp->statusCode = $arr['statusCode'];
-                            $resp->message = $arr['message'];
-                            $resp->data = $arr['data'];
+                            $this->response->statusCode= $arr['statusCode'];
+                            $this->response->message= $arr['message'];
+                            $this->response->data= $arr['data'];
                         }else{
-                            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-                            $resp->message = "Unable to find company with specified id";
+                            $this->response->statusCode= Globals::$STATUS_CODE_ERROR;
+                            $this->response->message= "Unable to find company with specified id";
                         }
                     }else{
 
@@ -79,34 +88,34 @@ class CompanySettingsController extends Controller
                                 $company = new Company();
                                 $action = "added details for company ".$name."";
                                 $arr = $this->addUpdateCompany($request, $company, $action, 'add');
-                                $resp->statusCode = $arr['statusCode'];
-                                $resp->message = $arr['message'];
-                                $resp->data = $arr['data'];
+                                $this->response->statusCode= $arr['statusCode'];
+                                $this->response->message= $arr['message'];
+                                $this->response->data= $arr['data'];
                             }else{
-                                $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-                                $resp->message = "Company with email ".$email." already exists";
+                                $this->response->statusCode= Globals::$STATUS_CODE_ERROR;
+                                $this->response->message= "Company with email ".$email." already exists";
                             }
                         } else{
-                            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-                            $resp->message = "Company with name ".$name." already exists";
+                            $this->response->statusCode= Globals::$STATUS_CODE_ERROR;
+                            $this->response->message= "Company with name ".$name." already exists";
                         }
                     }
                     
                 }else{
-                    $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-                    $resp->message = "Unable to process request: missing parameters";
+                    $this->response->statusCode= Globals::$STATUS_CODE_ERROR;
+                    $this->response->message= "Unable to process request: missing parameters";
                 }
             
         } catch (\Exception $ex) {
-            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-            $resp->message = $message = $ex->getMessage();
+            $this->response->statusCode= Globals::$STATUS_CODE_ERROR;
+            $this->response->message= $message = $ex->getMessage();
         }
         
-        $dataArr = array("code" => $resp->statusCode,
-        "message" => $resp->message,
+        $dataArr = array("code" => $this->response->statusCode,
+        "message" => $this->response->message,
         "method" => $method);
         Helper::LogRequest($request, $dataArr);
-        return response()->json($resp);
+        return response()->json($this->response);
         
     }
     

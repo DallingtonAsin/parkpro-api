@@ -6,9 +6,9 @@ use AfricasTalking\SDK\AfricasTalking;
 
 class SmsService{
 
-
    public function sendOTP($phone_number, $otp){
     try{
+
         $username = config("app.AfricasTalking_Sandbox_Username"); 
         $apiKey   = config("app.AfricasTalking_Sandbox_ApiKey");
         $service       = new AfricasTalking($username, $apiKey);
@@ -18,6 +18,7 @@ class SmsService{
             'message' => "Your ".config('app.company_name')." verification code is: ".$otp.""
         ]);
         return $result;
+
     }catch(\Exception $ex){
         throw $ex;
     }
