@@ -15,10 +15,10 @@ class ClientController extends Controller
 {
 
 
-    public $response = [];
+    public $response;
     
-    public function __constructor(){
-        $this->response = new ApiResponse();
+    public function __construct(ApiResponse $response){
+        $this->response = $response;
     }
 
     /**
@@ -52,7 +52,6 @@ class ClientController extends Controller
     */
     public function store(Request $request)
     {
-        $resp = new ApiResponse();
         
         try{
             
@@ -74,34 +73,34 @@ class ClientController extends Controller
                             $action = "registered client ".$client_name."";
                             $responseInfo = Helper::getMessage('success', $action);
                             Helper::logActivity($request, ['name' => $request->input('creator'), 'role' => 'admin', 'action' => $action]);
-                            $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                            $resp->message = $responseInfo; 
+                            $this->response->statusCode= Globals::$STATUS_CODE_SUCCESS;
+                            $this->response->message = $responseInfo; 
                         } else {
                             $messageErr = "registering client failed!";
                             $responseInfo = Helper::getMessage('error', $messageErr);
-                            $resp->statusCode = Globals::$STATUS_CODE_FAILED;
-                            $resp->message = $responseInfo;
+                            $this->response->statusCode= Globals::$STATUS_CODE_FAILED;
+                            $this->response->message = $responseInfo;
                         }
                     } else {
                         $messageErr = "Client ".$client_name." has already been registered";
                         $responseInfo = Helper::getMessage('error', $messageErr);
-                        $resp->statusCode = Globals::$STATUS_CODE_FAILED;
-                        $resp->message = $responseInfo;
+                        $this->response->statusCode= Globals::$STATUS_CODE_FAILED;
+                        $this->response->message = $responseInfo;
                     }
                     
                 }else{
                     $messageErr = "Failed to get client from request";
                     $responseInfo = Helper::getMessage('error', $messageErr);
-                    $resp->statusCode = Globals::$STATUS_CODE_FAILED;
-                    $resp->message = $responseInfo;
+                    $this->response->statusCode= Globals::$STATUS_CODE_FAILED;
+                    $this->response->message = $responseInfo;
                 }
           
         } catch (\Exception $ex) {
-            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-            $resp->message = $ex->getMessage();
+            $this->response->statusCode= Globals::$STATUS_CODE_ERROR;
+            $this->response->message = $ex->getMessage();
         }
-        $resp->data = Client::count();
-        return response()->json($resp);
+        $this->response->data = Client::count();
+        return response()->json($this->response);
     }
     
     /**
@@ -146,8 +145,8 @@ class ClientController extends Controller
         
         try{
             if($validator->fails()){
-                $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
-                $this->response['message'] = $validator->errors()->all();
+                $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                $this->response->message = $validator->errors()->all();
             }else{
                 
                 $author_id = $request->input('user_id');
@@ -169,16 +168,16 @@ class ClientController extends Controller
                     $role = Helper::getUserRoleName($author_id);
                     $action = "updated client ".$client_name." details";
                     Helper::logActivity($request, ['name' => $author, 'role' => $role, 'action' => $action]);
-                    $this->response['message'] = Helper::getMessage('success', $action);
-                    $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
+                    $this->response->message = Helper::getMessage('success', $action);
+                    $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
                 }else{
-                    $this->response['message'] ="Unable to update client details!";
-                    $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
+                    $this->response->message ="Unable to update client details!";
+                    $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
                 }
             }
         }catch(\Exception $ex){
-            $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
-            $this->response['message'] = $ex->getMessage();
+            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+            $this->response->message = $ex->getMessage();
         }
         
         return response()->json($this->response, 200);  
@@ -198,8 +197,8 @@ class ClientController extends Controller
         
         try{
             if($validator->fails()){
-                $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
-                $this->response['message'] = $validator->errors()->all();
+                $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                $this->response->message = $validator->errors()->all();
             }else{
                 
                 $author_id = $request->input('user_id');
@@ -218,16 +217,16 @@ class ClientController extends Controller
                     $role = Helper::getUserRoleName($author_id);
                     $action = "".$activity." client ".$client_name."";
                     Helper::logActivity($request, ['name' => $author, 'role' => $role, 'action' => $action]);
-                    $this->response['message'] = Helper::getMessage('success', $action);
-                    $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
+                    $this->response->message = Helper::getMessage('success', $action);
+                    $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
                 }else{
-                    $this->response['message'] ="Unable to delete client!";
-                    $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
+                    $this->response->message ="Unable to delete client!";
+                    $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
                 }
             }
         }catch(\Exception $ex){
-            $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
-            $this->response['message'] = $ex->getMessage();
+            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+            $this->response->message = $ex->getMessage();
         }
         
         return response()->json($this->response, 200);  

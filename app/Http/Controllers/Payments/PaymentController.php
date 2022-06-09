@@ -28,12 +28,15 @@ use Validator;
 class PaymentController extends Controller
 {
     
-    protected $flutterWaveService, $moMoService;
+    protected $flutterWaveService, $moMoService, $response;
     
-    public function __construct(FlutterWaveService $flutterWaveService, MMService $moMoService)
+    public function __construct(FlutterWaveService $flutterWaveService,
+                                MMService $moMoService,
+                                ApiResponse $response)
     {
         $this->flutterWaveService = $flutterWaveService;
         $this->moMoService = $moMoService;
+        $this->response = $response;
     }
     
     /**
@@ -53,7 +56,7 @@ class PaymentController extends Controller
     */
     public function create1(Request $request)
     {
-        $resp = new ApiResponse();
+        ;
         $paymentData = array(
             'phonenumber' => '256774014727',
             'amount'      => '1000',
@@ -64,16 +67,16 @@ class PaymentController extends Controller
         
         try {
             $response = LaramanBeyonic::createCollectionRequest($paymentData);
-            $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
-            $resp->message  = Globals::$STATUS_DESC_SUCCESS;
-            $resp->data = $response;
+            $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
+            $this->response->message  = Globals::$STATUS_DESC_SUCCESS;
+            $this->response->data = $response;
         } catch (\Exception $ex) {
-            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-            $resp->message = $ex->getMessage();
-            $resp->data = null;
+            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+            $this->response->message = $ex->getMessage();
+            $this->response->data = null;
         }
         
-        return response()->json($resp);
+        return response()->json($this->response);
     }
     
     public function create(Request $request) {
@@ -111,8 +114,8 @@ class PaymentController extends Controller
             
             try{
                 if($validator->fails()){
-                    $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
-                    $this->response['message'] = $validator->errors()->all();
+                    $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                    $this->response->message = $validator->errors()->all();
                 }else{
                     $customerId = $request->input("id");
                     $country_code = $request->input("country_code");
@@ -136,37 +139,37 @@ class PaymentController extends Controller
                                     $isTransactionRecorded = true; //$mmService->recordMobileMoneyTransaction($customerId, $phone_number, $amount);
                                     
                                     if($isTransactionRecorded){
-                                        $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
-                                        $this->response['message'] = 'Mobile money topup successful';
-                                        $this->response['data'] = Helper::getCustomerData($customerId);
+                                        $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                                        $this->response->message = 'Mobile money topup successful';
+                                        $this->response->data = Helper::getCustomerData($customerId);
                                         $this->response['airtimeResponse'] = $resp;
                                     }else{
-                                        $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
-                                        $this->response['message'] = "Unable to log mobile money transaction in the customer ledger";
+                                        $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
+                                        $this->response->message = "Unable to log mobile money transaction in the customer ledger";
                                     }
                                 }else{
-                                    $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
-                                    $this->response['message'] = "Unable to credit customer balance";
+                                    $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
+                                    $this->response->message = "Unable to credit customer balance";
                                 }
                             }else{
-                                $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
-                                $this->response['message'] = "Unable to log transaction in  mobile money transactions table";
+                                $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
+                                $this->response->message = "Unable to log transaction in  mobile money transactions table";
                             }
                             
                         }else{
-                            $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
-                            $this->response['message'] =$resp['data'];
+                            $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
+                            $this->response->message =$this->response->data;
                         }
                         
                     }else{
-                        $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
-                        $this->response['message'] = "Unable to get customer's identity";
+                        $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                        $this->response->message = "Unable to get customer's identity";
                     }
                     
                 }
             }catch(\Exception $ex){
-                $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
-                $this->response['message'] = json_encode($ex->getMessage());
+                $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                $this->response->message = json_encode($ex->getMessage());
             }
             return response()->json($this->response, 200);   
             
@@ -183,8 +186,8 @@ class PaymentController extends Controller
             
             try{
                 if($validator->fails()){
-                    $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
-                    $this->response['message'] = $validator->errors()->all();
+                    $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                    $this->response->message = $validator->errors()->all();
                 }else{
                     $customerId = $request->input("id");
                     $phone_number = $request->input("phone_number");
@@ -198,33 +201,33 @@ class PaymentController extends Controller
                             if($hasDeductedCustomerBal){
                                 $isTransactionRecorded = $airtimeService->recordAirtimeTransaction($customerId, $phone_number, $amount);
                                 if($isTransactionRecorded){
-                                    $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
-                                    $this->response['message'] = 'Airtime loaded successfully on '.$phone_number.'';
-                                    $this->response['data'] = Helper::getCustomerData($customerId);
+                                    $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                                    $this->response->message = 'Airtime loaded successfully on '.$phone_number.'';
+                                    $this->response->data = Helper::getCustomerData($customerId);
                                     $this->response['airtimeResponse'] = $resp;
                                 }else{
-                                    $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
-                                    $this->response['message'] = "Unable to log airtime transaction in the customer ledger";
+                                    $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
+                                    $this->response->message = "Unable to log airtime transaction in the customer ledger";
                                 }
                             }else{
-                                $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
-                                $this->response['message'] = "Unable to deduct customer balance";
+                                $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
+                                $this->response->message = "Unable to deduct customer balance";
                             }
                             
                         }else{
-                            $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
-                            $this->response['message'] =$resp['data'];
+                            $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
+                            $this->response->message =$this->response->data;
                         }
                         
                     }else{
-                        $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
-                        $this->response['message'] = "Unable to get customer's identity";
+                        $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                        $this->response->message = "Unable to get customer's identity";
                     }
                     
                 }
             }catch(\Exception $ex){
-                $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
-                $this->response['message'] = $ex->getMessage();
+                $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                $this->response->message = $ex->getMessage();
             }
             return response()->json($this->response, 200);   
             
@@ -232,7 +235,7 @@ class PaymentController extends Controller
         
         
         public function topupUserAccount(Request $request){
-            $resp = new ApiResponse();
+            ;
             
             try{
                 
@@ -267,37 +270,37 @@ class PaymentController extends Controller
                             //     $action = "topped up your account with amount ".number_format($amount).". Your new balance is ".number_format($customer->account_balance)."";
                             //     $responseInfo = Helper::getMessage('success', $action);
                             //     Helper::logActivity($request, ['name' => 'System', 'role' => 'system', 'action' => $action]);
-                            //     $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                            //     $resp->message = $responseInfo; 
-                            //     $resp->data = Helper::getCustomerData($customer_id);
+                            //     $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                            //     $this->response->message = $responseInfo; 
+                            //     $this->response->data = Helper::getCustomerData($customer_id);
                             //     }else{
                                 //             $messageErr = "Unable to top up customer account!";
                                 //             $responseInfo = Helper::getMessage('error', $messageErr);
-                                //             $resp->statusCode = Globals::$STATUS_CODE_FAILED;
-                                //             $resp->message = $responseInfo;
+                                //             $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
+                                //             $this->response->message = $responseInfo;
                                 //         }
                             }else{
                                 $messageErr = "Failed to find customer with supplied details";
                                 $responseInfo = Helper::getMessage('error', $messageErr);
-                                $resp->statusCode = Globals::$STATUS_CODE_FAILED;
-                                $resp->message = $responseInfo;
+                                $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
+                                $this->response->message = $responseInfo;
                             }
                         } else {
                             $messageErr = "Unable to process request: missing parameters";
                             $responseInfo = Helper::getMessage('error', $messageErr);
-                            $resp->statusCode = Globals::$STATUS_CODE_FAILED;
-                            $resp->message = $responseInfo;
+                            $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
+                            $this->response->message = $responseInfo;
                         }
                     } catch (\Exception $ex) {
-                        $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-                        $resp->message = $ex->getMessage();
+                        $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                        $this->response->message = $ex->getMessage();
                     }
-                    return response()->json($resp);
+                    return response()->json($this->response);
                 }
                 
                 
                 public function topupUserAccounts(Request $request){
-                    $resp = new ApiResponse();
+                    ;
                     
                     try{
                         
@@ -325,8 +328,8 @@ class PaymentController extends Controller
                                     $action = "topped up your account with amount ".number_format($amount).". Your new balance is ".number_format($customer->account_balance)."";
                                     $responseInfo = Helper::getMessage('success', $action);
                                     Helper::logActivity($request, ['name' => 'System', 'role' => 'system', 'action' => $action]);
-                                    $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                                    $resp->message = $responseInfo; 
+                                    $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                                    $this->response->message = $responseInfo; 
                                     
                                     // $ledger = new CustomersLedger();
                                     $ledgerInput = [
@@ -360,31 +363,31 @@ class PaymentController extends Controller
                                     }
                                     
                                     
-                                    $resp->data = $customer;
+                                    $this->response->data = $customer;
                                 } else {
                                     $messageErr = "Unable to top up customer account!";
                                     $responseInfo = Helper::getMessage('error', $messageErr);
-                                    $resp->statusCode = Globals::$STATUS_CODE_FAILED;
-                                    $resp->message = $responseInfo;
+                                    $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
+                                    $this->response->message = $responseInfo;
                                 }
                                 
                             }else{
                                 $messageErr = "Failed to find customer with supplied details";
                                 $responseInfo = Helper::getMessage('error', $messageErr);
-                                $resp->statusCode = Globals::$STATUS_CODE_FAILED;
-                                $resp->message = $responseInfo;
+                                $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
+                                $this->response->message = $responseInfo;
                             }
                         } else {
                             $messageErr = "Unable to process request: missing parameters";
                             $responseInfo = Helper::getMessage('error', $messageErr);
-                            $resp->statusCode = Globals::$STATUS_CODE_FAILED;
-                            $resp->message = $responseInfo;
+                            $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
+                            $this->response->message = $responseInfo;
                         }
                     } catch (\Exception $ex) {
-                        $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-                        $resp->message = $ex->getMessage();
+                        $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                        $this->response->message = $ex->getMessage();
                     }
-                    return response()->json($resp);
+                    return response()->json($this->response);
                 }
                 
                 private function storePaymentNotification($paymentData) {
@@ -455,74 +458,74 @@ class PaymentController extends Controller
                 
                 
                 public function getNotifications(NotificationRepository $notificationRepo, Request $request){
-                    $resp = new ApiResponse();
+                    ;
                     try {
                         if($request->filled('id')){
                             $customer_id = $request->input('id');
                             $data = $notificationRepo->getUserNotification($customer_id);
                             if(count((array)$data) > 0){
-                                $resp->message  = "No notifications found";
+                                $this->response->message  = "No notifications found";
                             }
-                            $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                            $resp->data = $data;
+                            $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                            $this->response->data = $data;
                             
                         }else {
-                            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-                            $resp->message = "Unable to process request: missing parameters";
+                            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                            $this->response->message = "Unable to process request: missing parameters";
                         }
                         
                     } catch (\Exception $ex) {
-                        $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-                        $resp->message = $ex->getMessage();
-                        $resp->data = $ex->getMessage();
+                        $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                        $this->response->message = $ex->getMessage();
+                        $this->response->data = $ex->getMessage();
                     }
                     
-                    return response()->json($resp);
+                    return response()->json($this->response);
                 }
                 
                 public function getTransactionHistory(PaymentRepository $paymentRepo, Request $request){
-                    $resp = new ApiResponse();
+                    ;
                     try {
                         if($request->filled('id')){
                             $customer_id = $request->input('id');
                             $transactions = $paymentRepo->getTransactionRecords($customer_id);
                             if(count($transactions->toArray()) > 0){
-                                $resp->message  = Globals::$STATUS_DESC_SUCCESS;
+                                $this->response->message  = Globals::$STATUS_DESC_SUCCESS;
                             }else{
-                                $resp->message  = "No transactions found";
+                                $this->response->message  = "No transactions found";
                             }
                             $tranRecords = $paymentRepo->mapNotifications($transactions);
-                            $resp->data = $tranRecords;
-                            $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                            $this->response->data = $tranRecords;
+                            $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
                         }else {
-                            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-                            $resp->message = "Unable to process request: missing parameters";
+                            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                            $this->response->message = "Unable to process request: missing parameters";
                         }
                     } catch (\Exception $ex) {
-                        $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-                        $resp->message = $ex->getMessage();
-                        $resp->data = $ex->getMessage();
+                        $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                        $this->response->message = $ex->getMessage();
+                        $this->response->data = $ex->getMessage();
                     }
                     
-                    return response()->json($resp);
+                    return response()->json($this->response);
                 }
                 
                 public function africasTkngAccountDetails(Request $request, MMService $mmService){
-                    $resp = new ApiResponse();
+                    ;
                     try {
                         $accountDetailsResp = $mmService->getAccountDetails();
                         if($accountDetailsResp){
-                            $resp->message = strtoupper($accountDetailsResp['status']);
-                            $resp->data = $accountDetailsResp['data']->UserData;
+                            $this->response->message = strtoupper($accountDetailsResp['status']);
+                            $this->response->data = $accountDetailsResp['data']->UserData;
                         }
-                        $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                        $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
                     } catch (\Exception $ex) {
-                        $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-                        $resp->message = $ex->getMessage();
-                        $resp->data = $ex->getMessage();
+                        $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                        $this->response->message = $ex->getMessage();
+                        $this->response->data = $ex->getMessage();
                     }
                     
-                    return response()->json($resp);
+                    return response()->json($this->response);
                 }
                 
                 

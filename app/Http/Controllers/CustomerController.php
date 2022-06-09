@@ -25,11 +25,11 @@ use Mail;
 class CustomerController extends Controller
 {
     
-    public $response = [];
+    protected $smsService, $response;
     
-    
-    public function __constructor(){
-        $this->response = new ApiResponse();
+    public function __construct(SmsService $smsService, ApiResponse $response){
+        $this->smsService = $smsService;
+        $this->response = $response;
     }
     
     
@@ -60,7 +60,7 @@ class CustomerController extends Controller
     }
     
     
-    public function InsertOrUpdateCustomerOTP(Request $request, SmsService $smsService){
+    public function InsertOrUpdateCustomerOTP(Request $request){
         
         $validator = Validator::make($request->all(), [
             'countryIsoCode' => 'required',
@@ -73,8 +73,8 @@ class CustomerController extends Controller
         
         try{
             if($validator->fails()){
-                $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
-                $this->response['message'] = $validator->errors()->all();
+                $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                $this->response->message = $validator->errors()->all();
             }else{
                 
                 $country_iso_code = request('countryIsoCode');
@@ -94,7 +94,7 @@ class CustomerController extends Controller
                 : $device_language = null;
                 
                 
-                $otp = $smsService->generateNumericOTP(4);
+                $otp = $this->smsService->generateNumericOTP(4);
                 $exists = Customer::where("country_code", "=", $country_code)
                 ->where("phone_number", "=", $phone_number)
                 ->exists();
@@ -109,7 +109,7 @@ class CustomerController extends Controller
                     'device_language' => $device_language,
                 ]);
                 
-                $this->response = $this->sendVerificationCode($smsService, $customer, $otp);
+                $this->response = $this->sendVerificationCode($customer, $otp);
             }else{
                 
                 $customer = new Customer();
@@ -125,19 +125,61 @@ class CustomerController extends Controller
                 
                 
                 if($customer->save()){
-                    $this->response = $this->sendVerificationCode($smsService, $customer, $otp);
+                    $this->response = $this->sendVerificationCode($customer, $otp);
                 } else{
-                    $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
-                    $this->response['message'] = "Unable to register customer phone number";
+                    $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                    $this->response->message = "Unable to register customer phone number";
                 }
             }
             
         }
     }catch(\Exception $ex){
-        $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
-        $this->response['message'] = $ex->getMessage();
+        $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+        $this->response->message = $ex->getMessage();
     }
     return response()->json($this->response, 200);
+}
+
+
+
+
+public function resendOTP(Request $request){
+    
+    $validator = Validator::make($request->all(), [
+        'countryCode' => 'required',
+        'phoneNumber' => 'required'
+    ]);
+    
+    try{
+        if($validator->fails()){
+            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+            $this->response->message = $validator->errors()->all();
+        }else{
+            
+            $country_code  = request('countryCode');
+            $phone_number  = request('phoneNumber');
+
+            $exists = Customer::where("country_code", "=", $country_code)
+            ->where("phone_number", "=", $phone_number)
+            ->exists();
+            
+            if($exists){
+
+                $customer = Customer::where("country_code", "=", $country_code)
+                ->where("phone_number", "=", $phone_number)->first();
+                
+                $otp = $this->smsService->generateNumericOTP(4); // $customer->otp
+                $this->response = $this->sendVerificationCode($customer, $otp);
+            }else{
+                $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                $this->response->message = "Unable to find customer with supplied details";
+            }
+        }
+    }catch(\Exception $ex){
+        $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+        $this->response->message = $ex->getMessage();
+    }
+    return response()->json($this->response);
 }
 
 
@@ -150,8 +192,8 @@ public function updateAppDetails(Request $request){
     
     try{
         if($validator->fails()){
-            $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
-            $this->response['message'] = $validator->errors()->all();
+            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+            $this->response->message = $validator->errors()->all();
         }else{
             
             $user_id = request('id');
@@ -163,47 +205,46 @@ public function updateAppDetails(Request $request){
             if($exists){
                 
                 $customer = Customer::find($user_id);
-
+                
                 $ip_address = $request->filled('ipAddress') ? request('ipAddress') : $customer->ip_address;
                 $fcm_token = $request->filled('deviceToken') ? request('deviceToken') : $customer->fcm_token;
                 $unique_device_id = $request->filled('uniqueDeviceId') ? request('uniqueDeviceId') : $customer->unique_device_id;
                 
                 $isUpdated = $customer->update([
-                'unique_device_id' => $unique_device_id, 
-                'ip_address' => $ip_address,
-                'current_version' => $current_version,
-                'fcm_token' => $fcm_token,
+                    'unique_device_id' => $unique_device_id, 
+                    'ip_address' => $ip_address,
+                    'current_version' => $current_version,
+                    'fcm_token' => $fcm_token,
                 ]);
-               
+                
                 if($isUpdated){
-                    $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
-                    $this->response['message'] = Globals::$STATUS_DESC_SUCCESS;
-                    $this->response['data'] = Helper::getCustomerData($user_id);;
+                    $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                    $this->response->message = Globals::$STATUS_DESC_SUCCESS;
+                    $this->response->data = Helper::getCustomerData($user_id);;
                 }else{
-                    $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
-                    $this->response['message'] = Globals::$STATUS_DESC_FAILED;
+                    $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
+                    $this->response->message = Globals::$STATUS_DESC_FAILED;
                 }
+                
+            }else{
+                $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                $this->response->message = "Unable to find customer with supplied details";
+            }
             
-        }else{
-            $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
-            $this->response['message'] = "Unable to find customer with supplied details";
         }
-        
+    }catch(\Exception $ex){
+        $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+        $this->response->message = $ex->getMessage();
     }
-}catch(\Exception $ex){
-    $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
-    $this->response['message'] = $ex->getMessage();
-}
-return response()->json($this->response, 200);
+    return response()->json($this->response, 200);
 }
 
 
-
-private function sendVerificationCode($smsService, $customer, $otp){
+private function sendVerificationCode($customer, $otp){
     try{
         
         $customer_phone_number = $customer->country_code.''.$customer->phone_number;
-        $data = $smsService->sendOTP($customer_phone_number, $otp);
+        $data = $this->smsService->sendOTP($customer_phone_number, $otp);
         
         $customerData['user_id'] = $customer->id;
         $customerData["otp"] = $otp;
@@ -212,9 +253,9 @@ private function sendVerificationCode($smsService, $customer, $otp){
         $customerData['access_token'] = $customer->createToken('Customer'.$customer_phone_number, ['customer'])->accessToken;
         
         Customer::where("country_code", $customer->country_code)->where("phone_number", $customer->phone_number)->update(["otp" => $otp]);
-        $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
-        $this->response['message'] = 'OTP sent successfully to '.$customer_phone_number.'';
-        $this->response['data'] = $customerData;
+        $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
+        $this->response->message = 'OTP sent successfully to '.$customer_phone_number.'';
+        $this->response->data = $customerData;
         
         return $this->response;
     }catch(\Exception $ex){
@@ -231,8 +272,8 @@ public function verifyOTP(Request $request){
     ]);
     
     if($validator->fails()){
-        $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
-        $this->response['message'] = $validator->errors()->all();
+        $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+        $this->response->message = $validator->errors()->all();
     }else{
         
         $country_code = request('country_code');
@@ -262,13 +303,13 @@ public function verifyOTP(Request $request){
             
             Customer::where("country_code", "=", $country_code)->where("phone_number", "=", $phone_number)->update(["otp" => null]);
             
-            $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
-            $this->response['message'] = 'OTP successfully verified!';
-            $this->response['data'] = $customerData;
+            $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
+            $this->response->message = 'OTP successfully verified!';
+            $this->response->data = $customerData;
             
         }else{
-            $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
-            $this->response['message'] = 'Invalid OTP Code';
+            $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
+            $this->response->message = 'Invalid OTP Code';
         }
         
     }
@@ -278,43 +319,43 @@ public function verifyOTP(Request $request){
 
 
 
-public function signup(Request $request, SmsService $smsService){
+public function signup(Request $request){
     $validator = Validator::make($request->all(), [
         'phone_number' => 'required',
     ]);
     
     try{
         if($validator->fails()){
-            $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
-            $this->response['message'] = $validator->errors()->all();
+            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+            $this->response->message = $validator->errors()->all();
         }else{
             $phone_number = request('phone_number');
             $exists = Customer::where("phone_number", "=", $phone_number)->exists();
-            $otp = $smsService->generateNumericOTP(4);
+            $otp = $this->smsService->generateNumericOTP(4);
             if($exists){
                 $customer = Customer::where("phone_number", "=", $phone_number)->first();
                 if($customer->first_name){
-                    $this->response = $this->sendVerificationCode($smsService, $customer, $otp);
+                    $this->response = $this->sendVerificationCode($customer, $otp);
                 }else{
-                    $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
-                    $this->response['message'] = "Customer with phone number ".$phone_number." is already registered.";
+                    $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                    $this->response->message = "Customer with phone number ".$phone_number." is already registered.";
                 }
             }else{
                 $customer = new Customer();
                 $customer->phone_number = $phone_number;
                 $customer->otp = $otp;
                 if($customer->save()){
-                    $this->response = $this->sendVerificationCode($smsService, $customer, $otp);
+                    $this->response = $this->sendVerificationCode($customer, $otp);
                 } else{
-                    $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
-                    $this->response['message'] = "Unable to register customer phone number";
+                    $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                    $this->response->message = "Unable to register customer phone number";
                 }
             }
             
         }
     }catch(\Exception $ex){
-        $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
-        $this->response['message'] = $ex->getMessage();
+        $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+        $this->response->message = $ex->getMessage();
     }
     return response()->json($this->response, 200);
 }
@@ -343,7 +384,7 @@ public function login(Request $request)
                 if($status == 1){
                     $statusCode = Globals::$STATUS_CODE_SUCCESS;
                     $action = $message =  "logged into the app";
-                    $resp->data = Auth::user();
+                    $this->response->data = Auth::user();
                     $customer_name = Auth::user()->first_name." ".Auth::user()->last_name;
                     Helper::logActivity($request, ['name' => $customer_name, 'role' => 'customer', 'action' => $action]);
                 }
@@ -361,10 +402,10 @@ public function login(Request $request)
         $message = $ex->getMessage();
     }
     
-    $resp->statusCode = $statusCode;
-    $resp->message = $message;
+    $this->response->statusCode = $statusCode;
+    $this->response->message = $message;
     
-    return response()->json($resp);
+    return response()->json($this->response);
 }
 
 
@@ -379,8 +420,8 @@ public function register(Request $request){
     ]);
     
     if($validatedData->fails()){
-        $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
-        $this->response['message'] =  $validatedData->errors()->all();
+        $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
+        $this->response->message =  $validatedData->errors()->all();
     }else{
         
         $first_name = trim($request->input('first_name'));
@@ -408,23 +449,23 @@ public function register(Request $request){
                 $message = "You have been successfully registered as ".$role.", thank you!";
                 Helper::logActivity($request, ['name' => 'system', 'role' => $role, 'action' => $action]);
                 
-                $this->response['message'] = $message;
-                $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
+                $this->response->message = $message;
+                $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
                 // $cust = Customer::where('phone_number', '=', $phone_number)->first();
                 // $customerData = Helper::getCustomerData($cust->id); 
                 $customer->access_token = $customer->createToken('Customer'.$customer->phone_number, ['customer'])->accessToken;
-                $this->response['data'] = $customer;
+                $this->response->data = $customer;
             }
             else
             {
-                $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
+                $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
                 $this->resp['message'] = "Customer registration failed!";
             }
         } else{
             $message = "Customer with phone number ".$phone_number." has been already registered";
             $responseInfo = Helper::getMessage('error', $message);
-            $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
-            $this->response['message']  = $responseInfo;
+            $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
+            $this->response->message  = $responseInfo;
         }
     }
     return response()->json($this->response, 200);
@@ -447,8 +488,8 @@ public function createProfile(Request $request){
         
         if($validator->fails())
         {
-            $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
-            $this->response['message'] =  $validator->errors()->all();
+            $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
+            $this->response->message =  $validator->errors()->all();
         }
         else{
             
@@ -485,25 +526,25 @@ public function createProfile(Request $request){
                     $customer = Customer::find($customerId);
                     config(['auth.guards.api.provider' => 'customer']);
                     $action = "created your profile";
-                    $this->response['message'] = Helper::getMessage('success', $action);
-                    $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
+                    $this->response->message = Helper::getMessage('success', $action);
+                    $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
                     $customerData = Helper::getCustomerData($customerId);
                     $customerData['access_token'] = $customer->createToken('Customer'.$customer->country_code.''.$customer->phone_number, ['customer'])->accessToken;
-                    $this->response['data'] = $customerData;
+                    $this->response->data = $customerData;
                 }else{
-                    $this->response['message'] ="Unable to update customer account profile!";
-                    $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
+                    $this->response->message ="Unable to update customer account profile!";
+                    $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
                 }
             }else{
-                $this->response['message'] ="Unable to find customer with supplied details.";
-                $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED; 
+                $this->response->message ="Unable to find customer with supplied details.";
+                $this->response->statusCode = Globals::$STATUS_CODE_FAILED; 
             }
             
         }
         
     }catch(\Exception $ex){
-        $this->response['message'] = $ex->getMessage();
-        $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
+        $this->response->message = $ex->getMessage();
+        $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
     }
     
     return response()->json($this->response, 200);
@@ -526,8 +567,8 @@ public function updateProfile(Request $request){
         
         if($validator->fails())
         {
-            $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
-            $this->response['message'] =  $validator->errors()->all();
+            $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
+            $this->response->message =  $validator->errors()->all();
         }
         else{
             
@@ -563,24 +604,24 @@ public function updateProfile(Request $request){
                 if($hasUpdated){
                     $customer = Customer::find($customerId);
                     $action = "updated your profile";
-                    $this->response['message'] = Helper::getMessage('success', $action);
-                    $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
+                    $this->response->message = Helper::getMessage('success', $action);
+                    $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
                     $customerData = Helper::getCustomerData($customerId);
-                    $this->response['data'] = $customerData;
+                    $this->response->data = $customerData;
                 }else{
-                    $this->response['message'] ="Unable to update customer account profile!";
-                    $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
+                    $this->response->message ="Unable to update customer account profile!";
+                    $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
                 }
             }else{
-                $this->response['message'] ="Unable to find customer with supplied details.";
-                $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED; 
+                $this->response->message ="Unable to find customer with supplied details.";
+                $this->response->statusCode = Globals::$STATUS_CODE_FAILED; 
             }
             
         }
         
     }catch(\Exception $ex){
-        $this->response['message'] = $ex->getMessage();
-        $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
+        $this->response->message = $ex->getMessage();
+        $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
     }
     
     return response()->json($this->response, 200);
@@ -595,7 +636,7 @@ public function updateProfile(Request $request){
 */
 public function store(Request $request)
 {
-    $resp = new ApiResponse();
+    
     $method = "CustomerController@store";
     try{
         if($request->filled(['first_name','last_name', 'phone_number','password'])){
@@ -638,13 +679,13 @@ public function store(Request $request)
                 if($hasUpdated){
                     $customer = Customer::find($customerId);
                     $action = "updated profile";
-                    $resp->message = Helper::getMessage('success', $action);
-                    $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                    $this->response->message = Helper::getMessage('success', $action);
+                    $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
                     $customerData = Helper::getCustomerData($customerId);
-                    $resp->data = $customerData;
+                    $this->response->data = $customerData;
                 }else{
-                    $resp->message ="Unable to update customer account profile!";
-                    $resp->statusCode = Globals::$STATUS_CODE_FAILED;
+                    $this->response->message ="Unable to update customer account profile!";
+                    $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
                 }
                 
                 
@@ -680,41 +721,41 @@ public function store(Request $request)
                         $message = "You have been successfully registered as ".$role.", thank you!";
                         Helper::logActivity($request, ['name' => 'system', 'role' => $role, 'action' => $action]);
                         
-                        $resp->message = $message;
-                        $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                        $this->response->message = $message;
+                        $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
                         $cust = Customer::where('phone_number', '=', $phone_number)->first();
                         $customerData = Helper::getCustomerData($cust->id);
-                        $resp->data = $customerData;
+                        $this->response->data = $customerData;
                     }
                     else
                     {
-                        $resp->statusCode = Globals::$STATUS_CODE_FAILED;
-                        $resp->message = "Customer registration failed!";
+                        $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
+                        $this->response->message = "Customer registration failed!";
                     }
                 } else{
                     $message = "Customer with phone number ".$phone_number." has been already registered";
                     $responseInfo = Helper::getMessage('error', $message);
-                    $resp->statusCode = Globals::$STATUS_CODE_FAILED;
-                    $resp->message  = $responseInfo;
+                    $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
+                    $this->response->message  = $responseInfo;
                     
                 }
                 
             }
         } else{
-            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-            $resp->message = "Unable to process request: missing parameters";
+            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+            $this->response->message = "Unable to process request: missing parameters";
         }
         
     } catch (\Exception $ex) {
-        $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-        $resp->message = $message = $ex->getMessage();
+        $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+        $this->response->message = $message = $ex->getMessage();
     }
     
-    $dataArr = array("code" => $resp->statusCode,
-    "message" => $resp->message,
+    $dataArr = array("code" => $this->response->statusCode,
+    "message" => $this->response->message,
     "method" => $method);
     Helper::LogRequest($request, $dataArr);
-    return response()->json($resp);
+    return response()->json($this->response);
     
 }
 
@@ -764,18 +805,18 @@ public function findCustomer(Request $request){
             $doesCustomerExist = Customer::where('id', $customer_id)->exists();
             if ($doesCustomerExist) {
                 $customerData = Helper::getCustomerData($customer_id);
-                $this->apiResponse['statusCode'] = 1;
-                $this->apiResponse['message'] = 'customer details found';
-                $this->apiResponse['data'] = $customerData;
+                $this->response->statusCode = 1;
+                $this->response->message = 'customer details found';
+                $this->response->data = $customerData;
             } else {
-                $this->apiResponse['statusCode'] = 0;
-                $this->apiResponse['message'] = 'Unable to find customer details';
+                $this->response->statusCode = 0;
+                $this->response->message = 'Unable to find customer details';
             }
         } else {
-            $this->apiResponse['statusCode'] = 0;
-            $this->apiResponse['message'] = "Unable to process request";
+            $this->response->statusCode = 0;
+            $this->response->message = "Unable to process request";
         }
-        return response()->json($this->apiResponse, 200);
+        return response()->json($this->response, 200);
     }
     
 }
@@ -783,7 +824,7 @@ public function findCustomer(Request $request){
 
 public function changePassword(Request $request)
 {
-    $resp = new ApiResponse();
+
     try {
         if($request->filled('id') && $request->filled('current_password') 
         && $request->filled('new_password') && $request->filled('confirm_password')  ){
@@ -809,45 +850,45 @@ public function changePassword(Request $request)
                             'action' => "changed password" ]);
                             $message = Helper::getMessage('success', $action);
                             $customerData = Helper::getCustomerData($customer->id);
-                            $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                            $resp->message  = $message;
-                            $resp->data  = $customerData;
+                            $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                            $this->response->message  = $message;
+                            $this->response->data  = $customerData;
                             
                         }else{
-                            $resp->statusCode = Globals::$STATUS_CODE_FAILED;
-                            $resp->message = "Unable to change your password";
+                            $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
+                            $this->response->message = "Unable to change your password";
                         }  
                     }else{
-                        $resp->statusCode = Globals::$STATUS_CODE_FAILED;
-                        $resp->message = "Incorrect old password";
+                        $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
+                        $this->response->message = "Incorrect old password";
                     }
                     
                 }else{
-                    $resp->statusCode = Globals::$STATUS_CODE_FAILED;
-                    $resp->message = "Enter new matching passwords";
+                    $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
+                    $this->response->message = "Enter new matching passwords";
                 }
                 
             }else{
-                $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-                $resp->message = "Customer with supplied details does not exist"; 
+                $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                $this->response->message = "Customer with supplied details does not exist"; 
             }
         }
         else{
-            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-            $resp->message = "Unable to process request";
+            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+            $this->response->message = "Unable to process request";
         }
     } catch (\Exception $ex) {
-        $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-        $resp->message = $ex->getMessage();
-        $resp->data = $ex->getMessage();
+        $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+        $this->response->message = $ex->getMessage();
+        $this->response->data = $ex->getMessage();
     }
     
-    return response()->json($resp);
+    return response()->json($this->response);
 }
 
 
 public function uploadProfilePicture(Request $request){
-    $resp = new ApiResponse();
+  
     try {
         if($request->filled('id') && $request->filled('country_code') && $request->filled('phone_number') &&
         $request->filled('extension') && $request->has('image')){
@@ -881,30 +922,30 @@ public function uploadProfilePicture(Request $request){
                     $action = "updated your profile picture";
                     $message = Helper::getMessage('success', $action);
                     $customerData = Helper::getCustomerData($customer_id);
-                    $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                    $resp->message  = $message;
-                    $resp->data = $customerData;
+                    $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                    $this->response->message  = $message;
+                    $this->response->data = $customerData;
                 }else{
-                    $resp->statusCode = Globals::$STATUS_CODE_FAILED;
-                    $resp->message = "Unable to update your profile picture";
+                    $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
+                    $this->response->message = "Unable to update your profile picture";
                 }
             }else{
-                $resp->statusCode = Globals::$STATUS_CODE_FAILED;
-                $resp->message = "Unable to find customer with supplied details";
+                $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
+                $this->response->message = "Unable to find customer with supplied details";
             }
         }
         else{
-            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-            $resp->message = "Unable to process request";
+            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+            $this->response->message = "Unable to process request";
         }
         
     } catch (\Exception $ex) {
-        $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-        $resp->message = $ex->getMessage();
-        $resp->data = $ex->getMessage();
+        $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+        $this->response->message = $ex->getMessage();
+        $this->response->data = $ex->getMessage();
     }
     
-    return response()->json($resp, 200);
+    return response()->json($this->response, 200);
 }
 
 
@@ -919,8 +960,8 @@ public function removeProfilePicture(Request $request){
     try{
         
         if($validator->fails()){
-            $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
-            $this->response['message'] =  $validator->errors()->all();
+            $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
+            $this->response->message =  $validator->errors()->all();
         }
         else{
             
@@ -942,24 +983,24 @@ public function removeProfilePicture(Request $request){
                 if($hasUpdated){
                     $customer = Customer::find($customerId);
                     $action = "removed your profile picture";
-                    $this->response['message'] = Helper::getMessage('success', $action);
-                    $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
+                    $this->response->message = Helper::getMessage('success', $action);
+                    $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
                     $customerData = Helper::getCustomerData($customerId);
-                    $this->response['data'] = $customerData;
+                    $this->response->data = $customerData;
                 }else{
-                    $this->response['message'] ="Unable to remove profile picture";
-                    $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
+                    $this->response->message ="Unable to remove profile picture";
+                    $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
                 }
             }else{
-                $this->response['message'] ="Unable to find customer with supplied details.";
-                $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED; 
+                $this->response->message ="Unable to find customer with supplied details.";
+                $this->response->statusCode = Globals::$STATUS_CODE_FAILED; 
             }
             
         }
         
     }catch(\Exception $ex){
-        $this->response['message'] = $ex->getMessage();
-        $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
+        $this->response->message = $ex->getMessage();
+        $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
     }
     
     return response()->json($this->response, 200);

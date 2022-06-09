@@ -24,11 +24,11 @@ use Mail;
 class UserController extends Controller
 {
     
-    public $response = [];
+    protected $response ;
     
     
-    public function __constructor(){
-        $this->response = new ApiResponse();
+    public function __construct(ApiResponse $response){
+        $this->response = $response;
     }
     
     
@@ -42,8 +42,8 @@ class UserController extends Controller
         
         try{
             if($validator->fails()){
-                $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
-                $this->response['message'] = $validator->errors()->all();
+                $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                $this->response->message = $validator->errors()->all();
             } else {
                 
                 ($request->has('remember'))
@@ -70,31 +70,31 @@ class UserController extends Controller
                 
                 if($is_deleted == 0){
                 if($status == 0){
-                    $this->response['statusCode']  = Globals::$STATUS_CODE_FAILED;
-                    $this->response['message']= 'Your account is inactivated, see admin';
+                    $this->response->statusCode  = Globals::$STATUS_CODE_FAILED;
+                    $this->response->message= 'Your account is inactivated, see admin';
                 }
                 if($status == 1){
-                    $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
-                    $action = $this->response['message'] =  "logged into the system";
+                    $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                    $action = $this->response->message =  "logged into the system";
                     $user = Auth::user();
                     $user['access_token'] = $user->createToken('User->'.$user->username, ['user'])->accessToken;
-                    $this->response['data'] = $user;
+                    $this->response->data = $user;
                     Helper::logActivity($request, ['name' => $login, 'role' => 'admin', 'action' => $action]);
                 }
             }else{
-                $this->response['statusCode']  = Globals::$STATUS_CODE_FAILED;
-                $this->response['message']= 'Your account was removed, see admin';
+                $this->response->statusCode  = Globals::$STATUS_CODE_FAILED;
+                $this->response->message= 'Your account was removed, see admin';
             }
             }else
             {
-                $this->response['statusCode']  = Globals::$STATUS_CODE_FAILED;
-                $this->response['message'] = 'Invalid login credentials';
+                $this->response->statusCode  = Globals::$STATUS_CODE_FAILED;
+                $this->response->message = 'Invalid login credentials';
             }
         }
         
     } catch (\Exception $ex) {
-        $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
-        $this->response['message'] = $ex->getMessage();
+        $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+        $this->response->message = $ex->getMessage();
     }
     
     return response()->json($this->response, 200);
@@ -228,7 +228,7 @@ public function getImageStoragePath(){
 
 public function store(Request $request)
 {
-    $resp = new ApiResponse();
+    ;
     $method = "UserController@store";
     
     try{
@@ -285,17 +285,17 @@ public function store(Request $request)
                     
                     if($hasUpdated){
                         $action = "updated profile";
-                        $resp->message = Helper::getMessage('success', $action);
-                        $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                        $resp->data = User::count();
+                        $this->response->message = Helper::getMessage('success', $action);
+                        $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                        $this->response->data = User::count();
                     }else{
-                        $resp->message ="Unable to update user account details!";
-                        $resp->statusCode = Globals::$STATUS_CODE_FAILED;
+                        $this->response->message ="Unable to update user account details!";
+                        $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
                     }
                 }
                 else{
-                    $resp->message = "username ".$request->input('username')." has already been taken, choose another one";
-                    $resp->statusCode = Globals::$STATUS_CODE_FAILED; 
+                    $this->response->message = "username ".$request->input('username')." has already been taken, choose another one";
+                    $this->response->statusCode = Globals::$STATUS_CODE_FAILED; 
                 }
                 
             }else {
@@ -379,44 +379,44 @@ public function store(Request $request)
                                 $message = $action;
                             }
                             
-                            $resp->message = Helper::getMessage('success', $message);
-                            $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                            $resp->data = User::count();
+                            $this->response->message = Helper::getMessage('success', $message);
+                            $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                            $this->response->data = User::count();
                         }
                         else
                         {
-                            $resp->statusCode = Globals::$STATUS_CODE_FAILED;
-                            $resp->message = "User registration failed!";
+                            $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
+                            $this->response->message = "User registration failed!";
                         }
                     } else{
                         $message = "User with email ".$email." has been already registered";
                         $responseInfo = Helper::getMessage('error', $message);
-                        $resp->statusCode = Globals::$STATUS_CODE_FAILED;
-                        $resp->message  = $responseInfo;
+                        $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
+                        $this->response->message  = $responseInfo;
                         
                     }
                     
                     
                 }else{
-                    $resp->message = "username ".$username." has already been taken, choose another one";
-                    $resp->statusCode = Globals::$STATUS_CODE_FAILED;
+                    $this->response->message = "username ".$username." has already been taken, choose another one";
+                    $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
                 }
             }
         } else{
-            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-            $resp->message = "Unable to process request: missing parameters";
+            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+            $this->response->message = "Unable to process request: missing parameters";
         }
         
     } catch (\Exception $ex) {
-        $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-        $resp->message = $message = $ex->getMessage();
+        $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+        $this->response->message = $message = $ex->getMessage();
     }
     
-    $dataArr = array("code" => $resp->statusCode,
-    "message" => $resp->message,
+    $dataArr = array("code" => $this->response->statusCode,
+    "message" => $this->response->message,
     "method" => $method);
     Helper::LogRequest($request, $dataArr);
-    return response()->json($resp);
+    return response()->json($this->response);
     
 }
 
@@ -469,7 +469,7 @@ public function mail(Request $request) {
 
 public function stores(Request $request)
 {
-    $resp = new ApiResponse();
+    ;
     $method = "UserController@store";
     
     try{
@@ -544,9 +544,9 @@ public function stores(Request $request)
                             "message" => Str::replaceFirst('your', '', $action),
                             "method" => $method);
                             Helper::LogRequest($request, $dataArr);
-                            $resp->message = Helper::getMessage('success', $action);
-                            $resp->statusCode = $statusCode;
-                            $resp->data = User::count();
+                            $this->response->message = Helper::getMessage('success', $action);
+                            $this->response->statusCode = $statusCode;
+                            $this->response->data = User::count();
                         }else{
                             $message = "Unable to update user account details!";
                             $statusCode = Globals::$STATUS_CODE_FAILED;
@@ -554,8 +554,8 @@ public function stores(Request $request)
                             "message" => $message,
                             "method" => $method);
                             Helper::LogRequest($request, $dataArr);
-                            $resp->statusCode = $statusCode;
-                            $resp->message = $message;
+                            $this->response->statusCode = $statusCode;
+                            $this->response->message = $message;
                         }
                         
                     }
@@ -566,8 +566,8 @@ public function stores(Request $request)
                         $dataArr = array("code" => $statusCode,
                         "message" => $message,
                         "method" =>  $method);
-                        $resp->message = $message;
-                        $resp->statusCode = $statusCode; 
+                        $this->response->message = $message;
+                        $this->response->statusCode = $statusCode; 
                     }
                     
                 }else {
@@ -642,16 +642,16 @@ public function stores(Request $request)
                                 "message" => $message,
                                 "method" => $method);
                                 Helper::LogRequest($request, $dataArr);
-                                $resp->message = Helper::getMessage('success', $message);
-                                $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                                $resp->data = User::count();
+                                $this->response->message = Helper::getMessage('success', $message);
+                                $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                                $this->response->data = User::count();
                             }
                             else
                             {
                                 $message = "User registration failed!";
                                 Helper::LogRequest($request, $dataArr);
-                                $resp->statusCode = Globals::$STATUS_CODE_FAILED;
-                                $resp->message = $message;
+                                $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
+                                $this->response->message = $message;
                             }
                         } else{
                             $message = "User with email ".$email." has been already registered";
@@ -659,8 +659,8 @@ public function stores(Request $request)
                             "message" => $message,
                             "method" => $method);
                             $responseInfo = Helper::getMessage('error', $message);
-                            $resp->statusCode = Globals::$STATUS_CODE_FAILED;
-                            $resp->message  = $responseInfo;
+                            $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
+                            $this->response->message  = $responseInfo;
                             
                         }
                         
@@ -670,25 +670,25 @@ public function stores(Request $request)
                         $dataArr = array("code" => Globals::$STATUS_CODE_FAILED,
                         "message" => $message,
                         "method" =>  $method);
-                        $resp->message = $message;
-                        $resp->statusCode = Globals::$STATUS_CODE_FAILED;
+                        $this->response->message = $message;
+                        $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
                     }
                 }
             } else{
-                $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-                $resp->message = "Unable to process request: missing parameters";
+                $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                $this->response->message = "Unable to process request: missing parameters";
             }
             
         } catch (\Exception $ex) {
-            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-            $resp->message = $message = $ex->getMessage();
+            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+            $this->response->message = $message = $ex->getMessage();
         }
         
-        $dataArr = array("code" => $resp->statusCode,
-        "message" => $resp->message,
+        $dataArr = array("code" => $this->response->statusCode,
+        "message" => $this->response->message,
         "method" => $method);
         Helper::LogRequest($request, $dataArr);
-        return response()->json($resp);
+        return response()->json($this->response);
         
     }
     
@@ -737,8 +737,8 @@ public function stores(Request $request)
         
         try{
             if($validator->fails()){
-                $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
-                $this->response['message'] = $validator->errors()->all();
+                $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                $this->response->message = $validator->errors()->all();
             }else{
                 
                 $author_id = $request->input('user_id');
@@ -763,16 +763,16 @@ public function stores(Request $request)
                     $role = Helper::getUserRoleName($author_id);
                     $action = "updated ".$names." details";
                     Helper::logActivity($request, ['name' => $author, 'role' => $role, 'action' => $action]);
-                    $this->response['message'] = Helper::getMessage('success', $action);
-                    $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
+                    $this->response->message = Helper::getMessage('success', $action);
+                    $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
                 }else{
-                    $this->response['message'] ="Unable to update user details!";
-                    $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
+                    $this->response->message ="Unable to update user details!";
+                    $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
                 }
             }
         }catch(\Exception $ex){
-            $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
-            $this->response['message'] = $ex->getMessage();
+            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+            $this->response->message = $ex->getMessage();
         }
         
         return response()->json($this->response, 200);       
@@ -793,8 +793,8 @@ public function stores(Request $request)
         
         try{
             if($validator->fails()){
-                $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
-                $this->response['message'] = $validator->errors()->all();
+                $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                $this->response->message = $validator->errors()->all();
             }else{
                 
                 $author_id = $request->input('user_id');
@@ -811,16 +811,16 @@ public function stores(Request $request)
                     $role = Helper::getUserRoleName($author_id);
                     $action = "".$activity." ".$names."'s account";
                     Helper::logActivity($request, ['name' => $author, 'role' => $role, 'action' => $action]);
-                    $this->response['message'] = Helper::getMessage('success', $action);
-                    $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
+                    $this->response->message = Helper::getMessage('success', $action);
+                    $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
                 }else{
-                    $this->response['message'] ="Unable to delete user!";
-                    $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
+                    $this->response->message ="Unable to delete user!";
+                    $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
                 }
             }
         }catch(\Exception $ex){
-            $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
-            $this->response['message'] = $ex->getMessage();
+            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+            $this->response->message = $ex->getMessage();
         }
         
         return response()->json($this->response, 200);  
@@ -830,7 +830,7 @@ public function stores(Request $request)
     
     public function changePassword(Request $request)
     {
-        $resp = new ApiResponse();
+        ;
         try {
             
             if( ($request->has('user_id') && $request->filled('user_id')) &&
@@ -853,33 +853,33 @@ public function stores(Request $request)
                             $name = $user->first_name." ".$user->last_name;
                             Helper::logActivity($request, ['name' => $name, 'role' => Helper::getUserRole($user->role), 'action' => $action]);
                             $message = Helper::getMessage('success', $action);
-                            $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                            $resp->message  = $message;
+                            $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                            $this->response->message  = $message;
                         }else{
-                            $resp->statusCode = Globals::$STATUS_CODE_FAILED;
-                            $resp->message = "Unable to change your password";
+                            $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
+                            $this->response->message = "Unable to change your password";
                         }  
                     }else{
-                        $resp->statusCode = Globals::$STATUS_CODE_FAILED;
-                        $resp->message = "Incorrect old password";
+                        $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
+                        $this->response->message = "Incorrect old password";
                     }
                 }else{
-                    $resp->statusCode = Globals::$STATUS_CODE_FAILED;
-                    $resp->message = "Enter new matching passwords";
+                    $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
+                    $this->response->message = "Enter new matching passwords";
                 }
             }
             else{
-                $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-                $resp->message = "Unable to process request";
+                $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                $this->response->message = "Unable to process request";
             }
             
         } catch (\Exception $ex) {
-            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-            $resp->message = $ex->getMessage();
-            $resp->data = $ex->getMessage();
+            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+            $this->response->message = $ex->getMessage();
+            $this->response->data = $ex->getMessage();
         }
         
-        return response()->json($resp);
+        return response()->json($this->response);
     }
 
 
@@ -893,8 +893,8 @@ public function stores(Request $request)
         
         try{
             if($validator->fails()){
-                $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
-                $this->response['message'] = $validator->errors()->all();
+                $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                $this->response->message = $validator->errors()->all();
             }else{
                 
                 $author_id = $request->input('user_id');
@@ -910,20 +910,20 @@ public function stores(Request $request)
                     $role = Helper::getUserRoleName($author_id);
                     $action = "".$statusAction." ".$names."'s account";
                     Helper::logActivity($request, ['name' => $author, 'role' => $role, 'action' => $action]);
-                    $this->response['message'] = Helper::getMessage('success', $action);
-                    $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
+                    $this->response->message = Helper::getMessage('success', $action);
+                    $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
                 }else{
-                    $this->response['message'] ="Unable to ".$statusAction." user account!";
-                    $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
+                    $this->response->message ="Unable to ".$statusAction." user account!";
+                    $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
                 }
             }else{
-                $this->response['message'] ="User account doesn't exist!";
-                $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
+                $this->response->message ="User account doesn't exist!";
+                $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
             }
             }
         }catch(\Exception $ex){
-            $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
-            $this->response['message'] = $ex->getMessage();
+            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+            $this->response->message = $ex->getMessage();
         }
         
         return response()->json($this->response, 200);  
