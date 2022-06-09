@@ -20,11 +20,11 @@ class ParkingRequestController extends Controller
 {
     
     
-    public $response = [];
+    protected $response ;
     
     
-    public function __constructor(){
-        $this->response = new ApiResponse();
+    public function __construct(ApiResponse $response){
+        $this->response = $response;
     }
     
     /**
@@ -64,7 +64,7 @@ class ParkingRequestController extends Controller
     public function getTransactionHistory(Request $request)
     {
         
-        $resp = new ApiResponse();
+        ;
         try {  
             if($request->has('telephone_no') && $request->filled('telephone_no')){
                 $telephone_no = $request->input('telephone_no');
@@ -84,24 +84,24 @@ class ParkingRequestController extends Controller
                     $transaction->amount = number_format($transaction->amount);
                 }
             }
-            $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
-            $resp->message  = Globals::$STATUS_DESC_SUCCESS;
-            $resp->data = $transactions;
+            $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
+            $this->response->message  = Globals::$STATUS_DESC_SUCCESS;
+            $this->response->data = $transactions;
             
         } catch (\Exception $ex) {
-            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-            $resp->message = $ex->getMessage();
-            $resp->data = $ex->getMessage();
+            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+            $this->response->message = $ex->getMessage();
+            $this->response->data = $ex->getMessage();
         }
         
-        return response()->json($resp);
+        return response()->json($this->response);
     }
     
     
     public function approveRequest(Request $request)
     {
         
-        $resp = new ApiResponse();
+        ;
         try {
             
             if($request->filled(['request_id', 'telephone_no', 'vehicle_number'])){
@@ -125,43 +125,43 @@ class ParkingRequestController extends Controller
                     ->where('vehicle_number', '=', $vehicle_number)
                     ->update(['order_no'=> $order_no, 'status' => $status, 'approval_date' => $approval_date]);
                     if($isApproved){
-                        $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                        $resp->message  = Globals::$STATUS_DESC_SUCCESS;
+                        $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                        $this->response->message  = Globals::$STATUS_DESC_SUCCESS;
                         $data = array(
                             'request_id' => $request_id,
                             'order_no' => $order_no,
                             'telephone_no' => $telephone_no,
                             'status' => $status,
                             'approval_date' => $approval_date,
-                            'statusCode' => $resp->statusCode,
-                            'message' => $resp->message,
+                            'statusCode' => $this->response->statusCode,
+                            'message' => $this->response->message,
                         );
-                        $resp->data = $data;
+                        $this->response->data = $data;
                     }else{
-                        $resp->statusCode = Globals::$STATUS_CODE_FAILED;
-                        $resp->message = "Unable to approve request";
+                        $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
+                        $this->response->message = "Unable to approve request";
                     }
                 }else{
-                    $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-                    $resp->message = "Request doesn't exist";
+                    $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                    $this->response->message = "Request doesn't exist";
                 }
             }else{
-                $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-                $resp->message = "Unable to process request: missing parameters";
+                $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                $this->response->message = "Unable to process request: missing parameters";
             }
             
         } catch (\Exception $ex) {
-            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-            $resp->message = $ex->getMessage();
+            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+            $this->response->message = $ex->getMessage();
         }
-        return response()->json($resp);
+        return response()->json($this->response);
     }
     
     
     public function rejectRequest(Request $request)
     {
         
-        $resp = new ApiResponse();
+        ;
         try {
             
             if($request->filled(['request_id', 'telephone_no', 'vehicle_number'])){
@@ -185,35 +185,35 @@ class ParkingRequestController extends Controller
                     ->where('vehicle_number', '=', $vehicle_number)
                     ->update(['order_no'=> null, 'status' => $status, 'approval_date' => null, 'reject_date' => $reject_date]);
                     if($isRejected){
-                        $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                        $resp->message  = Globals::$STATUS_DESC_SUCCESS;
+                        $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                        $this->response->message  = Globals::$STATUS_DESC_SUCCESS;
                         $data = array(
                             'request_id' => $request_id,
                             'telephone_no' => $telephone_no,
                             'status' => $status,
                             'reject_date' => $reject_date,
-                            'statusCode' => $resp->statusCode,
-                            'message' => $resp->message,
+                            'statusCode' => $this->response->statusCode,
+                            'message' => $this->response->message,
                         );
-                        $resp->data = $data;
+                        $this->response->data = $data;
                     }else{
-                        $resp->statusCode = Globals::$STATUS_CODE_FAILED;
-                        $resp->message = "Unable to reject request";
+                        $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
+                        $this->response->message = "Unable to reject request";
                     }
                 }else{
-                    $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-                    $resp->message = "Request doesn't exist";
+                    $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                    $this->response->message = "Request doesn't exist";
                 }
             }else{
-                $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-                $resp->message = "Unable to process request: missing parameters";
+                $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                $this->response->message = "Unable to process request: missing parameters";
             }
             
         } catch (\Exception $ex) {
-            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-            $resp->message = $ex->getMessage();
+            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+            $this->response->message = $ex->getMessage();
         }
-        return response()->json($resp);
+        return response()->json($this->response);
     }
     
     /**
@@ -335,16 +335,16 @@ class ParkingRequestController extends Controller
                 }else{
                     $order = [];
                 }
-                $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
-                $this->response['message'] = "Order information found";
-                $this->response['data'] = $order;
+                $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                $this->response->message = "Order information found";
+                $this->response->data = $order;
             }else{
-                $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
-                $this->response['message'] = "Unable to process request, missing parameters!";
+                $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
+                $this->response->message = "Unable to process request, missing parameters!";
             }
         }catch(Exception $ex){
-            $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
-            $this->response['message'] = $ex->getMessage();
+            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+            $this->response->message = $ex->getMessage();
         }
         return response()->json($this->response);
     }
@@ -364,16 +364,16 @@ class ParkingRequestController extends Controller
                 }else{
                     $requests = [];
                 }
-                $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
-                $this->response['message'] = "Parking requests data found";
-                $this->response['data'] = $requests;
+                $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                $this->response->message = "Parking requests data found";
+                $this->response->data = $requests;
             }else{
-                $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
-                $this->response['message'] = "Unable to process request: missing parameters";
+                $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
+                $this->response->message = "Unable to process request: missing parameters";
             }
         }catch(Exception $ex){
-            $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
-            $this->response['message'] = $ex->getMessage();
+            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+            $this->response->message = $ex->getMessage();
         }
         return response()->json($this->response);
     }
@@ -386,7 +386,7 @@ class ParkingRequestController extends Controller
     */
     public function store(Request $request)
     {
-        $resp = new ApiResponse();
+        ;
         try {
             
             if($request->filled(['customer_id', 'parking_area_id', 'telephone_no', 'vehicle_details', 'vehicle_category',
@@ -436,48 +436,48 @@ class ParkingRequestController extends Controller
                             $parkingRequest->approval_date = Carbon::now()->toDateTimeString();
                             
                             if($parkingRequest->save()){
-                                $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                                $resp->message  = "Your request has been submitted and approved successfully.";
+                                $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                                $this->response->message  = "Your request has been submitted and approved successfully.";
                                 $data = array(
                                     'customer_id' => $customer_id,
                                     'order_no' => $orderNo,
                                     'telephone_no' => $telephone_no,
                                     'status' => $status,
                                     'request_date' => $request_date,
-                                    'statusCode' => $resp->statusCode,
-                                    'message' => $resp->message,
+                                    'statusCode' => $this->response->statusCode,
+                                    'message' => $this->response->message,
                                 );
-                                $resp->data = $data;
+                                $this->response->data = $data;
                             }else{
-                                $resp->statusCode = Globals::$STATUS_CODE_FAILED;
-                                $resp->message = "Unable to submit request";
+                                $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
+                                $this->response->message = "Unable to submit request";
                             }
                         }else {
-                            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-                            $resp->message = "Unable to get supplied vehicle type";
+                            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                            $this->response->message = "Unable to get supplied vehicle type";
                         }   
                         
                     }else {
-                        $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-                        $resp->message = "Parking area is currently fully occupied";
+                        $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                        $this->response->message = "Parking area is currently fully occupied";
                     }
                 }else {
-                    $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-                    $resp->message = "Parking area is currently closed";
+                    $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                    $this->response->message = "Parking area is currently closed";
                 }
                 
             }else{
-                $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-                $resp->message = "Unable to process request: missing parameters";
+                $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                $this->response->message = "Unable to process request: missing parameters";
             }
             
             
             
         } catch (\Exception $ex) {
-            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-            $resp->message = $ex->getMessage();
+            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+            $this->response->message = $ex->getMessage();
         }
-        return response()->json($resp);
+        return response()->json($this->response);
     }
     
     

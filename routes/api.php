@@ -111,6 +111,8 @@ use App\Http\Controllers\NotificationController;
         
         Route::get('/details', [CustomerController::class, 'findCustomer']); //done
         Route::post('/app/details', [CustomerController::class, 'updateAppDetails']); //done
+        Route::post('/resend-otp', [CustomerController::class, 'resendOTP']); //done
+
         Route::get('/transactions', [PaymentController::class, 'getTransactionHistory']); // done
         Route::get('/transaction/history', [ParkingRequestController::class, 'getTransactionHistory']); //done
         Route::get('/notifications', [PaymentController::class, 'getNotifications']); // done

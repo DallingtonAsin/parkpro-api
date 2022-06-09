@@ -14,8 +14,15 @@ use Mail;
 class MailController extends Controller
 {
     
+    protected $response;
+    
+    public function __construct(ApiResponse $response)
+    {
+        $this->response = $response;
+    }
+
     public function postFeedback(Request $request){
-        $resp = new ApiResponse();
+       
         try {
                 if($request->filled(['id', 'reaction' ,'description'])){
 
@@ -48,30 +55,30 @@ class MailController extends Controller
                         $company_email = config('app.email');
                         Mail::to($company_email)->send(new SendMail($data));
                         if(Mail::failures()){
-                            $resp->statusCode = Globals::$STATUS_CODE_FAILED;
-                            $resp->message = 'Unable to send suggestion';
+                            $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
+                            $this->response->message = 'Unable to send suggestion';
                         }else{
-                            $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                            $resp->message =  "Your suggestion has been sent successfully"; 
+                            $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                            $this->response->message =  "Your suggestion has been sent successfully"; 
                         }
 
                     }else{
-                        $resp->statusCode = Globals::$STATUS_CODE_FAILED;
-                        $resp->message = "Unable to find customer with supplied details";
+                        $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
+                        $this->response->message = "Unable to find customer with supplied details";
                     }
                 }
                 else{
-                    $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-                    $resp->message = "Unable to process request";
+                    $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                    $this->response->message = "Unable to process request";
                 }
             
         } catch (\Exception $ex) {
-            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-            $resp->message = $ex->getMessage();
-            $resp->data = $ex->getMessage();
+            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+            $this->response->message = $ex->getMessage();
+            $this->response->data = $ex->getMessage();
         }
         
-        return response()->json($resp);
+        return response()->json($this->response);
     }
 
 

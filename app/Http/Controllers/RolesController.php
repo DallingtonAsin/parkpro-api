@@ -17,11 +17,11 @@ use Globals;
 class RolesController extends Controller
 {
 
-    public $response = [];
+    protected $response ;
     
     
-    public function __constructor(){
-        $this->response = new ApiResponse();
+    public function __construct(ApiResponse $response){
+        $this->response = $response;
     }
     /**
      * Display a listing of the resource.
@@ -60,8 +60,8 @@ class RolesController extends Controller
         try{
             
             if($validator->fails()){
-                $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
-                $this->response['message'] = $validator->errors()->all();
+                $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                $this->response->message = $validator->errors()->all();
             }else{
 
                 $user_id = $request->input('user_id');
@@ -78,25 +78,25 @@ class RolesController extends Controller
                     $role = Helper::getUserRoleName($user_id);
                     $action = "added role ".$name."";
                     Helper::logActivity($request, ['name' => $author, 'role' => $role, 'action' => $action]);
-                    $this->response['message'] = Helper::getMessage('success', $action);
-                    $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
+                    $this->response->message = Helper::getMessage('success', $action);
+                    $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
                     }else{
-                        $this->response['message'] ="Unable to add role ".$name."!";
-                        $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED; 
+                        $this->response->message ="Unable to add role ".$name."!";
+                        $this->response->statusCode = Globals::$STATUS_CODE_FAILED; 
                     }
 
                 } else {
                     $messageErr = "role ".$name." has already been added";
                     $responseInfo = Helper::getMessage('error', $messageErr);
-                    $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
-                    $this->response['message'] = $responseInfo;
+                    $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
+                    $this->response->message = $responseInfo;
                 }
 
             }
             
         } catch (\Exception $ex) {
-            $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
-            $this->response['message'] = $ex->getMessage();
+            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+            $this->response->message = $ex->getMessage();
         }
      
         return response()->json($this->response, 200);
@@ -142,8 +142,8 @@ class RolesController extends Controller
         
         try{
             if($validator->fails()){
-                $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
-                $this->response['message'] = $validator->errors()->all();
+                $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                $this->response->message = $validator->errors()->all();
             }else{
                 
                 $author_id = $request->input('user_id');
@@ -159,16 +159,16 @@ class RolesController extends Controller
                     $role = Helper::getUserRoleName($author_id);
                     $action = "updated role ".$name." details";
                     Helper::logActivity($request, ['name' => $author, 'role' => $role, 'action' => $action]);
-                    $this->response['message'] = Helper::getMessage('success', $action);
-                    $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
+                    $this->response->message = Helper::getMessage('success', $action);
+                    $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
                 }else{
-                    $this->response['message'] ="Unable to update role details!";
-                    $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
+                    $this->response->message ="Unable to update role details!";
+                    $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
                 }
             }
         }catch(\Exception $ex){
-            $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
-            $this->response['message'] = $ex->getMessage();
+            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+            $this->response->message = $ex->getMessage();
         }
         
         return response()->json($this->response, 200);       
@@ -189,8 +189,8 @@ class RolesController extends Controller
         
         try{
             if($validator->fails()){
-                $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
-                $this->response['message'] = $validator->errors()->all();
+                $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                $this->response->message = $validator->errors()->all();
             }else{
                 
                 $author_id = $request->input('user_id');
@@ -209,16 +209,16 @@ class RolesController extends Controller
                     $role = Helper::getUserRoleName($author_id);
                     $action = "".$activity." role ".$role_name."";
                     Helper::logActivity($request, ['name' => $author, 'role' => $role, 'action' => $action]);
-                    $this->response['message'] = Helper::getMessage('success', $action);
-                    $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
+                    $this->response->message = Helper::getMessage('success', $action);
+                    $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
                 }else{
-                    $this->response['message'] ="Unable to delete role!";
-                    $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
+                    $this->response->message ="Unable to delete role!";
+                    $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
                 }
             }
         }catch(\Exception $ex){
-            $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
-            $this->response['message'] = $ex->getMessage();
+            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+            $this->response->message = $ex->getMessage();
         }
         
         return response()->json($this->response, 200);  

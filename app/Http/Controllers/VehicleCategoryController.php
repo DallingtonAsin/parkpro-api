@@ -14,10 +14,10 @@ use Validator;
 class VehicleCategoryController extends Controller
 {
 
-    public $response = [];
+    protected $response ;
 
-    public function __constructor(){
-        $this->response = new ApiResponse();
+    public function __construct(ApiResponse $response){
+        $this->response = $response;
     }
     /**
     * Display a listing of the resource.
@@ -48,7 +48,7 @@ class VehicleCategoryController extends Controller
     */
     public function store(Request $request)
     {
-        $resp = new ApiResponse();
+        ;
         
         try{
             
@@ -63,33 +63,33 @@ class VehicleCategoryController extends Controller
                         $action = "added vehicle category ".$name."";
                         $responseInfo = Helper::getMessage('success', $action);
                         Helper::logActivity($request, ['name' => 'Dallington', 'role' => 'admin', 'action' => $action]);
-                        $resp->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                        $resp->message = $responseInfo; 
+                        $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                        $this->response->message = $responseInfo; 
                     } else {
                         $messageErr = "adding vehicle category failed!";
                         $responseInfo = Helper::getMessage('error', $messageErr);
-                        $resp->statusCode = Globals::$STATUS_CODE_FAILED;
-                        $resp->message = $responseInfo;
+                        $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
+                        $this->response->message = $responseInfo;
                     }
                 } else {
                     $messageErr = "Vehicle category ".$name." has already been added";
                     $responseInfo = Helper::getMessage('error', $messageErr);
-                    $resp->statusCode = Globals::$STATUS_CODE_FAILED;
-                    $resp->message = $responseInfo;
+                    $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
+                    $this->response->message = $responseInfo;
                 }
                 
             }else{
                 $messageErr = "Failed to get vehicle category and fee from request";
                 $responseInfo = Helper::getMessage('error', $messageErr);
-                $resp->statusCode = Globals::$STATUS_CODE_FAILED;
-                $resp->message = $responseInfo;
+                $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
+                $this->response->message = $responseInfo;
             }
         } catch (\Exception $ex) {
-            $resp->statusCode = Globals::$STATUS_CODE_ERROR;
-            $resp->message = $ex->getMessage();
+            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+            $this->response->message = $ex->getMessage();
         }
-        $resp->data = VehicleCategory::count();
-        return response()->json($resp);
+        $this->response->data = VehicleCategory::count();
+        return response()->json($this->response);
     }
     
     /**
@@ -131,8 +131,8 @@ class VehicleCategoryController extends Controller
         
         try{
             if($validator->fails()){
-                $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
-                $this->response['message'] = $validator->errors()->all();
+                $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                $this->response->message = $validator->errors()->all();
             }else{
                 
                 $author_id = $request->input('user_id');
@@ -148,16 +148,16 @@ class VehicleCategoryController extends Controller
                     $role = Helper::getUserRoleName($author_id);
                     $action = "updated vehicle type ".$vehicle_type." details";
                     Helper::logActivity($request, ['name' => $author, 'role' => $role, 'action' => $action]);
-                    $this->response['message'] = Helper::getMessage('success', $action);
-                    $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
+                    $this->response->message = Helper::getMessage('success', $action);
+                    $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
                 }else{
-                    $this->response['message'] ="Unable to update vehicle type details!";
-                    $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
+                    $this->response->message ="Unable to update vehicle type details!";
+                    $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
                 }
             }
         }catch(\Exception $ex){
-            $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
-            $this->response['message'] = $ex->getMessage();
+            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+            $this->response->message = $ex->getMessage();
         }
         
         return response()->json($this->response, 200); 
@@ -177,8 +177,8 @@ class VehicleCategoryController extends Controller
         
         try{
             if($validator->fails()){
-                $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
-                $this->response['message'] = $validator->errors()->all();
+                $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                $this->response->message = $validator->errors()->all();
             }else{
                 
                 $author_id = $request->input('user_id');
@@ -197,16 +197,16 @@ class VehicleCategoryController extends Controller
                     $role = Helper::getUserRoleName($author_id);
                     $action = "".$activity." vehicle category ".$vehicle_type."";
                     Helper::logActivity($request, ['name' => $author, 'role' => $role, 'action' => $action]);
-                    $this->response['message'] = Helper::getMessage('success', $action);
-                    $this->response['statusCode'] = Globals::$STATUS_CODE_SUCCESS;
+                    $this->response->message = Helper::getMessage('success', $action);
+                    $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
                 }else{
-                    $this->response['message'] ="Unable to delete vehicle category!";
-                    $this->response['statusCode'] = Globals::$STATUS_CODE_FAILED;
+                    $this->response->message ="Unable to delete vehicle category!";
+                    $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
                 }
             }
         }catch(\Exception $ex){
-            $this->response['statusCode'] = Globals::$STATUS_CODE_ERROR;
-            $this->response['message'] = $ex->getMessage();
+            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+            $this->response->message = $ex->getMessage();
         }
         
         return response()->json($this->response, 200);  
