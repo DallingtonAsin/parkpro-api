@@ -146,7 +146,8 @@ class CustomerController extends Controller
 public function resendOTP(Request $request){
     
     $validator = Validator::make($request->all(), [
-        'id' => 'required'
+        'countryCode' => 'required',
+        'phoneNumber' => 'required'
     ]);
     
     try{
@@ -155,13 +156,20 @@ public function resendOTP(Request $request){
             $this->response->message = $validator->errors()->all();
         }else{
             
-            $user_id = request('id');
-            $exists = Customer::where("id", "=", $user_id)
+            $country_code  = request('countryCode');
+            $phone_number  = request('phoneNumber');
+
+            $exists = Customer::where("country_code", "=", $country_code)
+            ->where("phone_number", "=", $phone_number)
             ->exists();
             
             if($exists){
-                $customer = Customer::find($user_id);
-                $this->response = $this->sendVerificationCode($customer, $customer->otp);
+
+                $customer = Customer::where("country_code", "=", $country_code)
+                ->where("phone_number", "=", $phone_number)->first();
+                
+                $otp = $this->smsService->generateNumericOTP(4); // $customer->otp
+                $this->response = $this->sendVerificationCode($customer, $otp);
             }else{
                 $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
                 $this->response->message = "Unable to find customer with supplied details";
