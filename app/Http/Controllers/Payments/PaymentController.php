@@ -36,7 +36,7 @@ class PaymentController extends Controller
     {
         $this->flutterWaveService = $flutterWaveService;
         $this->moMoService = $moMoService;
-        $this->response = $ApiResponse;
+        $this->response = $response;
     }
     
     /**
