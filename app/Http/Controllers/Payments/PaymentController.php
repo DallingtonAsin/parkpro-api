@@ -28,12 +28,15 @@ use Validator;
 class PaymentController extends Controller
 {
     
-    protected $flutterWaveService, $moMoService;
+    protected $flutterWaveService, $moMoService, $response;
     
-    public function __construct(FlutterWaveService $flutterWaveService, MMService $moMoService)
+    public function __construct(FlutterWaveService $flutterWaveService,
+                                MMService $moMoService,
+                                ApiResponse $response)
     {
         $this->flutterWaveService = $flutterWaveService;
         $this->moMoService = $moMoService;
+        $this->response = $ApiResponse;
     }
     
     /**
