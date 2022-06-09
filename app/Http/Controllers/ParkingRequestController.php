@@ -389,7 +389,8 @@ class ParkingRequestController extends Controller
         ;
         try {
             
-            if($request->filled(['customer_id', 'parking_area_id', 'telephone_no', 'vehicle_details', 'vehicle_category',
+            if($request->filled(['customer_id', 'parking_area_id', 
+            'telephone_no', 'vehicle_details', 'vehicle_category',
             'start_time', 'end_time'])){
                 
                 $customer_id = $request->input('customer_id'); 

@@ -102,6 +102,8 @@ use App\Http\Controllers\NotificationController;
     // Customer Login and Registration (done)
     Route::post('/customer/send-otp', [CustomerController::class, 'InsertOrUpdateCustomerOTP']); // done
     Route::post('/customer/verify-otp', [CustomerController::class, 'verifyOTP']); // done
+    Route::post('/customer/resend-otp', [CustomerController::class, 'resendOTP']); //done
+
     Route::post('/customer/profile/create', [CustomerController::class, 'createProfile']); // done
     
     Route::get('africastkng/account/details', [PaymentController::class, 'africasTkngAccountDetails']);
@@ -111,7 +113,7 @@ use App\Http\Controllers\NotificationController;
         
         Route::get('/details', [CustomerController::class, 'findCustomer']); //done
         Route::post('/app/details', [CustomerController::class, 'updateAppDetails']); //done
-        Route::post('/resend-otp', [CustomerController::class, 'resendOTP']); //done
+        // Route::post('/customer/resend-otp', [CustomerController::class, 'resendOTP']); //done
 
         Route::get('/transactions', [PaymentController::class, 'getTransactionHistory']); // done
         Route::get('/transaction/history', [ParkingRequestController::class, 'getTransactionHistory']); //done
