@@ -158,18 +158,80 @@ public function resendOTP(Request $request){
             
             $country_code  = request('countryCode');
             $phone_number  = request('phoneNumber');
-
+            
             $exists = Customer::where("country_code", "=", $country_code)
             ->where("phone_number", "=", $phone_number)
             ->exists();
             
             if($exists){
-
+                
                 $customer = Customer::where("country_code", "=", $country_code)
                 ->where("phone_number", "=", $phone_number)->first();
                 
                 $otp = $this->smsService->generateNumericOTP(4); // $customer->otp
                 $this->response = $this->sendVerificationCode($customer, $otp);
+            }else{
+                $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                $this->response->message = "Unable to find customer with supplied details";
+            }
+        }
+    }catch(\Exception $ex){
+        $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+        $this->response->message = $ex->getMessage();
+    }
+    return response()->json($this->response);
+}
+
+
+public function changePin(Request $request){
+    
+    $validator = Validator::make($request->all(), [
+        'id' => 'required',
+        'currentPin' => 'required',
+        'newPin' => 'min:4|required_with:confirmPin|same:confirmPin',
+        'confirmPin' => 'required|min:4',
+    ]);
+    
+    try{
+        if($validator->fails()){
+            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+            $this->response->message = $validator->errors()->all();
+        }else{
+            
+            $user_id  = request('id');
+            $current_pin  = request('currentPin');
+            $new_pin  = request('newPin');
+            $confirm_pin  = request('confirmPin');
+            
+            $exists = Customer::where("id", "=", $user_id)->exists();
+            
+            if($exists){
+                
+                $customer = Customer::find($user_id);
+                $currentPinInDB = $customer->pin;
+                
+                if(Hash::check($current_pin, $currentPinInDB)){
+                    
+                    if(Hash::check($new_pin, $currentPinInDB)){
+                        $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                        $this->response->message = "Your new pin is same as current pin"; 
+                    }else{
+                        
+                        $newHashedPin = Hash::make($new_pin);
+                        $isUpdated = $customer->update(['pin' => $newHashedPin]);
+                        if($isUpdated){
+                            $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                            $this->response->message = "Your pin has been changed successfully";
+                        }else{
+                            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                            $this->response->message = "Unable to change your pin"; 
+                        }
+                    } 
+                }else{
+                    $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                    $this->response->message = "Your current pin is incorrect";
+                }
+                
             }else{
                 $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
                 $this->response->message = "Unable to find customer with supplied details";
@@ -220,7 +282,7 @@ public function updateAppDetails(Request $request){
                 if($isUpdated){
                     $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
                     $this->response->message = Globals::$STATUS_DESC_SUCCESS;
-                    $this->response->data = Helper::getCustomerData($user_id);;
+                    $this->response->data = Helper::getCustomerData($user_id);
                 }else{
                     $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
                     $this->response->message = Globals::$STATUS_DESC_FAILED;
@@ -512,18 +574,26 @@ public function createProfile(Request $request){
             ->exists();
             
             if($exists){
+                
                 $customer = Customer::find($customerId);
-                $hasUpdated = Customer::where('id', '=', $customerId)
-                ->update([
+                
+                $pin = $this->generateRandomPin();
+                $hashedPin =  Hash::make($pin);
+                
+                $hasUpdated = $customer->update([
                     'first_name' => $first_name,
                     'last_name' => $last_name,
                     'email' => $email,
+                    'pin' => $hashedPin,
                     'is_active' => true,
                     'profile_status' => true,
                 ]);
                 
                 if($hasUpdated){
-                    $customer = Customer::find($customerId);
+                    
+                    $pinNotificationMessage = "Hey ".$customer->first_name.", your default ".config('app.company_name')." pin is ".$pin.". You can change it anytime you want.";
+                    $this->smsService->sendMessage($customer->country_code.''.$customer->phone_number, $pinNotificationMessage);
+                    
                     config(['auth.guards.api.provider' => 'customer']);
                     $action = "created your profile";
                     $this->response->message = Helper::getMessage('success', $action);
@@ -531,6 +601,7 @@ public function createProfile(Request $request){
                     $customerData = Helper::getCustomerData($customerId);
                     $customerData['access_token'] = $customer->createToken('Customer'.$customer->country_code.''.$customer->phone_number, ['customer'])->accessToken;
                     $this->response->data = $customerData;
+                    
                 }else{
                     $this->response->message ="Unable to update customer account profile!";
                     $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
@@ -824,7 +895,7 @@ public function findCustomer(Request $request){
 
 public function changePassword(Request $request)
 {
-
+    
     try {
         if($request->filled('id') && $request->filled('current_password') 
         && $request->filled('new_password') && $request->filled('confirm_password')  ){
@@ -888,7 +959,7 @@ public function changePassword(Request $request)
 
 
 public function uploadProfilePicture(Request $request){
-  
+    
     try {
         if($request->filled('id') && $request->filled('country_code') && $request->filled('phone_number') &&
         $request->filled('extension') && $request->has('image')){
@@ -1005,6 +1076,15 @@ public function removeProfilePicture(Request $request){
     
     return response()->json($this->response, 200);
     
+}
+
+private function generateRandomPin(){
+    try{
+        $randomNumber = random_int(1000, 9999);
+        return $randomNumber;
+    }catch(\Exception $ex){
+        throw $ex;
+    }
 }
 
 
