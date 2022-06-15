@@ -332,7 +332,6 @@ class ParkingRequestController extends Controller
                         $info->booking_period = $start_time." - ".$end_time;
                         $customer = Customer::find($info->customer_id);
                         $info->name = $customer->first_name." ".$customer->last_name;
-                        $info->telephone_no = $customer->phone_number;
                         $info->parking_area = ParkingArea::where('id', $info->parking_area_id)->value('name');
                         $info->car_type = VehicleCategory::where('id', $info->vehicle_cat_id)->value('name');
                         $info->parking_hours = $this->convertTime($info->parking_hours);
