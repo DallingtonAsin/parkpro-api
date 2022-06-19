@@ -408,7 +408,7 @@ class ParkingRequestController extends Controller
                 $start_time = $request->input('start_time');
                 $end_time = $request->input('end_time');
                 
-                // if($this->isParkingAreaOpen($parking_area_id) === true){
+                if($this->isParkingAreaOpen($parking_area_id) === true){
                     
                     if($this->isParkingAreaFree($parking_area_id) === true){
                         
@@ -469,10 +469,10 @@ class ParkingRequestController extends Controller
                         $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
                         $this->response->message = "Parking area is currently fully occupied";
                     }
-                // }else {
-                //     $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
-                //     $this->response->message = "Parking area is currently closed";
-                // }
+                }else {
+                    $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                    $this->response->message = "Parking area is currently closed";
+                }
                 
             }else{
                 $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
