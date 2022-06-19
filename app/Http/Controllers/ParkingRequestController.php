@@ -335,7 +335,7 @@ class ParkingRequestController extends Controller
                         $info->parking_area = ParkingArea::where('id', $info->parking_area_id)->value('name');
                         $info->car_type = VehicleCategory::where('id', $info->vehicle_cat_id)->value('name');
                         $info->parking_hours = $this->convertTime($info->parking_hours);
-                        $info->fee_per_hour = number_format(ParkingFee::where('vehicle_cat_id', $info->vehicle_cat_id)->value('fee_per_hour'));
+                        $info->fee_per_hour = number_format(ParkingFee::where('parking_area_id', $info->parking_area_id)->where('vehicle_cat_id', $info->vehicle_cat_id)->value('fee_per_hour'));
                         $info->approval_date = date('Y-m-d H:i A', strtotime($info->approval_date));
                         $info->amount = number_format($info->amount);
                     }
@@ -408,7 +408,7 @@ class ParkingRequestController extends Controller
                 $start_time = $request->input('start_time');
                 $end_time = $request->input('end_time');
                 
-                if($this->isParkingAreaOpen($parking_area_id) === true){
+                // if($this->isParkingAreaOpen($parking_area_id) === true){
                     
                     if($this->isParkingAreaFree($parking_area_id) === true){
                         
@@ -469,10 +469,10 @@ class ParkingRequestController extends Controller
                         $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
                         $this->response->message = "Parking area is currently fully occupied";
                     }
-                }else {
-                    $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
-                    $this->response->message = "Parking area is currently closed";
-                }
+                // }else {
+                //     $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                //     $this->response->message = "Parking area is currently closed";
+                // }
                 
             }else{
                 $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
