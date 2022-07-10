@@ -294,6 +294,7 @@ public function changePhoneNumber(Request $request){
                         $user->phone_number = $user->new_phone_number;
                         $user->new_country_code = null; 
                         $user->new_phone_number = null;
+                        $user->otp = null;
 
                         $isUpdated = $user->save();
                         if($isUpdated){
