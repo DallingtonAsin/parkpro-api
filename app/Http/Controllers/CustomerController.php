@@ -183,6 +183,158 @@ public function resendOTP(Request $request){
 }
 
 
+public function verifyChangePhoneNumber(Request $request){
+    
+    $validator = Validator::make($request->all(), [
+        'id' => 'required',
+        'countryCode' => 'required',
+        'phoneNumber' => 'required'
+    ]);
+    
+    try{
+        if($validator->fails()){
+            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+            $this->response->message = $validator->errors()->all();
+        }else{
+            
+            $user_id = request('id');
+            $country_code  = request('countryCode');
+            $phone_number  = request('phoneNumber');
+            
+            $exists = Customer::where('id', $user_id)->exists();
+            
+            if($exists){
+                
+                $newPhoneNumberExists = Customer::where("country_code", "=", $country_code)
+                ->where("phone_number", "=", $phone_number)
+                ->exists();
+                
+                $user = Customer::find($user_id);
+                $currentPhoneNumber = $user->country_code."".$user->phone_number;
+                $newPhoneNumber = $country_code."".$phone_number;
+                
+                if($newPhoneNumberExists){
+                    $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                    $this->response->message = "Someone already registered with this phone number";
+                }
+                else if($currentPhoneNumber == $newPhoneNumber){
+                    $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                    $this->response->message = "Your new phone number is similar to the current phone number";
+                }else{
+                    
+                    $user->new_country_code = $country_code;
+                    $user->new_phone_number = $phone_number;
+                    
+                    $isUpdated = $user->save();
+                    if($isUpdated){
+
+                        $user->country_code = $user->new_country_code;
+                        $user->phone_number = $user->new_phone_number;
+                        $otp = $this->smsService->generateNumericOTP(4);
+                        $this->response = $this->sendVerificationCode($user, $otp);
+                        $this->response->data['new_phone_number'] = $newPhoneNumber;
+
+                    }else{
+                        $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                        $this->response->message = "Unable to update details while verifying change phone number";
+                    } 
+                }
+                
+            }else{
+                $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                $this->response->message = "Unable to find user with supplied details";
+            }
+        }
+    }catch(\Exception $ex){
+        $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+        $this->response->message = $ex->getMessage();
+    }
+    return response()->json($this->response);
+}
+
+
+public function changePhoneNumber(Request $request){
+    
+    $validator = Validator::make($request->all(), [
+        'id' => 'required',
+        'countryCode' => 'required',
+        'phoneNumber' => 'required',
+        'otp' => 'required'
+    ]);
+    
+    try{
+        if($validator->fails()){
+            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+            $this->response->message = $validator->errors()->all();
+        }else{
+            
+            $user_id = request('id');
+            $country_code = request('countryCode');
+            $phone_number  = request('phoneNumber');
+            $otp  = request('otp');
+            
+            $exists = Customer::where('id', $user_id)->exists();
+            
+            if($exists){
+                
+                $newPhoneNumberExists = Customer::where("new_country_code", "=", $country_code)
+                ->where("new_phone_number", "=", $phone_number)
+                ->exists();
+                
+                $user = Customer::find($user_id);
+                $currentPhoneNumber = $user->country_code."".$user->phone_number;
+                $newPhoneNumber = $country_code."".$phone_number;
+                
+                if($newPhoneNumberExists){
+                    
+                    if($user->otp == $otp){
+
+                        $user->country_code = $user->new_country_code;
+                        $user->phone_number = $user->new_phone_number;
+                        $user->new_country_code = null; 
+                        $user->new_phone_number = null;
+
+                        $isUpdated = $user->save();
+                        if($isUpdated){
+
+                            $userData = Helper::getCustomerData($user_id);
+            
+                            $userData['id'] = $user->id;
+                            $userData['country_code'] = $user->country_code;
+                            $userData['phone_number'] = $user->phone_number;
+                            $userData['is_registered'] = $user->profile_status;
+                            $userData['access_token'] = $user->createToken('Customer'.$user->country_code.''.$user->phone_number, ['customer'])->accessToken;
+                            $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                            $this->response->message = "Your phone number has been changed successfully";
+                            $this->response->data = $userData;
+                            
+                        }else{
+                            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                            $this->response->message = "System unable to change your phone number";
+                        }
+
+                    }else{
+                        $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                        $this->response->message = "Invalid OTP";
+                    } 
+                }else{
+                    $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                    $this->response->message = "Please enter your new phone number first"; 
+                }
+                
+            }else{
+                $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                $this->response->message = "Unable to find user with supplied details";
+            }
+        }
+    }catch(\Exception $ex){
+        $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+        $this->response->message = $ex->getMessage();
+    }
+    return response()->json($this->response);
+}
+
+
 public function changePin(Request $request){
     
     $validator = Validator::make($request->all(), [
@@ -314,7 +466,7 @@ private function sendVerificationCode($customer, $otp){
         $customerData['phone_number'] = $customer->phone_number;
         $customerData['access_token'] = $customer->createToken('Customer'.$customer_phone_number, ['customer'])->accessToken;
         
-        Customer::where("country_code", $customer->country_code)->where("phone_number", $customer->phone_number)->update(["otp" => $otp]);
+        Customer::where("id", $customer->id)->update(["otp" => $otp]);
         $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
         $this->response->message = 'OTP sent successfully to '.$customer_phone_number.'';
         $this->response->data = $customerData;
