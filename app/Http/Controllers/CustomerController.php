@@ -232,7 +232,8 @@ public function verifyChangePhoneNumber(Request $request){
                         $user->phone_number = $user->new_phone_number;
                         $otp = $this->smsService->generateNumericOTP(4);
                         $this->response = $this->sendVerificationCode($user, $otp);
-                        $this->response->data['new_phone_number'] = $newPhoneNumber;
+                        $this->response->data['new_country_code'] = $user->new_country_code;
+                        $this->response->data['new_phone_number'] = $user->new_phone_number;
 
                     }else{
                         $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
