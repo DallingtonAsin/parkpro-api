@@ -128,6 +128,9 @@ use App\Http\Controllers\NotificationController;
         Route::post('/payment/create', [PaymentController::class, 'create']); // done
         Route::post('/send/airtime', [PaymentController::class, 'dispatchAirtime']); // done
         Route::post('/account/topup/money', [PaymentController::class, 'creditCustomerAccount']); // done
+        Route::post('/verify-change-phone-number', [CustomerController::class, 'verifyChangePhoneNumber']); // done
+        Route::post('/change-phone-number', [CustomerController::class, 'changePhoneNumber']); // done
+        
         
         // The route that the button calls to initialize payment
         Route::post('/pay', [FlutterwaveController::class, 'initialize'])->name('pay');
