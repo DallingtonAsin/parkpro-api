@@ -13,6 +13,7 @@ use App\Helpers\ApiResponse;
 use App\Helpers\formattedApiResponse;
 use Illuminate\Support\Facades\DB;
 use App\Repositories\Parking\ParkingRequestRepository;
+use App\Repositories\Parking\ParkingAreaRepository;
 use Carbon\Carbon;
 use Globals;
 
@@ -248,22 +249,15 @@ class ParkingRequestController extends Controller
     
     private function isParkingAreaOpen($id){
         try{
-            $isParkingOpen = false;
+          
+            $$parkingAreaRepo = new ParkingAreaRepository();
+
             if(ParkingArea::where('id', $id)->exists()){
                 $parking = ParkingArea::find($id);
-                $now = date("H:i:s");
-                $start = date('H:i:s', strtotime($parking->opens_at));
-                $end = date('H:i:s', strtotime($parking->closes_at));
-                
-                if($start > $end) {
-                    if($now >= $start || $now < $end){
-                        $isParkingOpen = true;
-                    }
-                }
-                else if ($now >= $start && $now <= $end) {
-                    $isParkingOpen =  true;
-                }
+                $isParkingOpen = $parkingAreaRepo->isParkingAreaOpen($parking->opens_at, $parking->closes_at);
                 return $isParkingOpen;
+            }else{
+                return false;
             }
         }catch(Exception $e){
             throw $e;
@@ -271,22 +265,7 @@ class ParkingRequestController extends Controller
         
     }
     
-    private function  isParkingAreaOpenOld($id){
-        $isParkingOpen = false;
-        try{
-            if(ParkingArea::where('id', $id)->exists()){
-                $parking = ParkingArea::find($id);
-                if(date('H', strtotime($parking->opens_at)) < date('H') && date('H') < date('H', strtotime($parking->closes_at))){ 
-                    $isParkingOpen = true;
-                } 
-            }
-            
-        }catch(Exception $e){
-            throw $e;
-        }
-        return $isParkingOpen;
-    }
-    
+ 
     private function isParkingAreaFree($id){
         $isSpaceAvailable = false;
         try{
@@ -327,8 +306,8 @@ class ParkingRequestController extends Controller
                 $order = ParkingRequest::where('order_no', $order_no)->where('customer_id', $customer_id)->get();
                 if(count((array)$order) > 0){
                     foreach($order as $info){
-                        $start_time = date('H:i A', strtotime($info->start_time));
-                        $end_time = date('H:i A', strtotime($info->end_time));
+                        $start_time = date('h:i A', strtotime($info->start_time));
+                        $end_time = date('h:i A', strtotime($info->end_time));
                         $info->booking_period = $start_time." - ".$end_time;
                         $customer = Customer::find($info->customer_id);
                         $info->name = $customer->first_name." ".$customer->last_name;
@@ -408,9 +387,9 @@ class ParkingRequestController extends Controller
                 $start_time = $request->input('start_time');
                 $end_time = $request->input('end_time');
                 
-                if($this->isParkingAreaOpen($parking_area_id) === true){
+                if($this->isParkingAreaOpen($parking_area_id) == true){
                     
-                    if($this->isParkingAreaFree($parking_area_id) === true){
+                    if($this->isParkingAreaFree($parking_area_id) == true){
                         
                         if(VehicleCategory::where('name', 'like', '%'.$vehicle_category.'%')->exists()){
                             $vehicle_cat_id = VehicleCategory::where('name', 'like', '%'.$vehicle_category.'%')->value('id');
