@@ -11,12 +11,11 @@ class FlutterWaveService
     * Initialize Rave mobile money payment process
     * @return void
     */
-    public function initializeMobileMoneyPayment($customer, $amount){
+    public function initializeMobileMoneyPayment($customer, $customerPhoneNumber, $amount){
         try{
             
             $tx_ref = Flutterwave::generateReference();
             $order_id = Flutterwave::generateReference('momo');
-            $customerPhoneNumber = $customer->country_code.''.$customer->phone_number;
             $customerEmail = empty($customer->email) ? "info@parkproug.com" : $customer->email;
             
             $data = [
