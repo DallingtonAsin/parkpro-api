@@ -31,8 +31,8 @@ class PaymentController extends Controller
     protected $flutterWaveService, $moMoService, $response;
     
     public function __construct(FlutterWaveService $flutterWaveService,
-                                MMService $moMoService,
-                                ApiResponse $response)
+    MMService $moMoService,
+    ApiResponse $response)
     {
         $this->flutterWaveService = $flutterWaveService;
         $this->moMoService = $moMoService;
@@ -235,298 +235,290 @@ class PaymentController extends Controller
         
         
         public function topupUserAccount(Request $request){
+            
+            try{
+                
+                if($request->filled(['customer_id', 'amount', 'country_code', 'phone_number'])){
+                    
+                    $customer_id = $request->input('customer_id');
+                    $amount = $request->input('amount');
+                    $country_code = $request->input('country_code');
+                    $phone_number = $request->input('phone_number');
+                    
+                    $exists = Customer::where('id', $customer_id)
+                    ->exists();
+                    
+                    if($exists){
+                   
+                        $customer = Customer::find($customer_id);
+                        $withdrawPhoneNumber = $country_code.''.$phone_number;
+                        $charge = $this->flutterWaveService->initializeMobileMoneyPayment($customer, $withdrawPhoneNumber, $amount);
+                        
+                        if ($charge['status'] == 'success') {
+
+                            $isLogged = $this->moMoService->insertTransactionInDB($request, $customer, $charge);
+                            $redirect_link = $charge['data']['redirect'];
+                            $respData['link'] = $redirect_link;
+                            
+                            $this->response->data = $respData;
+                            $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                            $this->response->message = Globals::$STATUS_DESC_SUCCESS;
+
+                        }else{
+                            $this->response->data = null;
+                            $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
+                            $this->response->message = Globals::$STATUS_DESC_FAILED;
+                        }
+
+                    }else{
+                        $messageErr = "Failed to find customer with supplied details";
+                        $responseInfo = Helper::getMessage('error', $messageErr);
+                        $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
+                        $this->response->message = $responseInfo;
+                    }
+                } else {
+                    $messageErr = "Unable to process request: missing parameters";
+                    $responseInfo = Helper::getMessage('error', $messageErr);
+                    $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
+                    $this->response->message = $responseInfo;
+                }
+            } catch (\Exception $ex) {
+                $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                $this->response->message = $ex->getMessage();
+            }
+            
+            return response()->json($this->response);
+        }
+        
+        
+        public function topupUserAccounts(Request $request){
             ;
             
             try{
                 
                 if($request->filled(['customer_id', 'amount', 'country_code', 'phone_number'])){
-                            
+                    
                     $customer_id = $request->input('customer_id');
                     $amount = $request->input('amount');
                     $country_code = $request->input('country_code');
                     $phone_number = $request->input('phone_number');
-
+                    
                     $exists = Customer::where('id', $customer_id)
                     ->where('country_code', $country_code)
                     ->where('phone_number', $phone_number)
                     ->exists();
                     
                     if($exists){
-                        $transData = [
-                            'customer_id' => $customer_id,
-                            'amount' => $amount,
-                        ];
+                        
+                        $amount = Helper::Numberize($amount);
+                        $hasUpdated = Customer::where('id', $customer_id)->increment('account_balance', $amount);
                         $customer = Customer::find($customer_id);
-                        $charge = $this->flutterWaveService->initializeMobileMoneyPayment($customer, $amount);
-                        if ($charge['status'] === 'success') {
-                            $isLogged = $this->moMoService->insertTransactionInDB($request, $customer, $charge);
-                            dd($charge);
-                            // return redirect($charge['data']['redirect']);
-                        }
-                        // ProcessCustomerPayment::dispatch($transData)->onQueue('payments');
-                        // if($result->hasProcessed){
-                            //     
-                            //     $customer_name = $customer->first_name." ".$customer->last_name;
-                            //     $action = "topped up your account with amount ".number_format($amount).". Your new balance is ".number_format($customer->account_balance)."";
-                            //     $responseInfo = Helper::getMessage('success', $action);
-                            //     Helper::logActivity($request, ['name' => 'System', 'role' => 'system', 'action' => $action]);
-                            //     $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                            //     $this->response->message = $responseInfo; 
-                            //     $this->response->data = Helper::getCustomerData($customer_id);
-                            //     }else{
-                                //             $messageErr = "Unable to top up customer account!";
-                                //             $responseInfo = Helper::getMessage('error', $messageErr);
-                                //             $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
-                                //             $this->response->message = $responseInfo;
-                                //         }
-                            }else{
-                                $messageErr = "Failed to find customer with supplied details";
-                                $responseInfo = Helper::getMessage('error', $messageErr);
-                                $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
-                                $this->response->message = $responseInfo;
+                        
+                        if ($hasUpdated) {
+                            $customer_name = $customer->first_name. " ".$customer->last_name;
+                            // $action = "topped up ".$customer_name." account's with amount worth ".$amount;
+                            $action = "topped up your account with amount ".number_format($amount).". Your new balance is ".number_format($customer->account_balance)."";
+                            $responseInfo = Helper::getMessage('success', $action);
+                            Helper::logActivity($request, ['name' => 'System', 'role' => 'system', 'action' => $action]);
+                            $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                            $this->response->message = $responseInfo; 
+                            
+                            // $ledger = new CustomersLedger();
+                            $ledgerInput = [
+                                'reference' => time().''.$customer_id,
+                                'customer_id' => $customer_id,
+                                'type' => ucfirst('deposit'),
+                                'description' => ucfirst('deposit'),
+                                'credit' => $amount,
+                                'debt' => 0,
+                                'balance' => $customer->account_balance,
+                                'date' => date('Y-m-d'),
+                            ];
+                            CustomersLedger::create($ledgerInput);
+                            
+                            
+                            $paymentNotificationData = [
+                                'id' => $customer_id,
+                                'type' => ucfirst('payment'),
+                                'name' => $customer_name,
+                                'body' => 'Congratulations, You have deposited amount '.number_format($amount).' successfully',
+                                'thanks' => 'Thank you',
+                                'offerText' => 'Please keep using the app to get better offers',
+                            ];
+                            
+                            $this->storePaymentNotification($paymentNotificationData);
+                            
+                            if(isset($customer->image)){
+                                $customer_image =  Storage::disk('public')->url($customer->image);
+                            } else{
+                                $customer_image = $customer->image;
                             }
+                            
+                            
+                            $this->response->data = $customer;
                         } else {
-                            $messageErr = "Unable to process request: missing parameters";
+                            $messageErr = "Unable to top up customer account!";
                             $responseInfo = Helper::getMessage('error', $messageErr);
                             $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
                             $this->response->message = $responseInfo;
                         }
-                    } catch (\Exception $ex) {
-                        $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
-                        $this->response->message = $ex->getMessage();
-                    }
-                    return response()->json($this->response);
-                }
-                
-                
-                public function topupUserAccounts(Request $request){
-                    ;
-                    
-                    try{
                         
-                        if($request->filled(['customer_id', 'amount', 'country_code', 'phone_number'])){
-                            
-                            $customer_id = $request->input('customer_id');
-                            $amount = $request->input('amount');
-                            $country_code = $request->input('country_code');
-                            $phone_number = $request->input('phone_number');
-
-                            $exists = Customer::where('id', $customer_id)
-                            ->where('country_code', $country_code)
-                            ->where('phone_number', $phone_number)
-                            ->exists();
-                            
-                            if($exists){
-                                
-                                $amount = Helper::Numberize($amount);
-                                $hasUpdated = Customer::where('id', $customer_id)->increment('account_balance', $amount);
-                                $customer = Customer::find($customer_id);
-                                
-                                if ($hasUpdated) {
-                                    $customer_name = $customer->first_name. " ".$customer->last_name;
-                                    // $action = "topped up ".$customer_name." account's with amount worth ".$amount;
-                                    $action = "topped up your account with amount ".number_format($amount).". Your new balance is ".number_format($customer->account_balance)."";
-                                    $responseInfo = Helper::getMessage('success', $action);
-                                    Helper::logActivity($request, ['name' => 'System', 'role' => 'system', 'action' => $action]);
-                                    $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                                    $this->response->message = $responseInfo; 
-                                    
-                                    // $ledger = new CustomersLedger();
-                                    $ledgerInput = [
-                                        'reference' => time().''.$customer_id,
-                                        'customer_id' => $customer_id,
-                                        'type' => ucfirst('deposit'),
-                                        'description' => ucfirst('deposit'),
-                                        'credit' => $amount,
-                                        'debt' => 0,
-                                        'balance' => $customer->account_balance,
-                                        'date' => date('Y-m-d'),
-                                    ];
-                                    CustomersLedger::create($ledgerInput);
-                                    
-                                    
-                                    $paymentNotificationData = [
-                                        'id' => $customer_id,
-                                        'type' => ucfirst('payment'),
-                                        'name' => $customer_name,
-                                        'body' => 'Congratulations, You have deposited amount '.number_format($amount).' successfully',
-                                        'thanks' => 'Thank you',
-                                        'offerText' => 'Please keep using the app to get better offers',
-                                    ];
-                                    
-                                    $this->storePaymentNotification($paymentNotificationData);
-                                    
-                                    if(isset($customer->image)){
-                                        $customer_image =  Storage::disk('public')->url($customer->image);
-                                    } else{
-                                        $customer_image = $customer->image;
-                                    }
-                                    
-                                    
-                                    $this->response->data = $customer;
-                                } else {
-                                    $messageErr = "Unable to top up customer account!";
-                                    $responseInfo = Helper::getMessage('error', $messageErr);
-                                    $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
-                                    $this->response->message = $responseInfo;
-                                }
-                                
-                            }else{
-                                $messageErr = "Failed to find customer with supplied details";
-                                $responseInfo = Helper::getMessage('error', $messageErr);
-                                $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
-                                $this->response->message = $responseInfo;
-                            }
-                        } else {
-                            $messageErr = "Unable to process request: missing parameters";
-                            $responseInfo = Helper::getMessage('error', $messageErr);
-                            $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
-                            $this->response->message = $responseInfo;
-                        }
-                    } catch (\Exception $ex) {
-                        $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
-                        $this->response->message = $ex->getMessage();
+                    }else{
+                        $messageErr = "Failed to find customer with supplied details";
+                        $responseInfo = Helper::getMessage('error', $messageErr);
+                        $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
+                        $this->response->message = $responseInfo;
                     }
-                    return response()->json($this->response);
+                } else {
+                    $messageErr = "Unable to process request: missing parameters";
+                    $responseInfo = Helper::getMessage('error', $messageErr);
+                    $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
+                    $this->response->message = $responseInfo;
                 }
-                
-                private function storePaymentNotification($paymentData) {
-                    try{
-                        $customerSchema = Customer::where('id', $paymentData['id'])->first();
-                        Notification::send($customerSchema, new PaymentMadeNotification($paymentData));
-                    }catch(Exception $ex){
-                        throw $ex;
-                    }
-                }
-                
-                
-                /**
-                * Store a newly created resource in storage.
-                *
-                * @param  \Illuminate\Http\Request  $request
-                * @return \Illuminate\Http\Response
-                */
-                public function store(Request $request)
-                {
-                    //
-                }
-                
-                /**
-                * Display the specified resource.
-                *
-                * @param  int  $id
-                * @return \Illuminate\Http\Response
-                */
-                public function show($id)
-                {
-                    //
-                }
-                
-                /**
-                * Show the form for editing the specified resource.
-                *
-                * @param  int  $id
-                * @return \Illuminate\Http\Response
-                */
-                public function edit($id)
-                {
-                    //
-                }
-                
-                /**
-                * Update the specified resource in storage.
-                *
-                * @param  \Illuminate\Http\Request  $request
-                * @param  int  $id
-                * @return \Illuminate\Http\Response
-                */
-                public function update(Request $request, $id)
-                {
-                    //
-                }
-                
-                /**
-                * Remove the specified resource from storage.
-                *
-                * @param  int  $id
-                * @return \Illuminate\Http\Response
-                */
-                public function destroy($id)
-                {
-                    //
-                }
-                
-                
-                public function getNotifications(NotificationRepository $notificationRepo, Request $request){
-                    ;
-                    try {
-                        if($request->filled('id')){
-                            $customer_id = $request->input('id');
-                            $data = $notificationRepo->getUserNotification($customer_id);
-                            if(count((array)$data) > 0){
-                                $this->response->message  = "No notifications found";
-                            }
-                            $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                            $this->response->data = $data;
-                            
-                        }else {
-                            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
-                            $this->response->message = "Unable to process request: missing parameters";
-                        }
-                        
-                    } catch (\Exception $ex) {
-                        $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
-                        $this->response->message = $ex->getMessage();
-                        $this->response->data = $ex->getMessage();
-                    }
-                    
-                    return response()->json($this->response);
-                }
-                
-                public function getTransactionHistory(PaymentRepository $paymentRepo, Request $request){
-                    ;
-                    try {
-                        if($request->filled('id')){
-                            $customer_id = $request->input('id');
-                            $transactions = $paymentRepo->getTransactionRecords($customer_id);
-                            if(count($transactions->toArray()) > 0){
-                                $this->response->message  = Globals::$STATUS_DESC_SUCCESS;
-                            }else{
-                                $this->response->message  = "No transactions found";
-                            }
-                            $tranRecords = $paymentRepo->mapNotifications($transactions);
-                            $this->response->data = $tranRecords;
-                            $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                        }else {
-                            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
-                            $this->response->message = "Unable to process request: missing parameters";
-                        }
-                    } catch (\Exception $ex) {
-                        $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
-                        $this->response->message = $ex->getMessage();
-                        $this->response->data = $ex->getMessage();
-                    }
-                    
-                    return response()->json($this->response);
-                }
-                
-                public function africasTkngAccountDetails(Request $request, MMService $mmService){
-                    ;
-                    try {
-                        $accountDetailsResp = $mmService->getAccountDetails();
-                        if($accountDetailsResp){
-                            $this->response->message = strtoupper($accountDetailsResp['status']);
-                            $this->response->data = $accountDetailsResp['data']->UserData;
-                        }
-                        $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                    } catch (\Exception $ex) {
-                        $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
-                        $this->response->message = $ex->getMessage();
-                        $this->response->data = $ex->getMessage();
-                    }
-                    
-                    return response()->json($this->response);
-                }
-                
-                
+            } catch (\Exception $ex) {
+                $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                $this->response->message = $ex->getMessage();
             }
+            return response()->json($this->response);
+        }
+        
+        private function storePaymentNotification($paymentData) {
+            try{
+                $customerSchema = Customer::where('id', $paymentData['id'])->first();
+                Notification::send($customerSchema, new PaymentMadeNotification($paymentData));
+            }catch(Exception $ex){
+                throw $ex;
+            }
+        }
+        
+        
+        /**
+        * Store a newly created resource in storage.
+        *
+        * @param  \Illuminate\Http\Request  $request
+        * @return \Illuminate\Http\Response
+        */
+        public function store(Request $request)
+        {
+            //
+        }
+        
+        /**
+        * Display the specified resource.
+        *
+        * @param  int  $id
+        * @return \Illuminate\Http\Response
+        */
+        public function show($id)
+        {
+            //
+        }
+        
+        /**
+        * Show the form for editing the specified resource.
+        *
+        * @param  int  $id
+        * @return \Illuminate\Http\Response
+        */
+        public function edit($id)
+        {
+            //
+        }
+        
+        /**
+        * Update the specified resource in storage.
+        *
+        * @param  \Illuminate\Http\Request  $request
+        * @param  int  $id
+        * @return \Illuminate\Http\Response
+        */
+        public function update(Request $request, $id)
+        {
+            //
+        }
+        
+        /**
+        * Remove the specified resource from storage.
+        *
+        * @param  int  $id
+        * @return \Illuminate\Http\Response
+        */
+        public function destroy($id)
+        {
+            //
+        }
+        
+        
+        public function getNotifications(NotificationRepository $notificationRepo, Request $request){
+            ;
+            try {
+                if($request->filled('id')){
+                    $customer_id = $request->input('id');
+                    $data = $notificationRepo->getUserNotification($customer_id);
+                    if(count((array)$data) > 0){
+                        $this->response->message  = "No notifications found";
+                    }
+                    $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                    $this->response->data = $data;
+                    
+                }else {
+                    $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                    $this->response->message = "Unable to process request: missing parameters";
+                }
+                
+            } catch (\Exception $ex) {
+                $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                $this->response->message = $ex->getMessage();
+                $this->response->data = $ex->getMessage();
+            }
+            
+            return response()->json($this->response);
+        }
+        
+        public function getTransactionHistory(PaymentRepository $paymentRepo, Request $request){
+            ;
+            try {
+                if($request->filled('id')){
+                    $customer_id = $request->input('id');
+                    $transactions = $paymentRepo->getTransactionRecords($customer_id);
+                    if(count($transactions->toArray()) > 0){
+                        $this->response->message  = Globals::$STATUS_DESC_SUCCESS;
+                    }else{
+                        $this->response->message  = "No transactions found";
+                    }
+                    $tranRecords = $paymentRepo->mapNotifications($transactions);
+                    $this->response->data = $tranRecords;
+                    $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                }else {
+                    $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                    $this->response->message = "Unable to process request: missing parameters";
+                }
+            } catch (\Exception $ex) {
+                $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                $this->response->message = $ex->getMessage();
+                $this->response->data = $ex->getMessage();
+            }
+            
+            return response()->json($this->response);
+        }
+        
+        public function africasTkngAccountDetails(Request $request, MMService $mmService){
+            ;
+            try {
+                $accountDetailsResp = $mmService->getAccountDetails();
+                if($accountDetailsResp){
+                    $this->response->message = strtoupper($accountDetailsResp['status']);
+                    $this->response->data = $accountDetailsResp['data']->UserData;
+                }
+                $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
+            } catch (\Exception $ex) {
+                $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
+                $this->response->message = $ex->getMessage();
+                $this->response->data = $ex->getMessage();
+            }
+            
+            return response()->json($this->response);
+        }
+        
+        
+    }
