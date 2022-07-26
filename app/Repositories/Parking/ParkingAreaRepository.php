@@ -8,6 +8,7 @@ use App\Models\ParkingFee;
 use App\Models\Client;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
+use DateTime;
 
 
 class ParkingAreaRepository{
@@ -33,14 +34,14 @@ class ParkingAreaRepository{
             $parking->distance = 35;
             $parking->fees = $this->getParkingFees($parking->id);
             
-            $parking->is_open = date('H') < date('H', strtotime($parking->closes_at)) ? true : false;
+            $parking->is_open = $this->isParkingAreaOpen($parking->opens_at, $parking->closes_at);
             
             $parking->opens_at = date('H:i', strtotime($parking->opens_at));
             $parking->closes_at = date('H:i', strtotime($parking->closes_at));
             
             $opens_at = date('h:i A', strtotime($parking->opens_at));
             $closes_at = date('h:i A', strtotime($parking->closes_at));
-            $parking->working_hours = $opens_at."-".$closes_at;
+            $parking->working_hours = $opens_at." - ".$closes_at;
             
             
         }
@@ -66,12 +67,12 @@ class ParkingAreaRepository{
                 $parking->distance = 35;
                 $parking->fees = $this->getParkingFees($parking->id);
                 $parking->is_open = $this->isParkingAreaOpen($parking->opens_at, $parking->closes_at); // date('H') < date('H', strtotime($parking->closes_at)) ? true : false;
-                $parking->opens_at = date('H:i', strtotime($parking->opens_at));
-                $parking->closes_at = date('H:i', strtotime($parking->closes_at));
+                // $parking->opens_at = date('H:i', strtotime($parking->opens_at));
+                // $parking->closes_at = date('H:i', strtotime($parking->closes_at));
             }
             return $this->parking_area;
             
-        }catch(Exception $e){
+        }catch(\Exception $e){
             throw $e;
         }
     }
@@ -126,15 +127,11 @@ class ParkingAreaRepository{
             
             $isParkingOpen = false;
             
-            $current_time = date("h:i a");
-            $start_time = date('h:i a', strtotime($opens_at));
-            $end_time = date('h:i a', strtotime($closes_at));
-            
-            $currentTime = DateTime::createFromFormat('h:i a', $current_time);
-            $startTime = DateTime::createFromFormat('h:i a', $start_time);
-            $endDate = DateTime::createFromFormat('h:i a', $end_time);
-            
-            if($currentTime > $startTime && $currentTime < $endDate){
+            $currentTime = date('H:i');
+            $startTime = date('H:i', strtotime($opens_at));
+            $endTime = date('H:i', strtotime($closes_at));
+         
+            if( $startTime <= $currentTime  && $currentTime <= $endTime){
                 $isParkingOpen = true;
             }
             
