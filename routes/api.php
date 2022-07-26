@@ -17,7 +17,7 @@ use App\Http\Controllers\Payments\PaymentController;
 use App\Http\Controllers\Payments\FlutterwaveController;
 use App\Http\Controllers\MailController;
 use App\Http\Controllers\NotificationController;
-
+// use Storage;
 
 
 /*
@@ -46,6 +46,10 @@ use App\Http\Controllers\NotificationController;
         Route::get('/image/path', [UserController::class, 'getImageStoragePath']);
         
     });
+
+    // Route::get('/image', function(){
+    //     dd(Storage::disk('appImages')->url('images/61658871843.jpeg'));
+    // });
     
     
     // PARKING REQUESTS 
