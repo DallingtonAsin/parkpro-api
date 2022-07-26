@@ -250,7 +250,7 @@ class ParkingRequestController extends Controller
     private function isParkingAreaOpen($id){
         try{
           
-            $$parkingAreaRepo = new ParkingAreaRepository();
+            $parkingAreaRepo = new ParkingAreaRepository();
 
             if(ParkingArea::where('id', $id)->exists()){
                 $parking = ParkingArea::find($id);
@@ -346,6 +346,8 @@ class ParkingRequestController extends Controller
                     foreach($requests as $request){
                         $request->approval_date = date('Y-m-d H:i A', strtotime($request->approval_date));
                         $request->amount = number_format($request->amount);
+                        $parking = ParkingArea::find($request->parking_area_id);
+                        $request->parking_area = $parking->name;
                     }
                 }else{
                     $requests = [];
