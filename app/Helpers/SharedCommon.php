@@ -49,7 +49,7 @@ class SharedCommon
                 $customer->account_balance = number_format($customer->account_balance);
             }
             if(!empty($customer->image)){
-                $customer->image =  Storage::disk('public')->url($customer->image);
+                 $customer->image = Storage::disk('appImages')->url($customer->image);
             }
             return $customer;
         }catch(\Exception $ex){
