@@ -202,7 +202,7 @@ class SharedCommon
     }
     
     
-    public static function recordTransaction($transactionDetails){
+    public static function recordLedgerTransaction($transactionDetails){
         $isInserted = false;
         try{
             if(CustomersLedger::create($transactionDetails)){

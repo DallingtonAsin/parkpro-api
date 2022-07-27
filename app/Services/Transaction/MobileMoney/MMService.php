@@ -61,7 +61,7 @@ class MMService{
             $mm->phoneNumber = $customer->country_code.''.$customer->phone_number;
             $mm->amount = $transaction['data']['amount'];
             $mm->orderId = $transaction['data']['order_id'];
-            $mm->tranReference = $transaction['data']['reference'];
+            $mm->requestId = $transaction['data']['reference'];
             $mm->status = Globals::$PENDING_STATUS;
             $mm->date = Carbon::now();
             $mm->userIpAddress = $request->ip();

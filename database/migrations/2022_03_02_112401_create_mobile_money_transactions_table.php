@@ -20,7 +20,7 @@ class CreateMobileMoneyTransactionsTable extends Migration
             $table->string('phoneNumber');
             $table->double('amount');
             $table->string('orderId');
-            $table->string('tranReference');
+            $table->string('transReference');
             $table->boolean('smsSent')->default(false);
             $table->string('status');
             $table->integer('failureCount')->default(0);
