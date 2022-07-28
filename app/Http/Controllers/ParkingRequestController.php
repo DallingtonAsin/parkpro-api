@@ -9,24 +9,24 @@ use App\Models\ParkingFee;
 use App\Models\ParkingArea;
 use App\Models\VehicleCategory;
 use App\Models\Customer;
-use App\Helpers\ApiResponse;
 use App\Helpers\formattedApiResponse;
 use Illuminate\Support\Facades\DB;
 use App\Repositories\Parking\ParkingRequestRepository;
 use App\Repositories\Parking\ParkingAreaRepository;
 use Carbon\Carbon;
 use Globals;
+use Helper;
 
 
 class ParkingRequestController extends Controller
 {
     
     
-    protected $response ;
+    protected $response;
     
     
-    public function __construct(ApiResponse $response){
-        $this->response = $response;
+    public function __construct(){
+        
     }
     
     /**
@@ -36,29 +36,48 @@ class ParkingRequestController extends Controller
     */
     public function index(ParkingRequestRepository $parkingReqRepo)
     {
-        $parking_requests = $parkingReqRepo->getAll();
-        return formattedApiResponse::getJson($parking_requests);
+        try{
+            $parking_requests = $parkingReqRepo->getAll();
+            return formattedApiResponse::getJson($parking_requests);
+        }catch(\Exception $ex){
+            return Helper::sendFailedHttpResponse($ex->getMessage());
+        }  
+        
     }
     
     // pending parking requests
     public function pendingRequests(ParkingRequestRepository $parkingReqRepo)
     {
-        $pending_requests = $parkingReqRepo->getPendingRequests();
-        return formattedApiResponse::getJson($pending_requests);
+        try{
+            $pending_requests = $parkingReqRepo->getPendingRequests();
+            return formattedApiResponse::getJson($pending_requests);
+        }catch(\Exception $ex){
+            return Helper::sendFailedHttpResponse($ex->getMessage());
+        } 
+        
     }
     
     // approved parking requests
     public function approvedRequests(ParkingRequestRepository $parkingReqRepo)
     {
-        $approved_parking_requests = $parkingReqRepo->getApprovedRequests();
-        return formattedApiResponse::getJson($approved_parking_requests);
+        try{
+            $approved_parking_requests = $parkingReqRepo->getApprovedRequests();
+            return formattedApiResponse::getJson($approved_parking_requests);
+        }catch(\Exception $ex){
+            return Helper::sendFailedHttpResponse($ex->getMessage());
+        }
+        
     }
     
     // rejected parking requests
     public function rejectedRequests(ParkingRequestRepository $parkingReqRepo){
+        try{
+            $rejected_requests = $parkingReqRepo->getRejectedRequests();
+            return formattedApiResponse::getJson($rejected_requests);
+        }catch(\Exception $ex){
+            return Helper::sendFailedHttpResponse($ex->getMessage());
+        }
         
-        $rejected_requests = $parkingReqRepo->getRejectedRequests();
-        return formattedApiResponse::getJson($rejected_requests);
     }
     
     
@@ -86,17 +105,11 @@ class ParkingRequestController extends Controller
                     $transaction->amount = number_format($transaction->amount);
                 }
             }
-            $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
-            $this->response->message  = Globals::$STATUS_DESC_SUCCESS;
-            $this->response->data = $transactions;
+            return Helper::sendOkHttpResponse($transactions);
             
         } catch (\Exception $ex) {
-            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
-            $this->response->message = $ex->getMessage();
-            $this->response->data = $ex->getMessage();
+            return Helper::sendFailedHttpResponse($ex->getMessage());
         }
-        
-        return response()->json($this->response);
     }
     
     
@@ -127,36 +140,34 @@ class ParkingRequestController extends Controller
                     ->where('vehicle_number', '=', $vehicle_number)
                     ->update(['order_no'=> $order_no, 'status' => $status, 'approval_date' => $approval_date]);
                     if($isApproved){
-                        $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                        $this->response->message  = Globals::$STATUS_DESC_SUCCESS;
+                        
                         $data = array(
                             'request_id' => $request_id,
                             'order_no' => $order_no,
                             'telephone_no' => $telephone_no,
                             'status' => $status,
-                            'approval_date' => $approval_date,
-                            'statusCode' => $this->response->statusCode,
-                            'message' => $this->response->message,
+                            'approval_date' => $approval_date
                         );
-                        $this->response->data = $data;
+                        return Helper::sendOkHttpResponse(['message' => $message, 'data' => $data]);
+                        
                     }else{
-                        $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
-                        $this->response->message = "Unable to approve request";
+                        $message = "Unable to approve request";
+                        return Helper::sendFailedHttpResponse($message);
+                        
                     }
                 }else{
-                    $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
-                    $this->response->message = "Request doesn't exist";
+                    $message = "Request doesn't exist";
+                    return Helper::sendFailedHttpResponse($message);
                 }
             }else{
-                $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
-                $this->response->message = "Unable to process request: missing parameters";
+                $message = "Unable to process request: missing parameters";
+                return Helper::sendFailedHttpResponse($message);
+                
             }
             
         } catch (\Exception $ex) {
-            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
-            $this->response->message = $ex->getMessage();
+            return Helper::sendFailedHttpResponse($ex->getMessage());
         }
-        return response()->json($this->response);
     }
     
     
@@ -187,35 +198,32 @@ class ParkingRequestController extends Controller
                     ->where('vehicle_number', '=', $vehicle_number)
                     ->update(['order_no'=> null, 'status' => $status, 'approval_date' => null, 'reject_date' => $reject_date]);
                     if($isRejected){
-                        $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                        $this->response->message  = Globals::$STATUS_DESC_SUCCESS;
+                        
                         $data = array(
                             'request_id' => $request_id,
                             'telephone_no' => $telephone_no,
                             'status' => $status,
-                            'reject_date' => $reject_date,
-                            'statusCode' => $this->response->statusCode,
-                            'message' => $this->response->message,
+                            'reject_date' => $reject_date
                         );
-                        $this->response->data = $data;
+                        return Helper::sendOkHttpResponse(['message' => $message , 'data' => $data]);
                     }else{
-                        $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
-                        $this->response->message = "Unable to reject request";
+                        $message = "Unable to reject request";
+                        return Helper::sendFailedHttpResponse($message);
+                        
                     }
                 }else{
-                    $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
-                    $this->response->message = "Request doesn't exist";
+                    $message = "Request doesn't exist";
+                    return Helper::sendFailedHttpResponse($message);
                 }
             }else{
-                $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
-                $this->response->message = "Unable to process request: missing parameters";
+                $message = "Unable to process request: missing parameters";
+                return Helper::sendFailedHttpResponse($message);
+                
             }
             
         } catch (\Exception $ex) {
-            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
-            $this->response->message = $ex->getMessage();
+            return Helper::sendFailedHttpResponse($ex->getMessage());
         }
-        return response()->json($this->response);
     }
     
     /**
@@ -237,11 +245,11 @@ class ParkingRequestController extends Controller
     
     private function generateOrderNo(){
         try{
-
+            
             $query = DB::select("SELECT GenerateParkingRequestOrderNo() as orderNo");
             $order_no =  $query[0]->orderNo;
             return $order_no;
-
+            
         }catch(\Exception $ex){
             throw $ex;
         }
@@ -249,9 +257,9 @@ class ParkingRequestController extends Controller
     
     private function isParkingAreaOpen($id){
         try{
-          
+            
             $parkingAreaRepo = new ParkingAreaRepository();
-
+            
             if(ParkingArea::where('id', $id)->exists()){
                 $parking = ParkingArea::find($id);
                 $isParkingOpen = $parkingAreaRepo->isParkingAreaOpen($parking->opens_at, $parking->closes_at);
@@ -265,7 +273,7 @@ class ParkingRequestController extends Controller
         
     }
     
- 
+    
     private function isParkingAreaFree($id){
         $isSpaceAvailable = false;
         try{
@@ -321,18 +329,17 @@ class ParkingRequestController extends Controller
                 }else{
                     $order = [];
                 }
-                $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                $this->response->message = "Order information found";
-                $this->response->data = $order;
+                return Helper::sendOkHttpResponse($order);
+                
             }else{
-                $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
-                $this->response->message = "Unable to process request, missing parameters!";
+                $message = "Unable to process request, missing parameters!";
+                return Helper::sendFailedHttpResponse($message);
+                
             }
         }catch(Exception $ex){
-            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
-            $this->response->message = $ex->getMessage();
+            $message = $ex->getMessage();
+            return Helper::sendFailedHttpResponse($message);
         }
-        return response()->json($this->response);
     }
     
     
@@ -352,18 +359,17 @@ class ParkingRequestController extends Controller
                 }else{
                     $requests = [];
                 }
-                $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                $this->response->message = "Parking requests data found";
-                $this->response->data = $requests;
+                return Helper::sendOkHttpResponse($requests);
+                
             }else{
-                $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
-                $this->response->message = "Unable to process request: missing parameters";
+                $message = "Unable to process request: missing parameters";
+                return Helper::sendFailedHttpResponse($message);
+                
             }
         }catch(Exception $ex){
-            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
-            $this->response->message = $ex->getMessage();
+            $message = $ex->getMessage();
+            return Helper::sendFailedHttpResponse($message);
         }
-        return response()->json($this->response);
     }
     
     /**
@@ -425,48 +431,53 @@ class ParkingRequestController extends Controller
                             $parkingRequest->approval_date = Carbon::now()->toDateTimeString();
                             
                             if($parkingRequest->save()){
-                                $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                                $this->response->message  = "Your request has been submitted and approved successfully.";
+                                
+                                $message  = "Your request has been submitted and approved successfully.";
                                 $data = array(
                                     'customer_id' => $customer_id,
                                     'order_no' => $orderNo,
                                     'telephone_no' => $telephone_no,
                                     'status' => $status,
-                                    'request_date' => $request_date,
-                                    'statusCode' => $this->response->statusCode,
-                                    'message' => $this->response->message,
+                                    'request_date' => $request_date
                                 );
-                                $this->response->data = $data;
+                                return Helper::sendOkHttpResponse(["message" => $message, "data" => $data]);
+                                
                             }else{
-                                $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
-                                $this->response->message = "Unable to submit request";
+                                $message = "Unable to submit request";
+                                return Helper::sendFailedHttpResponse($message);
+                                
+                                
                             }
                         }else {
-                            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
-                            $this->response->message = "Unable to get supplied vehicle type";
+                            $message = "Unable to get supplied vehicle type";
+                            return Helper::sendFailedHttpResponse($message);
+                            
                         }   
                         
                     }else {
-                        $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
-                        $this->response->message = "Parking area is currently fully occupied";
+                        $message = "Parking area is currently fully occupied";
+                        return Helper::sendFailedHttpResponse($message);
+                        
                     }
                 }else {
-                    $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
-                    $this->response->message = "Parking area is currently closed";
+                    $message = "Parking area is currently closed";
+                    return Helper::sendFailedHttpResponse($message);
+                    
                 }
                 
             }else{
-                $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
-                $this->response->message = "Unable to process request: missing parameters";
+                $message = "Unable to process request: missing parameters";
+                return Helper::sendFailedHttpResponse($message);
+                
             }
             
             
             
         } catch (\Exception $ex) {
-            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
-            $this->response->message = $ex->getMessage();
+            $message = $ex->getMessage();
+            return Helper::sendFailedHttpResponse($message);
+            
         }
-        return response()->json($this->response);
     }
     
     

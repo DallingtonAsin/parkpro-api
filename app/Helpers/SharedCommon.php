@@ -179,6 +179,31 @@ class SharedCommon
         : $message = "You have successfully ".$activity."";
         return $message;
     }
+
+    public static function sendOkHttpResponse($data){
+       try{
+          return response()->json($data);
+       }catch(\Exception $ex){
+        throw $ex;
+       }
+    }
+
+    public static function sendOkHttpMessage($message){
+        try{
+           return response()->json(["message" => $message], Globals::$STATUS_CODE_SUCCESS);
+        }catch(\Exception $ex){
+         throw $ex;
+        }
+     }
+
+
+    public static function sendFailedHttpResponse($message){
+        try{
+            return response()->json(["message" => $message], Globals::$STATUS_CODE_FAILED);
+        }catch(\Exception $ex){
+         throw $ex;
+        }
+     }
     
     public static function getUserRole($id){
         $role = Role::find($id);

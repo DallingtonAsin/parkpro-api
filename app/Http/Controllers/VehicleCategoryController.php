@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Helpers\ApiResponse;
 use App\Models\VehicleCategory;
 use App\Repositories\VehicleCategoryRepository;
 use App\Helpers\formattedApiResponse;
@@ -13,11 +12,9 @@ use Validator;
 
 class VehicleCategoryController extends Controller
 {
-
-    protected $response ;
-
-    public function __construct(ApiResponse $response){
-        $this->response = $response;
+    
+    public function __construct(){
+        
     }
     /**
     * Display a listing of the resource.
@@ -26,8 +23,13 @@ class VehicleCategoryController extends Controller
     */
     public function index(VehicleCategoryRepository $vehicleRepo)
     {
-        $vehicle_categories = $vehicleRepo->getVehicleCategories();
-        return formattedApiResponse::getJson($vehicle_categories);
+        try{
+            $vehicle_categories = $vehicleRepo->getVehicleCategories();
+            return formattedApiResponse::getJson($vehicle_categories);
+        }catch(\Exception $ex){
+            return Helper::sendFailedHttpResponse($ex->getMessage());
+        }
+        
     }
     
     /**
@@ -63,33 +65,28 @@ class VehicleCategoryController extends Controller
                         $action = "added vehicle category ".$name."";
                         $responseInfo = Helper::getMessage('success', $action);
                         Helper::logActivity($request, ['name' => 'Dallington', 'role' => 'admin', 'action' => $action]);
-                        $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                        $this->response->message = $responseInfo; 
+                        return Helper::sendOkHttpResponse(['message' => $responseInfo, 'data' => $vehicleCat]);
+                        
                     } else {
                         $messageErr = "adding vehicle category failed!";
                         $responseInfo = Helper::getMessage('error', $messageErr);
-                        $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
-                        $this->response->message = $responseInfo;
+                        return Helper::sendFailedHttpResponse($responseInfo);
                     }
                 } else {
                     $messageErr = "Vehicle category ".$name." has already been added";
                     $responseInfo = Helper::getMessage('error', $messageErr);
-                    $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
-                    $this->response->message = $responseInfo;
+                    return Helper::sendFailedHttpResponse($responseInfo);
                 }
                 
             }else{
                 $messageErr = "Failed to get vehicle category and fee from request";
                 $responseInfo = Helper::getMessage('error', $messageErr);
-                $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
-                $this->response->message = $responseInfo;
+                return Helper::sendFailedHttpResponse($responseInfo);
             }
         } catch (\Exception $ex) {
-            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
-            $this->response->message = $ex->getMessage();
+            $message = $ex->getMessage();
+            return Helper::sendFailedHttpResponse($message);
         }
-        $this->response->data = VehicleCategory::count();
-        return response()->json($this->response);
     }
     
     /**
@@ -131,36 +128,36 @@ class VehicleCategoryController extends Controller
         
         try{
             if($validator->fails()){
-                $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
-                $this->response->message = $validator->errors()->all();
+                $message = $validator->errors()->all();
+                return Helper::sendFailedHttpResponse($message);
             }else{
                 
                 $author_id = $request->input('user_id');
                 $name = $request->input('name');
-
+                
                 $vehicleType = VehicleCategory::find($id);
                 $vehicle_type = $vehicleType->name;
                 
                 $vehicleType->name = ucfirst($name);
-
+                
                 if($vehicleType->save()){
                     $author = Helper::getUserNames($author_id);
                     $role = Helper::getUserRoleName($author_id);
                     $action = "updated vehicle type ".$vehicle_type." details";
                     Helper::logActivity($request, ['name' => $author, 'role' => $role, 'action' => $action]);
-                    $this->response->message = Helper::getMessage('success', $action);
-                    $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                    $message = Helper::getMessage('success', $action);
+                    return Helper::sendOkHttpResponse(['message' => $responseInfo, 'data' => $vehicleType]);
+                    
                 }else{
-                    $this->response->message ="Unable to update vehicle type details!";
-                    $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
+                    $message ="Unable to update vehicle type details!";
+                    return Helper::sendFailedHttpResponse($message);
                 }
             }
         }catch(\Exception $ex){
-            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
-            $this->response->message = $ex->getMessage();
+            $message = $ex->getMessage();
+            return Helper::sendFailedHttpResponse($message);
         }
         
-        return response()->json($this->response, 200); 
     }
     
     /**
@@ -177,14 +174,14 @@ class VehicleCategoryController extends Controller
         
         try{
             if($validator->fails()){
-                $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
-                $this->response->message = $validator->errors()->all();
+                $message = $validator->errors()->all();
+                return Helper::sendFailedHttpResponse($message);
             }else{
                 
                 $author_id = $request->input('user_id');
                 $vehicleType = VehicleCategory::find($id);
                 $vehicle_type = $vehicleType->name; 
-
+                
                 $is_deleted = $vehicleType->is_deleted;
                 $undo = !$is_deleted;
                 $activity = $undo ? 'deleted': 'restored';
@@ -192,23 +189,23 @@ class VehicleCategoryController extends Controller
                 
                 $vehicleType->is_deleted = $undo;
                 $vehicleType->deleted_by = $author_id;
-              
+                
                 if($vehicleType->save()){
                     $role = Helper::getUserRoleName($author_id);
                     $action = "".$activity." vehicle category ".$vehicle_type."";
                     Helper::logActivity($request, ['name' => $author, 'role' => $role, 'action' => $action]);
-                    $this->response->message = Helper::getMessage('success', $action);
-                    $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                    $message = Helper::getMessage('success', $action);
+                    return Helper::sendOkHttpMessage($responseInfo);
+                    
                 }else{
-                    $this->response->message ="Unable to delete vehicle category!";
-                    $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
+                    $message ="Unable to delete vehicle category!";
+                    return Helper::sendFailedHttpResponse($message);
                 }
             }
         }catch(\Exception $ex){
-            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
-            $this->response->message = $ex->getMessage();
+            $message = $ex->getMessage();
+            return Helper::sendFailedHttpResponse($message);
         }
         
-        return response()->json($this->response, 200);  
     }
 }

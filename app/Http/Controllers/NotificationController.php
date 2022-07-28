@@ -5,9 +5,9 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Services\Firebase\FCMService;
 use Illuminate\Support\Facades\Validator;
-use App\Helpers\ApiResponse;
 use App\Models\Customer;
 use Globals;
+use Helper;
 
 
 class NotificationController extends Controller
@@ -17,10 +17,9 @@ class NotificationController extends Controller
     public function __construct(FCMService $firebaseService, ApiResponse $response)
     {
         $this->firebaseService = $firebaseService;
-        $this->response = $response;
     }
     
-     /**
+    /**
     * Send push notification to a given device.
     *
     * @return \Illuminate\Http\Response
@@ -31,10 +30,10 @@ class NotificationController extends Controller
         ]);
         
         try{
-           
+            
             if($validator->fails()){
-                $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
-                $this->response->message = $validator->errors()->all();
+                $message = $validator->errors()->all();
+                return Helper::sendFailedHttpResponse($message);
             }else{
                 
                 $userId = $request->input('id');
@@ -50,27 +49,28 @@ class NotificationController extends Controller
                     ];
                     $res = $this->firebaseService->send($fcmToken, $notification);
                     $respCode= $res->getStatusCode();
-
+                    
                     if($respCode == '200'){
-                        $this->response->statusCode = $respCode;
-                        $this->response->message = "Notification sent successfully";
-                        $this->response->data['fcm_token'] = $fcmToken;
+                        $data = $customer;
+                        $data['fcm_token'] = $fcmToken;
+                        return Helper::sendOkHttpResponse(['message' => 'SUCCESS', 'data' => $data]);
+                        
                     }else{
-                        $this->response->statusCode = $respCode;
-                        $this->response->message = Globals::$STATUS_CODE_ERROR;
+                        $message = Globals::$STATUS_CODE_ERROR;
+                        return Helper::sendFailedHttpResponse($message);
+                        
                     }
                     
                 }else{
-                    $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
-                    $this->response->message = "Unable to find customer";
+                    $message = "Unable to find customer";
+                    return Helper::sendFailedHttpResponse($message);
+                    
                 }
                 
             }
         }catch(\Exception $ex){
-            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
-            $this->response->message = $ex->getMessage();
+            return Helper::sendFailedHttpResponse($ex->getMessage());
         }
-        return response()->json($this->response);
     }
     
     
