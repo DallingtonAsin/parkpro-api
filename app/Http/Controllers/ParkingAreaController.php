@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Helpers\ApiResponse;
 use App\Models\ParkingArea;
 use App\Models\Client;
 use App\Repositories\Parking\ParkingAreaRepository;
@@ -16,11 +15,9 @@ use Validator;
 class ParkingAreaController extends Controller
 {
     
-    protected $response;
-    
-    public function __construct(ApiResponse $response)
+    public function __construct()
     {
-        $this->response = $response;
+        
     }
     /**
     * Display a listing of the resource.
@@ -40,22 +37,16 @@ class ParkingAreaController extends Controller
             if($request->filled(['id'])){
                 $id = $request->input('id');
                 $data = $parkingAreaRepo->searchParking($id);
-                $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                $this->response->message  = Globals::$STATUS_DESC_SUCCESS;
-                $this->response->data = $data;
+                return Helper::sendOkHttpResponse($data);
             }else{
                 $messageErr = "Unable to process request:missing parameters";
                 $responseInfo = Helper::getMessage('error', $messageErr);
-                $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
-                $this->response->message = $responseInfo;
+                return Helper::sendFailedHttpResponse($responseInfo);
             } 
             
         }catch (\Exception $ex) {
-            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
-            $this->response->message = Globals::$STATUS_DESC_ERROR;
-            $this->response->data = $ex->getMessage();
+            return Helper::sendFailedHttpResponse($ex->getMessage());
         }
-        return response()->json($this->response);
     }
     
     
@@ -66,23 +57,18 @@ class ParkingAreaController extends Controller
         try {
             if($request->filled(['client_id'])){
                 $client_id = $request->input('client_id');
-                $parking_spots = ParkingArea::where('client_id',  '=', $client_id)->get();
-                $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                $this->response->message  = Globals::$STATUS_DESC_SUCCESS;
-                $this->response->data = $parking_spots;
+                $parking_areas = ParkingArea::where('client_id',  '=', $client_id)->get();
+                return Helper::sendOkHttpResponse($parking_areas);
             }else{
                 $messageErr = "Unable to process request:missing parameters";
                 $responseInfo = Helper::getMessage('error', $messageErr);
-                $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
-                $this->response->message = $responseInfo;
+                return Helper::sendFailedHttpResponse($responseInfo);
+                
             }
         } catch (\Exception $ex) {
-            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
-            $this->response->message = Globals::$STATUS_DESC_ERROR;
-            $this->response->data = $ex->getMessage();
+            return Helper::sendFailedHttpResponse($ex->getMessage());
         }
         
-        return response()->json($this->response);
     }
     
     public function searchParkingArea(Request $request)
@@ -98,22 +84,17 @@ class ParkingAreaController extends Controller
                     $parking->client = Client::where('id', $parking->client_id)->value('name');
                     $parking->image = "https://picsum.photos/".$num++."";
                 }
-                $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                $this->response->message  = Globals::$STATUS_DESC_SUCCESS;
-                $this->response->data = $searchResults;
+                return Helper::sendOkHttpResponse($searchResults);
             }else{
                 $messageErr = "Unable to process request:missing parameters";
                 $responseInfo = Helper::getMessage('error', $messageErr);
-                $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
-                $this->response->message = $responseInfo;
+                return Helper::sendFailedHttpResponse($responseInfo);
+                
             }
         } catch (\Exception $ex) {
-            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
-            $this->response->message = Globals::$STATUS_DESC_ERROR;
-            $this->response->data = $ex->getMessage();
+            return Helper::sendFailedHttpResponse($ex->getMessage());
         }
         
-        return response()->json($this->response);
     }
     
     
@@ -136,7 +117,7 @@ class ParkingAreaController extends Controller
     */
     public function store(Request $request)
     {
-      
+        
         try{
             
             if($request->filled(['client_id', 'name', 'phone_number', 'address',
@@ -194,39 +175,32 @@ class ParkingAreaController extends Controller
                             $action = "added parking area ".$name." for client ".$client_name."";
                             $responseInfo = Helper::getMessage('success', $action);
                             Helper::logActivity($request, ['name' => 'Dallington', 'role' => 'admin', 'action' => $action]);
-                            $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                            $this->response->message = $responseInfo; 
+                            $data = ParkingArea::count();
+                            return Helper::sendOkHttpResponse($data);
                         } else {
                             $messageErr = "Adding parking area ".$name." for client '.$client_name.' failed!";
                             $responseInfo = Helper::getMessage('error', $messageErr);
-                            $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
-                            $this->response->message = $responseInfo;
+                            return Helper::sendFailedHttpResponse($responseInfo);
                         }
                         
                     }else{
                         $messageErr = "Parking area ".$name." for client ".$client_name." has been already added";
                         $responseInfo = Helper::getMessage('error', $messageErr);
-                        $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
-                        $this->response->message = $responseInfo;
+                        return Helper::sendFailedHttpResponse($responseInfo);
                     }
                 }else{
                     $messageErr = "Details of the client not found";
                     $responseInfo = Helper::getMessage('error', $messageErr);
-                    $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
-                    $this->response->message = $responseInfo;
+                    return Helper::sendFailedHttpResponse($responseInfo);
                 }
             } else {
                 $messageErr = "Unable to process request:missing parameters";
                 $responseInfo = Helper::getMessage('error', $messageErr);
-                $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
-                $this->response->message = $responseInfo;
+                return Helper::sendFailedHttpResponse($responseInfo);
             }
         } catch (\Exception $ex) {
-            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
-            $this->response->message = $ex->getMessage();
+            return Helper::sendFailedHttpResponse($ex->getMessage());
         }
-        $this->response->data = ParkingArea::count();
-        return response()->json($this->response);
     }
     
     /**
@@ -238,7 +212,7 @@ class ParkingAreaController extends Controller
     public function show($id)
     {
         $parkingArea = ParkingArea::find($id);
-        return response()->json($parkingArea, 200);
+        return response()->json($parkingArea);
     }
     
     /**
@@ -276,8 +250,8 @@ class ParkingAreaController extends Controller
         
         try{
             if($validator->fails()){
-                $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
-                $this->response->message = $validator->errors()->all();
+                $message = $validator->errors()->all();
+                return Helper::sendFailedHttpResponse($message);
             }else{
                 
                 $author_id = $request->input('user_id');
@@ -319,23 +293,23 @@ class ParkingAreaController extends Controller
                 
                 
                 if($parking->save()){
+                    
                     $author = Helper::getUserNames($author_id);
                     $role = Helper::getUserRoleName($author_id);
                     $action = "updated parking ".$parking_name." details";
                     Helper::logActivity($request, ['name' => $author, 'role' => $role, 'action' => $action]);
-                    $this->response->message = Helper::getMessage('success', $action);
-                    $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                    $message = Helper::getMessage('success', $action);
+                    return Helper::sendOkHttpMessage($message);
+                    
                 }else{
-                    $this->response->message ="Unable to update parking area details!";
-                    $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
+                    $responseInfo ="Unable to update parking area details!";
+                    return Helper::sendFailedHttpResponse($responseInfo);
                 }
             }
         }catch(\Exception $ex){
-            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
-            $this->response->message = $ex->getMessage();
+            return Helper::sendFailedHttpResponse($ex->getMessage());
         }
         
-        return response()->json($this->response, 200); 
     }
     
     /**
@@ -352,8 +326,8 @@ class ParkingAreaController extends Controller
         
         try{
             if($validator->fails()){
-                $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
-                $this->response->message = $validator->errors()->all();
+                $message = $validator->errors()->all();
+                return Helper::sendFailedHttpResponse($message);
             }else{
                 
                 $author_id = $request->input('user_id');
@@ -369,22 +343,22 @@ class ParkingAreaController extends Controller
                 $parking->deleted_by = $author_id;
                 
                 if($parking->save()){
+                    
                     $role = Helper::getUserRoleName($author_id);
                     $action = "".$activity." parking ".$parking_name."";
                     Helper::logActivity($request, ['name' => $author, 'role' => $role, 'action' => $action]);
-                    $this->response->message = Helper::getMessage('success', $action);
-                    $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                    $message = Helper::getMessage('success', $action);
+                    return Helper::sendOkHttpMessage($message);
+                    
                 }else{
-                    $this->response->message ="Unable to delete parking!";
-                    $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
+                    $message ="Unable to delete parking!";
+                    return Helper::sendFailedHttpResponse($message);
                 }
             }
         }catch(\Exception $ex){
-            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
-            $this->response->message = $ex->getMessage();
+            return Helper::sendFailedHttpResponse($ex->getMessage());
         }
         
-        return response()->json($this->response, 200);  
     }
     
     
@@ -396,37 +370,29 @@ class ParkingAreaController extends Controller
         
         try{
             if($validator->fails()){
-                $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
-                $this->response->message = $validator->errors()->all();
+                $message = $validator->errors()->all();
+                return Helper::sendFailedHttpResponse($message);
             }else{
                 $latitude = floatval($request->input("latitude"));
                 $longitude = floatval($request->input("longitude"));
                 $nearByParkings = $parkingAreaRepo->fetchNearByParkingAreas($latitude, $longitude);
-                $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                $this->response->message  = Globals::$STATUS_DESC_SUCCESS;
-                $this->response->data = $nearByParkings;
+                return Helper::sendOkHttpResponse($nearByParkings);
             }
             
         }catch(\Exception $ex){
-            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
-            $this->response->message = $ex->getMessage();
+            return Helper::sendFailedHttpResponse($ex->getMessage());
         }
-        return response()->json($this->response);
     }
     
     
     public function getTopRatedParkingAreas(Request $request, ParkingAreaRepository $parkingAreaRepo){
         try{
             $topRatedParkings = $parkingAreaRepo->fetchTopRatedParkingAreas();
-            $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
-            $this->response->message  = Globals::$STATUS_DESC_SUCCESS;
-            $this->response->data = $topRatedParkings;
+            return Helper::sendOkHttpResponse($topRatedParkings);
             
         }catch(\Exception $ex){
-            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
-            $this->response->message = $ex->getMessage();
+            return Helper::sendFailedHttpResponse($ex->getMessage());
         }
-        return response()->json($this->response);
     }
     
     

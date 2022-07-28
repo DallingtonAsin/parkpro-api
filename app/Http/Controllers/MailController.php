@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Mail\SendMail;
 use App\Models\Customer;
-use App\Helpers\ApiResponse;
 use Helper;
 use Globals;
 use Mail;
@@ -14,74 +13,75 @@ use Mail;
 class MailController extends Controller
 {
     
-    protected $response;
     
-    public function __construct(ApiResponse $response)
+    public function __construct()
     {
-        $this->response = $response;
+        
     }
-
+    
     public function postFeedback(Request $request){
-       
+        
         try {
-                if($request->filled(['id', 'reaction' ,'description'])){
-
-                    $customer_id = $request->input('id');
-                    $reaction = $request->input('reaction');
-                    $email = $request->input('email');
-                    $subject = $request->input('subject');
-                    $description = $request->input('description');
-
-                    if(empty($email)){
-                       $email = "Didn't supply email";
-                    }
-
-                    if(empty($subject)){
-                        $subject = "Customer Feedback";
-                     }
-
-                    $doesCustomerExist = Customer::where('id', $customer_id)->exists();
-
-                    if($doesCustomerExist){
-                        $customer = Customer::find($customer_id);
-                        $name = $customer->first_name." ".$customer->last_name;
-                        $data = array(
-                           'name' => $name,
-                           'email' => $email,
-                           'reaction' => $reaction,
-                           'subject' => $subject,
-                           'description' => $description,
-                        );
-                        $company_email = config('app.email');
-                        Mail::to($company_email)->send(new SendMail($data));
-                        if(Mail::failures()){
-                            $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
-                            $this->response->message = 'Unable to send suggestion';
-                        }else{
-                            $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
-                            $this->response->message =  "Your suggestion has been sent successfully"; 
-                        }
-
+            if($request->filled(['id', 'reaction' ,'description'])){
+                
+                $customer_id = $request->input('id');
+                $reaction = $request->input('reaction');
+                $email = $request->input('email');
+                $subject = $request->input('subject');
+                $description = $request->input('description');
+                
+                if(empty($email)){
+                    $email = "Didn't supply email";
+                }
+                
+                if(empty($subject)){
+                    $subject = "Customer Feedback";
+                }
+                
+                $doesCustomerExist = Customer::where('id', $customer_id)->exists();
+                
+                if($doesCustomerExist){
+                    $customer = Customer::find($customer_id);
+                    $name = $customer->first_name." ".$customer->last_name;
+                    $data = array(
+                        'name' => $name,
+                        'email' => $email,
+                        'reaction' => $reaction,
+                        'subject' => $subject,
+                        'description' => $description,
+                    );
+                    $company_email = config('app.email');
+                    Mail::to($company_email)->send(new SendMail($data));
+                    if(Mail::failures()){
+                        $message = 'Unable to send suggestion';
+                        return Helper::sendFailedHttpResponse($message);
+                        
                     }else{
-                        $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
-                        $this->response->message = "Unable to find customer with supplied details";
+                        $message =  "Your suggestion has been sent successfully"; 
+                        return Helper::sendOkHttpMessage($message);
+                        
                     }
+                    
+                }else{
+                    $message = "Unable to find customer with supplied details";
+                    return Helper::sendFailedHttpResponse($message);
+                    
                 }
-                else{
-                    $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
-                    $this->response->message = "Unable to process request";
-                }
+            }
+            else{
+                $message = "Unable to process request";
+                return Helper::sendFailedHttpResponse($message);
+                
+            }
             
         } catch (\Exception $ex) {
-            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
-            $this->response->message = $ex->getMessage();
-            $this->response->data = $ex->getMessage();
+            $message = $ex->getMessage();
+            return Helper::sendFailedHttpResponse($message);
+            
         }
-        
-        return response()->json($this->response);
     }
-
-
-
-
+    
+    
+    
+    
 }

@@ -6,20 +6,19 @@ use Illuminate\Http\Request;
 use App\Models\Company;
 use App\Repositories\CompanyRepository;
 use App\Models\User;
-use App\Helpers\ApiResponse;
 use App\Helpers\formattedApiResponse;
 use Helper;
 use Globals;
 
 class CompanySettingsController extends Controller
 {
-
-
+    
+    
     protected $response;
     
-    public function __construct(ApiResponse $response)
+    public function __construct()
     {
-        $this->response = $response;
+        
     }
     
     /**
@@ -29,10 +28,10 @@ class CompanySettingsController extends Controller
     */
     public function index(CompanyRepository $companyRepo)
     {
-
-       $company = $companyRepo->getCompanyData();
-       return formattedApiResponse::getJson($company);
-              
+        
+        $company = $companyRepo->getCompanyData();
+        return formattedApiResponse::getJson($company);
+        
     }
     
     /**
@@ -53,81 +52,80 @@ class CompanySettingsController extends Controller
     */
     public function store(Request $request)
     {
-
+        
         $method = "UserController@store";
         
         try{
+            
+            if($request->filled(['user_id', 'name', 'email', 'address', 'mobile_no']))
+            {
                 
-                if($request->filled(['user_id', 'name', 'email', 'address', 'mobile_no']))
-                {
-                  
-                    if($request->has('company_id') && $request->filled('company_id')){
-                        $company_id = $request->input('company_id');
-                        $company_exists = Company::where('id','=', $company_id)->exists();
-                        if($company_exists){
-                            $company = Company::find($company_id);
-                            $name = $company->name;
-                            $action = "updated details of company ".$name."";
-                            $arr = $this->addUpdateCompany($request, $company, $action, 'edit');
-                            $this->response->statusCode= $arr['statusCode'];
-                            $this->response->message= $arr['message'];
-                            $this->response->data= $arr['data'];
-                        }else{
-                            $this->response->statusCode= Globals::$STATUS_CODE_ERROR;
-                            $this->response->message= "Unable to find company with specified id";
-                        }
+                if($request->has('company_id') && $request->filled('company_id')){
+                    $company_id = $request->input('company_id');
+                    $company_exists = Company::where('id','=', $company_id)->exists();
+                    if($company_exists){
+                        $company = Company::find($company_id);
+                        $name = $company->name;
+                        $action = "updated details of company ".$name."";
+                        $arr = $this->addUpdateCompany($request, $company, $action, 'edit');
+                        $message= $arr['message'];
+                        $data= $arr['data'];
+                        return Helper::sendOkHttpResponse(['messsage' => $message, 'data' => $data]);
                     }else{
-
-                        $name = trim($request->input('name'));
-                        $email = trim($request->input('email'));
-
-                        $name_exists = Company::where('name','=', $name)->exists();
-                        $email_exists = Company::where('email', '=', $email)->exists();
-                        if(!$name_exists){
-                            if(!$email_exists){
-                                $company = new Company();
-                                $action = "added details for company ".$name."";
-                                $arr = $this->addUpdateCompany($request, $company, $action, 'add');
-                                $this->response->statusCode= $arr['statusCode'];
-                                $this->response->message= $arr['message'];
-                                $this->response->data= $arr['data'];
-                            }else{
-                                $this->response->statusCode= Globals::$STATUS_CODE_ERROR;
-                                $this->response->message= "Company with email ".$email." already exists";
-                            }
-                        } else{
-                            $this->response->statusCode= Globals::$STATUS_CODE_ERROR;
-                            $this->response->message= "Company with name ".$name." already exists";
-                        }
+                        $message= "Unable to find company with specified id";
+                        return Helper::sendFailedHttpResponse($message);
+                        
                     }
-                    
                 }else{
-                    $this->response->statusCode= Globals::$STATUS_CODE_ERROR;
-                    $this->response->message= "Unable to process request: missing parameters";
+                    
+                    $name = trim($request->input('name'));
+                    $email = trim($request->input('email'));
+                    
+                    $name_exists = Company::where('name','=', $name)->exists();
+                    $email_exists = Company::where('email', '=', $email)->exists();
+                    if(!$name_exists){
+                        if(!$email_exists){
+                            $company = new Company();
+                            $action = "added details for company ".$name."";
+                            $arr = $this->addUpdateCompany($request, $company, $action, 'add');
+                            $message= $arr['message'];
+                            $data= $arr['data'];
+                            return Helper::sendOkHttpResponse(['message' => $message, 'data' => $data]);
+                        }else{
+                            $message= "Company with email ".$email." already exists";
+                            return Helper::sendFailedHttpResponse($message);
+                            
+                        }
+                    } else{
+                        $message= "Company with name ".$name." already exists";
+                        return Helper::sendFailedHttpResponse($message);
+                        
+                    }
                 }
+                
+            }else{
+                $message= "Unable to process request: missing parameters";
+                return Helper::sendFailedHttpResponse($message);
+                
+            }
             
         } catch (\Exception $ex) {
-            $this->response->statusCode= Globals::$STATUS_CODE_ERROR;
-            $this->response->message= $message = $ex->getMessage();
+            $message= $message = $ex->getMessage();
+            return Helper::sendFailedHttpResponse($message);
+            
         }
-        
-        $dataArr = array("code" => $this->response->statusCode,
-        "message" => $this->response->message,
-        "method" => $method);
-        Helper::LogRequest($request, $dataArr);
-        return response()->json($this->response);
         
     }
     
     private function addUpdateCompany(Request $request, $company, $action, $type){
-
+        
         if($request->has('abbreviation') && $request->filled('abbreviation')) {
             $company->abbreviation = $request->input('abbreviation');
         }
         if($request->has('motto') && $request->filled('motto')) {
             $company->motto = $request->input('motto');  
         }
-
+        
         $company->name = trim($request->input('name'));
         $company->email = trim($request->input('email'));
         $company->address = trim($request->input('address'));
@@ -135,7 +133,7 @@ class CompanySettingsController extends Controller
         $user = User::find($request->input('user_id'));
         $registra = $user->first_name." ".$user->last_name;
         $registra_id = User::where('id', $request->input('user_id'))->value('role');
-
+        
         if($company->save()){
             $statusCode = Globals::$STATUS_CODE_SUCCESS;
             $message = Helper::getMessage('success', $action);

@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Helpers\ApiResponse;
 use App\Helpers\formattedApiResponse;
 use App\Models\Client;
 use App\Repositories\ClientRepository;
@@ -17,8 +16,7 @@ class ClientController extends Controller
 
     public $response;
     
-    public function __construct(ApiResponse $response){
-        $this->response = $response;
+    public function __construct(){
     }
 
     /**
@@ -73,34 +71,34 @@ class ClientController extends Controller
                             $action = "registered client ".$client_name."";
                             $responseInfo = Helper::getMessage('success', $action);
                             Helper::logActivity($request, ['name' => $request->input('creator'), 'role' => 'admin', 'action' => $action]);
-                            $this->response->statusCode= Globals::$STATUS_CODE_SUCCESS;
-                            $this->response->message = $responseInfo; 
+                            return Helper::sendOkHttpMessage($responseInfo);
+
                         } else {
                             $messageErr = "registering client failed!";
                             $responseInfo = Helper::getMessage('error', $messageErr);
-                            $this->response->statusCode= Globals::$STATUS_CODE_FAILED;
-                            $this->response->message = $responseInfo;
+                            return Helper::sendFailedHttpResponse($responseInfo);
+
                         }
                     } else {
                         $messageErr = "Client ".$client_name." has already been registered";
                         $responseInfo = Helper::getMessage('error', $messageErr);
-                        $this->response->statusCode= Globals::$STATUS_CODE_FAILED;
-                        $this->response->message = $responseInfo;
+                        return Helper::sendFailedHttpResponse($responseInfo);
+
                     }
                     
                 }else{
                     $messageErr = "Failed to get client from request";
                     $responseInfo = Helper::getMessage('error', $messageErr);
-                    $this->response->statusCode= Globals::$STATUS_CODE_FAILED;
-                    $this->response->message = $responseInfo;
+                    return Helper::sendFailedHttpResponse($responseInfo);
+
                 }
           
         } catch (\Exception $ex) {
-            $this->response->statusCode= Globals::$STATUS_CODE_ERROR;
-            $this->response->message = $ex->getMessage();
+            $message = $ex->getMessage();
+            return Helper::sendFailedHttpResponse($message);
+
         }
-        $this->response->data = Client::count();
-        return response()->json($this->response);
+     
     }
     
     /**
@@ -145,8 +143,9 @@ class ClientController extends Controller
         
         try{
             if($validator->fails()){
-                $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
-                $this->response->message = $validator->errors()->all();
+                $message = $validator->errors()->all();
+                return Helper::sendFailedHttpResponse($message);
+
             }else{
                 
                 $author_id = $request->input('user_id');
@@ -168,19 +167,20 @@ class ClientController extends Controller
                     $role = Helper::getUserRoleName($author_id);
                     $action = "updated client ".$client_name." details";
                     Helper::logActivity($request, ['name' => $author, 'role' => $role, 'action' => $action]);
-                    $this->response->message = Helper::getMessage('success', $action);
-                    $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                    $message = Helper::getMessage('success', $action);
+                    return Helper::sendOkHttpMessage($message);
+
                 }else{
-                    $this->response->message ="Unable to update client details!";
-                    $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
+                    $message ="Unable to update client details!";
+                    return Helper::sendFailedHttpResponse($message);
+
                 }
             }
         }catch(\Exception $ex){
-            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
-            $this->response->message = $ex->getMessage();
+            $message = $ex->getMessage();
+            return Helper::sendFailedHttpResponse($message);
+
         }
-        
-        return response()->json($this->response, 200);  
     }
     
     /**
@@ -197,8 +197,9 @@ class ClientController extends Controller
         
         try{
             if($validator->fails()){
-                $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
-                $this->response->message = $validator->errors()->all();
+                $message = $validator->errors()->all();
+                return Helper::sendFailedHttpResponse($message);
+
             }else{
                 
                 $author_id = $request->input('user_id');
@@ -217,19 +218,20 @@ class ClientController extends Controller
                     $role = Helper::getUserRoleName($author_id);
                     $action = "".$activity." client ".$client_name."";
                     Helper::logActivity($request, ['name' => $author, 'role' => $role, 'action' => $action]);
-                    $this->response->message = Helper::getMessage('success', $action);
-                    $this->response->statusCode = Globals::$STATUS_CODE_SUCCESS;
+                    $message = Helper::getMessage('success', $action);
+                    return Helper::sendOkHttpMessage($message);
+
                 }else{
-                    $this->response->message ="Unable to delete client!";
-                    $this->response->statusCode = Globals::$STATUS_CODE_FAILED;
+                    $message ="Unable to delete client!";
+                    return Helper::sendFailedHttpResponse($message);
+
                 }
             }
         }catch(\Exception $ex){
-            $this->response->statusCode = Globals::$STATUS_CODE_ERROR;
-            $this->response->message = $ex->getMessage();
-        }
-        
-        return response()->json($this->response, 200);  
+            $message = $ex->getMessage();
+            return Helper::sendFailedHttpResponse($message);
+
+        }  
     }
 
 

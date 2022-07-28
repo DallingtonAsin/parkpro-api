@@ -15,7 +15,7 @@ class MobileMoneyTransactionController extends Controller
      */
     public function index()
     {
-        //
+        
     }
 
     /**
