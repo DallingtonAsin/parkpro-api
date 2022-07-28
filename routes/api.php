@@ -135,10 +135,6 @@ use App\Http\Controllers\NotificationController;
         Route::post('/verify-change-phone-number', [CustomerController::class, 'verifyChangePhoneNumber']); // done
         Route::post('/change-phone-number', [CustomerController::class, 'changePhoneNumber']); // done
         
-        
-        // The route that the button calls to initialize payment
-        Route::post('/pay', [FlutterwaveController::class, 'initialize'])->name('pay');
-        // The callback url after a payment
        
     });
     
@@ -161,7 +157,7 @@ use App\Http\Controllers\NotificationController;
             'parking-fees' => ParkingFeeController::class, // done
             'parking-areas' => ParkingAreaController::class, // done
             'parking-request' => ParkingRequestController::class, // done
-            
+    
         ]);
     });
     

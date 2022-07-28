@@ -28,10 +28,12 @@ class CompanySettingsController extends Controller
     */
     public function index(CompanyRepository $companyRepo)
     {
-        
-        $company = $companyRepo->getCompanyData();
-        return formattedApiResponse::getJson($company);
-        
+        try{
+            $company = $companyRepo->getCompanyData();
+            return formattedApiResponse::getJson($company);
+        }catch(\Exception $ex){
+            return Helper::sendFailedHttpResponse($ex->getMessage());
+        }  
     }
     
     /**

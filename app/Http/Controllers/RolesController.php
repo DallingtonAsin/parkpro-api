@@ -29,8 +29,13 @@ class RolesController extends Controller
     */
     public function index(UserRoleRepository $roleRepo)
     {
-        $roles = $roleRepo->getRoles();
-        return formattedApiResponse::getJson($roles);
+        try{
+            $roles = $roleRepo->getRoles();
+            return formattedApiResponse::getJson($roles);
+        }catch(\Exception $ex){
+            return Helper::sendFailedHttpResponse($ex->getMessage());
+        }
+        
     }
     
     /**

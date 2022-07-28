@@ -12,13 +12,13 @@ use Validator;
 
 class ClientController extends Controller
 {
-
-
+    
+    
     public $response;
     
     public function __construct(){
     }
-
+    
     /**
     * Display a listing of the resource.
     *
@@ -26,9 +26,12 @@ class ClientController extends Controller
     */
     public function index(ClientRepository $clientRepo)
     {
-      
-       $clients = $clientRepo->getClients();
-       return formattedApiResponse::getJson($clients);
+        try{
+            $clients = $clientRepo->getClients();
+            return formattedApiResponse::getJson($clients);
+        }catch(\Exception $ex){
+            return Helper::sendFailedHttpResponse($ex->getMessage());
+        }
         
     }
     
@@ -53,52 +56,52 @@ class ClientController extends Controller
         
         try{
             
-                if($request->filled(['client_name', 'address', 'mobile_number', 'email'])){
+            if($request->filled(['client_name', 'address', 'mobile_number', 'email'])){
+                
+                $client_name = $request->input('client_name');
+                $address = $request->input('address');
+                $mobile_number = $request->input('mobile_number');
+                $email = $request->input('email');
+                $count = Client::where('name', '=', $client_name)->count();
+                if($count == 0){
                     
-                    $client_name = $request->input('client_name');
-                    $address = $request->input('address');
-                    $mobile_number = $request->input('mobile_number');
-                    $email = $request->input('email');
-                    $count = Client::where('name', '=', $client_name)->count();
-                    if($count == 0){
+                    $client = new Client();
+                    $client->name = $client_name;
+                    $client->address = $address;
+                    $client->mobile_number = $mobile_number;
+                    $client->email = $email;
+                    if ($client->save()) {
+                        $action = "registered client ".$client_name."";
+                        $responseInfo = Helper::getMessage('success', $action);
+                        Helper::logActivity($request, ['name' => $request->input('creator'), 'role' => 'admin', 'action' => $action]);
+                        return Helper::sendOkHttpMessage($responseInfo);
                         
-                        $client = new Client();
-                        $client->name = $client_name;
-                        $client->address = $address;
-                        $client->mobile_number = $mobile_number;
-                        $client->email = $email;
-                        if ($client->save()) {
-                            $action = "registered client ".$client_name."";
-                            $responseInfo = Helper::getMessage('success', $action);
-                            Helper::logActivity($request, ['name' => $request->input('creator'), 'role' => 'admin', 'action' => $action]);
-                            return Helper::sendOkHttpMessage($responseInfo);
-
-                        } else {
-                            $messageErr = "registering client failed!";
-                            $responseInfo = Helper::getMessage('error', $messageErr);
-                            return Helper::sendFailedHttpResponse($responseInfo);
-
-                        }
                     } else {
-                        $messageErr = "Client ".$client_name." has already been registered";
+                        $messageErr = "registering client failed!";
                         $responseInfo = Helper::getMessage('error', $messageErr);
                         return Helper::sendFailedHttpResponse($responseInfo);
-
+                        
                     }
-                    
-                }else{
-                    $messageErr = "Failed to get client from request";
+                } else {
+                    $messageErr = "Client ".$client_name." has already been registered";
                     $responseInfo = Helper::getMessage('error', $messageErr);
                     return Helper::sendFailedHttpResponse($responseInfo);
-
+                    
                 }
-          
+                
+            }else{
+                $messageErr = "Failed to get client from request";
+                $responseInfo = Helper::getMessage('error', $messageErr);
+                return Helper::sendFailedHttpResponse($responseInfo);
+                
+            }
+            
         } catch (\Exception $ex) {
             $message = $ex->getMessage();
             return Helper::sendFailedHttpResponse($message);
-
+            
         }
-     
+        
     }
     
     /**
@@ -145,7 +148,7 @@ class ClientController extends Controller
             if($validator->fails()){
                 $message = $validator->errors()->all();
                 return Helper::sendFailedHttpResponse($message);
-
+                
             }else{
                 
                 $author_id = $request->input('user_id');
@@ -153,7 +156,7 @@ class ClientController extends Controller
                 $address = $request->input('address');
                 $mobile_number = $request->input('mobile_number');
                 $email = $request->input('email');
-
+                
                 $client = Client::find($id);
                 $client_name = $client->name;
                 
@@ -161,7 +164,7 @@ class ClientController extends Controller
                 $client->address = $address;
                 $client->mobile_number = $mobile_number;
                 $client->email = $email;
-
+                
                 if($client->save()){
                     $author = Helper::getUserNames($author_id);
                     $role = Helper::getUserRoleName($author_id);
@@ -169,17 +172,17 @@ class ClientController extends Controller
                     Helper::logActivity($request, ['name' => $author, 'role' => $role, 'action' => $action]);
                     $message = Helper::getMessage('success', $action);
                     return Helper::sendOkHttpMessage($message);
-
+                    
                 }else{
                     $message ="Unable to update client details!";
                     return Helper::sendFailedHttpResponse($message);
-
+                    
                 }
             }
         }catch(\Exception $ex){
             $message = $ex->getMessage();
             return Helper::sendFailedHttpResponse($message);
-
+            
         }
     }
     
@@ -199,13 +202,13 @@ class ClientController extends Controller
             if($validator->fails()){
                 $message = $validator->errors()->all();
                 return Helper::sendFailedHttpResponse($message);
-
+                
             }else{
                 
                 $author_id = $request->input('user_id');
                 $client = Client::find($id);
                 $client_name = $client->name; 
-
+                
                 $is_deleted = $client->is_deleted;
                 $undo = !$is_deleted;
                 $activity = $undo ? 'deleted': 'restored';
@@ -213,28 +216,28 @@ class ClientController extends Controller
                 
                 $client->is_deleted = $undo;
                 $client->deleted_by = $author_id;
-
+                
                 if($client->save()){
                     $role = Helper::getUserRoleName($author_id);
                     $action = "".$activity." client ".$client_name."";
                     Helper::logActivity($request, ['name' => $author, 'role' => $role, 'action' => $action]);
                     $message = Helper::getMessage('success', $action);
                     return Helper::sendOkHttpMessage($message);
-
+                    
                 }else{
                     $message ="Unable to delete client!";
                     return Helper::sendFailedHttpResponse($message);
-
+                    
                 }
             }
         }catch(\Exception $ex){
             $message = $ex->getMessage();
             return Helper::sendFailedHttpResponse($message);
-
+            
         }  
     }
-
-
-
-
+    
+    
+    
+    
 }

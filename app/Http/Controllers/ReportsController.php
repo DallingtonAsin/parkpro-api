@@ -20,49 +20,75 @@ use Helper;
 
 class ReportsController extends Controller
 {
-
-  
+    
+    
     public function index(ReportRepository $reportRepo){
-
-        $data = $reportRepo->getIndexData();
-        return formattedApiResponse::getJson($data);
+        try{
+            $data = $reportRepo->getIndexData();
+            return formattedApiResponse::getJson($data);
+        }catch(\Exception $ex){
+            return Helper::sendFailedHttpResponse($ex->getMessage());
+        }
+        
     }
-
-
+    
+    
     public function requestMonthlyReview(ReportRepository $reportRepo){
-
-        $data = $reportRepo->getRequestMonthlyReviewData();
-        return formattedApiResponse::getJson($data);
-
+        try{
+            $data = $reportRepo->getRequestMonthlyReviewData();
+            return formattedApiResponse::getJson($data);
+        }catch(\Exception $ex){
+            return Helper::sendFailedHttpResponse($ex->getMessage());
+        }
+        
+        
     }
-
+    
     public function incomeMonthlyReview(ReportRepository $reportRepo){
-
-        $data = $reportRepo->getMonthlyIncomeReviewData();
-        return formattedApiResponse::getJson($data);
-
+        try{
+            $data = $reportRepo->getMonthlyIncomeReviewData();
+            return formattedApiResponse::getJson($data);
+            
+        }catch(\Exception $ex){
+            return Helper::sendFailedHttpResponse($ex->getMessage());
+        }
+        
     }
-
+    
     public function GetMonthlyRequestsData(ReportRepository $reportRepo)
     {
-
-        $data = $reportRepo->getRequestMonthlyData();
-        return formattedApiResponse::getJson($data);
+        try{
+            $data = $reportRepo->getRequestMonthlyData();
+            return formattedApiResponse::getJson($data);
+            
+        }catch(\Exception $ex){
+            return Helper::sendFailedHttpResponse($ex->getMessage());
+        }
+        
     }
-
-
+    
+    
     public function GetMonthlyIncomeData(ReportRepository $reportRepo)
     {
-
-        $data = $reportRepo->getIncomeMonthlyData();
-        return formattedApiResponse::getJson($data);
-
+        try{
+            $data = $reportRepo->getIncomeMonthlyData();
+            return formattedApiResponse::getJson($data);
+        }catch(\Exception $ex){
+            return Helper::sendFailedHttpResponse($ex->getMessage());
+        }
+        
+        
     }
-
+    
     public function fetchLogs(SystemAuditRepository $auditRepo)
     {
-        $logs = $auditRepo->getLogs();
-        return formattedApiResponse::getJson($logs);
+        try{
+            $logs = $auditRepo->getLogs();
+            return formattedApiResponse::getJson($logs);
+        }catch(\Exception $ex){
+            return Helper::sendFailedHttpResponse($ex->getMessage());
+        }
+        
     }
     
     

@@ -76,7 +76,7 @@ class UserController extends Controller
                         $user = Auth::user();
                         $user['access_token'] = $user->createToken('User->'.$user->username, ['user'])->accessToken;
                         Helper::logActivity($request, ['name' => $login, 'role' => 'admin', 'action' => $action]);
-                        return Helper::sendOkHttpResponse($user);
+                        return Helper::sendOkHttpResponse(['message' => 'SUCCESS', 'data' => $user]);
                     }
                 }else{
                     $message= 'Your account was removed, see admin';
@@ -130,8 +130,13 @@ private function isAccountDeleted($id){
 */
 public function index(UserRepository $userrepo)
 {
-    $users = $userrepo->getUsers();
-    return formattedApiResponse::getJson($users);
+    try{
+        $users = $userrepo->getUsers();
+        return formattedApiResponse::getJson($users);
+    }catch(\Exception $ex){
+        return Helper::sendFailedHttpResponse($ex->getMessage());
+    }
+    
 }
 
 /**
@@ -854,7 +859,7 @@ public function stores(Request $request)
                             $name = $user->first_name." ".$user->last_name;
                             Helper::logActivity($request, ['name' => $name, 'role' => Helper::getUserRole($user->role), 'action' => $action]);
                             $message = Helper::getMessage('success', $action);
-                            return Helper::sendOkHttpMessage($message);
+                            return Helper::sendOkHttpMessage(['message' => $message, 'data' => $user]);
                             
                         }else{
                             $message = "Unable to change your password";
@@ -915,7 +920,7 @@ public function stores(Request $request)
                         $action = "".$statusAction." ".$names."'s account";
                         Helper::logActivity($request, ['name' => $author, 'role' => $role, 'action' => $action]);
                         $message = Helper::getMessage('success', $action);
-                        return Helper::sendOkHttpMessage($message);
+                        return Helper::sendOkHttpMessage(['$message' => $message, 'data' => $user]);
                         
                     }else{
                         $message ="Unable to ".$statusAction." user account!";

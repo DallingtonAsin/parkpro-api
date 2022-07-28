@@ -26,8 +26,12 @@ class ParkingAreaController extends Controller
     */
     public function index(ParkingAreaRepository $parkingAreaRepo)
     {
-        $parking_areas = $parkingAreaRepo->getParkingAreas();
-        return formattedApiResponse::getJson($parking_areas);
+        try{
+            $parking_areas = $parkingAreaRepo->getParkingAreas();
+            return formattedApiResponse::getJson($parking_areas);
+        }catch(\Exception $ex){
+            return Helper::sendFailedHttpResponse($ex->getMessage());
+        }
     }
     
     public function findParking(ParkingAreaRepository $parkingAreaRepo, Request $request)
@@ -299,7 +303,7 @@ class ParkingAreaController extends Controller
                     $action = "updated parking ".$parking_name." details";
                     Helper::logActivity($request, ['name' => $author, 'role' => $role, 'action' => $action]);
                     $message = Helper::getMessage('success', $action);
-                    return Helper::sendOkHttpMessage($message);
+                    return Helper::sendOkHttpResponse(['message' => $message, 'data' => $parking]);
                     
                 }else{
                     $responseInfo ="Unable to update parking area details!";
@@ -348,7 +352,7 @@ class ParkingAreaController extends Controller
                     $action = "".$activity." parking ".$parking_name."";
                     Helper::logActivity($request, ['name' => $author, 'role' => $role, 'action' => $action]);
                     $message = Helper::getMessage('success', $action);
-                    return Helper::sendOkHttpMessage($message);
+                    return Helper::sendOkHttpResponse(['message' => $message, 'data' => $parking]);
                     
                 }else{
                     $message ="Unable to delete parking!";

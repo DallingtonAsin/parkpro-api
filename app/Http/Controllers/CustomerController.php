@@ -38,8 +38,12 @@ class CustomerController extends Controller
     */
     public function index(CustomerRepository $customerRepo)
     {
-        $customers = $customerRepo->getCustomers();
-        return formattedApiResponse::getJson($customers);
+        try{
+            $customers = $customerRepo->getCustomers();
+            return formattedApiResponse::getJson($customers);
+        }catch(\Exception $ex){
+            return Helper::sendFailedHttpResponse($ex->getMessage());
+        }  
         
     }
     
@@ -108,8 +112,8 @@ class CustomerController extends Controller
                 ]);
                 
                 $data = $this->sendVerificationCode($customer, $otp);
-                return Helper::sendOkHttpResponse($data);
-
+                return Helper::sendOkHttpResponse(['message' => 'OTP inserted successfully', 'data' => $data]);
+                
             }else{
                 
                 $customer = new Customer();
@@ -127,7 +131,7 @@ class CustomerController extends Controller
                 if($customer->save()){
                     $data = $this->sendVerificationCode($customer, $otp);
                     return Helper::sendOkHttpResponse($data);
-
+                    
                 } else{
                     $message = "Unable to register customer phone number";
                     return Helper::sendFailedHttpResponse($message);
@@ -173,8 +177,8 @@ public function resendOTP(Request $request){
                 
                 $otp = $this->smsService->generateNumericOTP(4); // $customer->otp
                 $data = $this->sendVerificationCode($customer, $otp);
-                return Helper::sendOkHttpResponse($data);
-
+                return Helper::sendOkHttpResponse(['message' => 'SUCCESS', 'data' => $data]);
+                
             }else{
                 $message = "Unable to find customer with supplied details";
                 return Helper::sendFailedHttpResponse($message);
@@ -243,7 +247,7 @@ public function verifyChangePhoneNumber(Request $request){
                         $data = $this->sendVerificationCode($user, $otp);
                         $data['new_country_code'] = $user->new_country_code;
                         $data['new_phone_number'] = $user->new_phone_number;
-                        return Helper::sendOkHttpResponse($data);
+                        return Helper::sendOkHttpResponse(['message' => 'SUCCESS', 'data' => $data]);
                         
                         
                     }else{
@@ -385,7 +389,7 @@ public function changePin(Request $request){
                         $isUpdated = $customer->update(['pin' => $newHashedPin]);
                         if($isUpdated){
                             $message = "Your pin has been changed successfully";
-                            return Helper::sendFailedHttpResponse($message);
+                            return Helper::sendOkHttpResponse(['message' => $message, 'data' => $customer]);
                         }else{
                             $message = "Unable to change your pin"; 
                             return Helper::sendFailedHttpResponse($message);
@@ -753,7 +757,7 @@ public function createProfile(Request $request){
                     $message = Helper::getMessage('success', $action);
                     $customerData = Helper::getCustomerData($customerId);
                     $customerData['access_token'] = $customer->createToken('Customer'.$customer->country_code.''.$customer->phone_number, ['customer'])->accessToken;
-                    return Helper::sendOkHttpResponse($customerData);
+                    return Helper::sendOkHttpResponse(['message' => $message, 'data' => $customerData]);
                     
                 }else{
                     $message ="Unable to update customer account profile!";

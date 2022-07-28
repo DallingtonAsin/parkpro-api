@@ -28,8 +28,13 @@ class ParkingFeeController extends Controller
     */
     public function index(ParkingFeeRepository $parkingFeeRepo)
     {
-        $parking_fees = $parkingFeeRepo->getParkingFees();
-        return formattedApiResponse::getJson($parking_fees);
+        try{
+            $parking_fees = $parkingFeeRepo->getParkingFees();
+            return formattedApiResponse::getJson($parking_fees);
+        }catch(\Exception $ex){
+            return Helper::sendFailedHttpResponse($ex->getMessage());
+        }  
+        
     }
     
     
@@ -211,7 +216,7 @@ class ParkingFeeController extends Controller
                     $action = "updated fee for parking ".$parking->name." on vehicle type ".$vehicleType->name."";
                     Helper::logActivity($request, ['name' => $author, 'role' => $role, 'action' => $action]);
                     $message = Helper::getMessage('success', $action);
-                    return Helper::sendOkHttpMessage($message);
+                    return Helper::sendOkHttpResponse(['message' => $message, 'data' => $parkingFee]);
                     
                 }else{
                     $message = "Unable to update parking fee!";
@@ -261,7 +266,7 @@ class ParkingFeeController extends Controller
                     $action = "".$activity." fee for parking ".$parking->name." on vehicle type ".$vehicleType->name."";
                     Helper::logActivity($request, ['name' => $author, 'role' => $role, 'action' => $action]);
                     $message = Helper::getMessage('success', $action);
-                    return Helper::sendOkHttpMessage($message);
+                    return Helper::sendOkHttpResponse(['message' => $message, 'data' => $parkingFee]);
                     
                 }else{
                     $message ="Unable to delete parking fee!";

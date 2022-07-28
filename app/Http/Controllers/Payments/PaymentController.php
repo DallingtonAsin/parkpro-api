@@ -63,7 +63,7 @@ class PaymentController extends Controller
         
         try {
             $data = LaramanBeyonic::createCollectionRequest($paymentData);
-            return Helper::sendOkHttpResponse($data);
+            return Helper::sendOkHttpResponse(['message' => 'SUCCESS', 'data' => $data]);
         } catch (\Exception $ex) {
             $message = $ex->getMessage();
             return Helper::sendFailedHttpResponse($message);
@@ -88,8 +88,8 @@ class PaymentController extends Controller
             ];
             
             try {
-                $response = LaramanBeyonic::createCollection($requestData);
-                dd($response);
+                $data = LaramanBeyonic::createCollection($requestData);
+                return Helper::sendOkHttpResponse(['message' => 'SUCCESS', 'data' => $data]);
             } catch (\Exception $ex) {
                 $error = json_decode($ex->getMessage());
             }
@@ -248,7 +248,7 @@ class PaymentController extends Controller
                             $isLogged = $this->moMoService->insertTransactionInDB($request, $customer, $charge);
                             $redirect_link = $charge['data']['redirect'];
                             $respData['link'] = $redirect_link;
-                            return Helper::sendOkHttpResponse($respData);
+                            return Helper::sendOkHttpResponse(['message' => 'SUCCESS', 'data' => $respData]);
                             
                         }else{
                             $message = Globals::$STATUS_DESC_FAILED;

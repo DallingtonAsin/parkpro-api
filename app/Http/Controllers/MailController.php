@@ -58,7 +58,7 @@ class MailController extends Controller
                         
                     }else{
                         $message =  "Your suggestion has been sent successfully"; 
-                        return Helper::sendOkHttpMessage($message);
+                        return Helper::sendOkHttpResponse(['message' => $message, 'data' => $customer]);
                         
                     }
                     

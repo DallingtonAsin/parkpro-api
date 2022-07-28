@@ -12,9 +12,9 @@ use Validator;
 
 class VehicleCategoryController extends Controller
 {
-
+    
     public function __construct(){
-       
+        
     }
     /**
     * Display a listing of the resource.
@@ -23,8 +23,13 @@ class VehicleCategoryController extends Controller
     */
     public function index(VehicleCategoryRepository $vehicleRepo)
     {
-        $vehicle_categories = $vehicleRepo->getVehicleCategories();
-        return formattedApiResponse::getJson($vehicle_categories);
+        try{
+            $vehicle_categories = $vehicleRepo->getVehicleCategories();
+            return formattedApiResponse::getJson($vehicle_categories);
+        }catch(\Exception $ex){
+            return Helper::sendFailedHttpResponse($ex->getMessage());
+        }
+        
     }
     
     /**
@@ -60,8 +65,8 @@ class VehicleCategoryController extends Controller
                         $action = "added vehicle category ".$name."";
                         $responseInfo = Helper::getMessage('success', $action);
                         Helper::logActivity($request, ['name' => 'Dallington', 'role' => 'admin', 'action' => $action]);
-                        return Helper::sendOkHttpMessage($responseInfo);
-
+                        return Helper::sendOkHttpResponse(['message' => $responseInfo, 'data' => $vehicleCat]);
+                        
                     } else {
                         $messageErr = "adding vehicle category failed!";
                         $responseInfo = Helper::getMessage('error', $messageErr);
@@ -129,20 +134,20 @@ class VehicleCategoryController extends Controller
                 
                 $author_id = $request->input('user_id');
                 $name = $request->input('name');
-
+                
                 $vehicleType = VehicleCategory::find($id);
                 $vehicle_type = $vehicleType->name;
                 
                 $vehicleType->name = ucfirst($name);
-
+                
                 if($vehicleType->save()){
                     $author = Helper::getUserNames($author_id);
                     $role = Helper::getUserRoleName($author_id);
                     $action = "updated vehicle type ".$vehicle_type." details";
                     Helper::logActivity($request, ['name' => $author, 'role' => $role, 'action' => $action]);
                     $message = Helper::getMessage('success', $action);
-                    return Helper::sendOkHttpMessage($responseInfo);
-
+                    return Helper::sendOkHttpResponse(['message' => $responseInfo, 'data' => $vehicleType]);
+                    
                 }else{
                     $message ="Unable to update vehicle type details!";
                     return Helper::sendFailedHttpResponse($message);
@@ -176,7 +181,7 @@ class VehicleCategoryController extends Controller
                 $author_id = $request->input('user_id');
                 $vehicleType = VehicleCategory::find($id);
                 $vehicle_type = $vehicleType->name; 
-
+                
                 $is_deleted = $vehicleType->is_deleted;
                 $undo = !$is_deleted;
                 $activity = $undo ? 'deleted': 'restored';
@@ -184,14 +189,14 @@ class VehicleCategoryController extends Controller
                 
                 $vehicleType->is_deleted = $undo;
                 $vehicleType->deleted_by = $author_id;
-              
+                
                 if($vehicleType->save()){
                     $role = Helper::getUserRoleName($author_id);
                     $action = "".$activity." vehicle category ".$vehicle_type."";
                     Helper::logActivity($request, ['name' => $author, 'role' => $role, 'action' => $action]);
                     $message = Helper::getMessage('success', $action);
                     return Helper::sendOkHttpMessage($responseInfo);
-
+                    
                 }else{
                     $message ="Unable to delete vehicle category!";
                     return Helper::sendFailedHttpResponse($message);
@@ -201,6 +206,6 @@ class VehicleCategoryController extends Controller
             $message = $ex->getMessage();
             return Helper::sendFailedHttpResponse($message);
         }
-          
+        
     }
 }

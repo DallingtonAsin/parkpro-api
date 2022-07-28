@@ -51,8 +51,9 @@ class NotificationController extends Controller
                     $respCode= $res->getStatusCode();
                     
                     if($respCode == '200'){
+                        $data = $customer;
                         $data['fcm_token'] = $fcmToken;
-                        return Helper::sendOkHttpResponse($data);
+                        return Helper::sendOkHttpResponse(['message' => 'SUCCESS', 'data' => $data]);
                         
                     }else{
                         $message = Globals::$STATUS_CODE_ERROR;
