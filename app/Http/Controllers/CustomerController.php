@@ -342,7 +342,9 @@ public function changePhoneNumber(Request $request){
                             $userData['country_code'] = $user->country_code;
                             $userData['phone_number'] = $user->phone_number;
                             $userData['is_registered'] = $user->profile_status;
-                            $userData['access_token'] = $user->createToken('Customer'.$user->country_code.''.$user->phone_number, ['customer'])->accessToken;
+                            if(empty($userData['access_token'])){
+                                $userData['access_token'] = $user->createToken('Customer'.$user->country_code.''.$user->phone_number, ['customer'])->accessToken;
+                            }
                             
                             $message = "Your phone number has been changed successfully";
                             return Helper::sendOkHttpResponse(['message' => $message, 'data' => $userData]);

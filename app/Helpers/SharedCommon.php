@@ -63,9 +63,7 @@ class SharedCommon
             $currentBalance = self::getCurrentCustomerBalance($customer_id);
             $customer->update(['account_balance' => $currentBalance]);
             $customer->account_balance = number_format($currentBalance);
-            // if($customer->account_balance >= 1000){
-            //     $customer->account_balance = number_format($currentBalance);
-            // }
+            $customer->access_token = $customer->createToken('Customer'.$customer->country_code.''.$customer->phone_number, ['customer'])->accessToken;
             if(!empty($customer->image)){
                 $customer->image = Storage::disk('appImages')->url($customer->image);
             }
