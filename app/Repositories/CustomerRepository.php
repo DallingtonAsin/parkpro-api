@@ -3,23 +3,35 @@
 namespace App\Repositories;
 
 use App\Models\Customer;
+use Helper;
 
 class CustomerRepository{
-
+   
    // property
-   public $customers;
-
+   public $customer, $customers;
+   
    // Method
    public function getCustomers(){
-
-    $this->customers = Customer::orderBy('id', 'desc')->get();
-    return $this->customers;
-
+      try{
+         $this->customers = Customer::orderBy('id', 'desc')->get();
+         return $this->customers;
+      }catch(\Exception $ex){
+         throw $ex;
+      }
    }
 
-
-
-
-
-
+   public function findCustomer($customerId){
+      try{
+         $this->customer = Helper::getCustomerData($customerId);
+         return $this->customer;
+      }catch(\Exception $ex){
+         throw $ex;
+      }
+   }
+   
+   
+   
+   
+   
+   
 }

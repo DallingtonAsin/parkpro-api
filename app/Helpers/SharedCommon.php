@@ -44,7 +44,7 @@ class SharedCommon
         return $resp;
     }
     
-    public static function computeUserBalance($customerId){
+    public static function getCurrentCustomerBalance($customerId){
         try{
 
             $totalDeposits = MobileMoneyTransaction::where('customerId', $customerId)->where('status', 'SUCCESSFUL')->sum('amount');
@@ -60,7 +60,7 @@ class SharedCommon
     public static function getCustomerData($customer_id){
         try{
             $customer = Customer::find($customer_id);
-            $currentBalance = self::computeUserBalance($customer_id);
+            $currentBalance = self::getCurrentCustomerBalance($customer_id);
             $customer->update(['account_balance' => $currentBalance]);
             $customer->account_balance = number_format($currentBalance);
             // if($customer->account_balance >= 1000){
@@ -117,10 +117,6 @@ class SharedCommon
         }
         return $resp;
     }
-    
-    
-    
-    
     
     public static function logError($data)
     {
@@ -248,8 +244,13 @@ class SharedCommon
     public static function recordLedgerTransaction($transactionDetails){
         $isInserted = false;
         try{
-            if(CustomersLedger::create($transactionDetails)){
-                $isInserted = true;
+            $tranExists = CustomersLedger::where('reference', $transactionDetails['reference'])->exists();
+            if($tranExists){
+                // transaction exists
+            }else{
+                if(CustomersLedger::create($transactionDetails)){
+                    $isInserted = true;
+                }
             }
             return $isInserted;
         }catch(Exception $ex){
