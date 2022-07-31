@@ -8,6 +8,7 @@ use KingFlamez\Rave\Facades\Rave as Flutterwave;
 use App\Services\Payments\FlutterWaveService;
 use App\Services\Transaction\MobileMoney\MMService;
 use App\Models\MobileMoneyTransaction;
+use App\Services\Firebase\FCMService;
 use Illuminate\Support\Facades\Log;
 use Helper;
 use Globals;
@@ -15,12 +16,13 @@ use Globals;
 class FlutterwaveController extends Controller
 {
     
-    protected $flutterWaveService, $moMoService;
-    
-    public function __construct(FlutterWaveService $flutterWaveService, MMService $moMoService)
+    protected $flutterWaveService, $moMoService, $firebaseService;
+
+    public function __construct(FlutterWaveService $flutterWaveService, MMService $moMoService, FCMService $firebaseService)
     {
         $this->flutterWaveService = $flutterWaveService;
         $this->moMoService = $moMoService;
+        $this->firebaseService = $firebaseService;
     }
     
     /**
@@ -117,6 +119,12 @@ class FlutterwaveController extends Controller
                     $ledger['date'] = date('Y-m-d', strtotime($payment_date));
 
                     Helper::recordLedgerTransaction($ledger);
+                    $currentBalance = Helper::getCurrentCustomerBalance($customerIdInDB);
+                    $notification = [
+                        'title' => 'Payment',
+                        'body' => "You have successfully deposited ".$currency." ".number_format($charged_amount)." on ".date('Y-m-d H:i:s', strtotime($payment_date)).". New wallet balance: ".$currency." ".number_format($currentBalance).". ID: ".$transactionId."",
+                    ];
+                    $this->firebaseService->send($customerIdInDB, $notification);
 
                   }
                 }
@@ -140,6 +148,9 @@ class FlutterwaveController extends Controller
                 ]);
                 
             }
+
+          
+            
         }
         
         

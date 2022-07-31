@@ -17,6 +17,8 @@ use Globals;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use App\Models\CustomersLedger;
+use App\Models\MobileMoneyTransaction;
+use App\Models\ParkingRequest;
 
 class SharedCommon
 {
@@ -42,14 +44,30 @@ class SharedCommon
         return $resp;
     }
     
+    public static function getCurrentCustomerBalance($customerId){
+        try{
+
+            $totalDeposits = MobileMoneyTransaction::where('customerId', $customerId)->where('status', 'SUCCESSFUL')->sum('amount');
+            $totalUsedInOrders = ParkingRequest::where('customer_id', $customerId)->where('status', 'APPROVED')->sum('amount');
+            $currentBalance = $totalDeposits - $totalUsedInOrders; 
+            return $currentBalance;
+            
+        }catch(\Exception $ex){
+            throw $ex;
+        }
+    }
+    
     public static function getCustomerData($customer_id){
         try{
             $customer = Customer::find($customer_id);
-            if($customer->account_balance >= 1000){
-                $customer->account_balance = number_format($customer->account_balance);
-            }
+            $currentBalance = self::getCurrentCustomerBalance($customer_id);
+            $customer->update(['account_balance' => $currentBalance]);
+            $customer->account_balance = number_format($currentBalance);
+            // if($customer->account_balance >= 1000){
+            //     $customer->account_balance = number_format($currentBalance);
+            // }
             if(!empty($customer->image)){
-                 $customer->image = Storage::disk('appImages')->url($customer->image);
+                $customer->image = Storage::disk('appImages')->url($customer->image);
             }
             return $customer;
         }catch(\Exception $ex){
@@ -99,10 +117,6 @@ class SharedCommon
         }
         return $resp;
     }
-    
-    
-    
-    
     
     public static function logError($data)
     {
@@ -179,31 +193,31 @@ class SharedCommon
         : $message = "You have successfully ".$activity."";
         return $message;
     }
-
+    
     public static function sendOkHttpResponse($data){
-       try{
-          return response()->json($data);
-       }catch(\Exception $ex){
-        throw $ex;
-       }
+        try{
+            return response()->json($data);
+        }catch(\Exception $ex){
+            throw $ex;
+        }
     }
-
+    
     public static function sendOkHttpMessage($message){
         try{
-           return response()->json(["message" => $message], Globals::$STATUS_CODE_SUCCESS);
+            return response()->json(["message" => $message], Globals::$STATUS_CODE_SUCCESS);
         }catch(\Exception $ex){
-         throw $ex;
+            throw $ex;
         }
-     }
-
-
+    }
+    
+    
     public static function sendFailedHttpResponse($message){
         try{
             return response()->json(["message" => $message], Globals::$STATUS_CODE_FAILED);
         }catch(\Exception $ex){
-         throw $ex;
+            throw $ex;
         }
-     }
+    }
     
     public static function getUserRole($id){
         $role = Role::find($id);
@@ -230,8 +244,13 @@ class SharedCommon
     public static function recordLedgerTransaction($transactionDetails){
         $isInserted = false;
         try{
-            if(CustomersLedger::create($transactionDetails)){
-                $isInserted = true;
+            $tranExists = CustomersLedger::where('reference', $transactionDetails['reference'])->exists();
+            if($tranExists){
+                // transaction exists
+            }else{
+                if(CustomersLedger::create($transactionDetails)){
+                    $isInserted = true;
+                }
             }
             return $isInserted;
         }catch(Exception $ex){
@@ -255,7 +274,7 @@ class SharedCommon
             throw $ex;
         }
     }
-
+    
     public static function creditCustomerAccount($customerId, $amount){
         $isDeducted = false;
         try{
@@ -272,7 +291,7 @@ class SharedCommon
             throw $ex;
         }
     }
-
+    
     public static function generateRandomNumber(){
         return random_int(1000000000, 99999999999);
     }

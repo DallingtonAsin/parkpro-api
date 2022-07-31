@@ -12,9 +12,9 @@ use Helper;
 
 class NotificationController extends Controller
 {
-    protected $firebaseService, $response;
+    protected $firebaseService;
     
-    public function __construct(FCMService $firebaseService, ApiResponse $response)
+    public function __construct(FCMService $firebaseService)
     {
         $this->firebaseService = $firebaseService;
     }
@@ -30,7 +30,7 @@ class NotificationController extends Controller
         ]);
         
         try{
-            
+           
             if($validator->fails()){
                 $message = $validator->errors()->all();
                 return Helper::sendFailedHttpResponse($message);
@@ -41,19 +41,18 @@ class NotificationController extends Controller
                 if($exists){
                     
                     $customer = Customer::find($userId);
-                    $fcmToken = $customer->fcm_token;
-                    
+                   
                     $notification = [
-                        'title' => 'Goodnight',
-                        'body' => 'Have a blessed night sir?',
+                        'title' => 'Payment',
+                        'body' => 'We have received your payment',
                     ];
-                    $res = $this->firebaseService->send($fcmToken, $notification);
+                    $res = $this->firebaseService->send($customer->id, $notification);
                     $respCode= $res->getStatusCode();
                     
                     if($respCode == '200'){
-                        $data = $customer;
-                        $data['fcm_token'] = $fcmToken;
-                        return Helper::sendOkHttpResponse(['message' => 'SUCCESS', 'data' => $data]);
+                        $fcmToken = $customer->fcm_token;
+                        $customer->fcm_token = $fcmToken;
+                        return Helper::sendOkHttpResponse(['message' => 'SUCCESS', 'data' => $customer]);
                         
                     }else{
                         $message = Globals::$STATUS_CODE_ERROR;
