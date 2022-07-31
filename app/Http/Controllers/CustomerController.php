@@ -47,6 +47,28 @@ class CustomerController extends Controller
         
     }
     
+    
+    public function getCustomerDetails(Request $request, CustomerRepository $customerRepo)
+    {
+        $validator = Validator::make($request->all(), [
+            'id' => 'required'
+        ]);
+        
+        try{
+            if($validator->fails()){
+                $message = $validator->errors()->all();
+                return Helper::sendFailedHttpResponse($message);
+            }else{
+                $customerId = $request->input('id');
+                $customer = $customerRepo->findCustomer($customerId);
+                return formattedApiResponse::getJson($customer);
+            }
+        }catch(\Exception $ex){
+            return Helper::sendFailedHttpResponse($ex->getMessage());
+        }  
+        
+    }
+    
     private function getCustomerId($phone_number){
         $customerId = Customer::where('phone_number',$phone_number)
         ->value('id');
