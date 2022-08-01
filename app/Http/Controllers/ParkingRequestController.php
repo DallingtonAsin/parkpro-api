@@ -433,6 +433,7 @@ class ParkingRequestController extends Controller
                             if($parkingRequest->save()){
                                 
                                 $message  = "Your request has been submitted and approved successfully.";
+                                $customerData = Helper::getCustomerData($customer_id);
                                 $data = array(
                                     'customer_id' => $customer_id,
                                     'order_no' => $orderNo,
@@ -440,7 +441,7 @@ class ParkingRequestController extends Controller
                                     'status' => $status,
                                     'request_date' => $request_date
                                 );
-                                return Helper::sendOkHttpResponse(["message" => $message, "data" => $data]);
+                                return Helper::sendOkHttpResponse(["message" => $message, "data" => $$customerData]);
                                 
                             }else{
                                 $message = "Unable to submit request";
