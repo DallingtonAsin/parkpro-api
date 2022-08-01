@@ -441,7 +441,7 @@ class ParkingRequestController extends Controller
                                     'status' => $status,
                                     'request_date' => $request_date
                                 );
-                                return Helper::sendOkHttpResponse(["message" => $message, "data" => $$customerData]);
+                                return Helper::sendOkHttpResponse(["message" => $message, "data" => $customerData]);
                                 
                             }else{
                                 $message = "Unable to submit request";
