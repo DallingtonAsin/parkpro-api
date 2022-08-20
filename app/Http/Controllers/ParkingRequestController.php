@@ -437,6 +437,20 @@ class ParkingRequestController extends Controller
                                 
                                 if($parkingRequest->save()){
                                     
+                                    $newBalance = Helper::getCurrentCustomerBalance($customer_id);
+                                    $parking = ParkingArea::find($parking_area_id);
+                                    $parkingArea = $parking->name;
+
+                                    $ledger['reference'] = $orderNo;
+                                    $ledger['type'] = strtoupper('placed order');
+                                    $ledger['customer_id'] = $customer_id;
+                                    $ledger['description'] = 'Ordered parking at '.$parkingArea.' for '.$parking_hours.' hours at amount of '.$amount.'';
+                                    $ledger['credit'] = 0;
+                                    $ledger['debt'] = $amount;
+                                    $ledger['balance'] = $newBalance;
+                                    $ledger['date'] = date('Y-m-d', strtotime($request_date));
+                                    Helper::recordLedgerTransaction($ledger);
+
                                     $message  = "Your request has been submitted and approved successfully.";
                                     $customerData = Helper::getCustomerData($customer_id);
                                     $data = array(
