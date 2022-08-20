@@ -442,7 +442,7 @@ class ParkingRequestController extends Controller
                                     $parkingArea = $parking->name;
 
                                     $ledger['reference'] = $orderNo;
-                                    $ledger['type'] = strtoupper('placed order');
+                                    $ledger['type'] = strtoupper('order');
                                     $ledger['customer_id'] = $customer_id;
                                     $ledger['description'] = 'Ordered parking at '.$parkingArea.' for '.$parking_hours.' hours at amount of '.$amount.'';
                                     $ledger['credit'] = 0;
