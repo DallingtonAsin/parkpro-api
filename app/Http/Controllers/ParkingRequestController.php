@@ -395,6 +395,7 @@ class ParkingRequestController extends Controller
                 $start_time = $request->input('start_time');
                 $end_time = $request->input('end_time');
                 
+                
                 if($this->isParkingAreaOpen($parking_area_id) == true){
                     
                     if($this->isParkingAreaFree($parking_area_id) == true){
@@ -412,42 +413,48 @@ class ParkingRequestController extends Controller
                             $fee = $this->getParkingFee($parking_area_id, $vehicle_cat_id);
                             
                             $amount = floatval($parking_hours)*floatval($fee);
-                            $amount = round($amount);
-                            $orderNo = $this->generateOrderNo();
-                            $parkingRequest = new ParkingRequest();
+                            $currentBalance = floatval(Helper::getCurrentCustomerBalance($customer_id));
                             
-                            $parkingRequest->order_no = $orderNo;
-                            $parkingRequest->customer_id = $customer_id;
-                            $parkingRequest->telephone_no = $telephone_no;
-                            $parkingRequest->parking_area_id = $parking_area_id;
-                            $parkingRequest->vehicle_details = $vehicle_details;
-                            $parkingRequest->vehicle_cat_id = $vehicle_cat_id;
-                            $parkingRequest->start_time = $start_time;
-                            $parkingRequest->end_time = $end_time;
-                            $parkingRequest->parking_hours = $parking_hours;
-                            $parkingRequest->amount = $amount;
-                            $parkingRequest->status = $status;
-                            $parkingRequest->request_date = $request_date;
-                            $parkingRequest->approval_date = Carbon::now()->toDateTimeString();
-                            
-                            if($parkingRequest->save()){
+                            if($currentBalance >= $amount){
                                 
-                                $message  = "Your request has been submitted and approved successfully.";
-                                $customerData = Helper::getCustomerData($customer_id);
-                                $data = array(
-                                    'customer_id' => $customer_id,
-                                    'order_no' => $orderNo,
-                                    'telephone_no' => $telephone_no,
-                                    'status' => $status,
-                                    'request_date' => $request_date
-                                );
-                                return Helper::sendOkHttpResponse(["message" => $message, "data" => $customerData]);
+                                $amount = round($amount);
+                                $orderNo = $this->generateOrderNo();
+                                $parkingRequest = new ParkingRequest();
                                 
+                                $parkingRequest->order_no = $orderNo;
+                                $parkingRequest->customer_id = $customer_id;
+                                $parkingRequest->telephone_no = $telephone_no;
+                                $parkingRequest->parking_area_id = $parking_area_id;
+                                $parkingRequest->vehicle_details = $vehicle_details;
+                                $parkingRequest->vehicle_cat_id = $vehicle_cat_id;
+                                $parkingRequest->start_time = $start_time;
+                                $parkingRequest->end_time = $end_time;
+                                $parkingRequest->parking_hours = $parking_hours;
+                                $parkingRequest->amount = $amount;
+                                $parkingRequest->status = $status;
+                                $parkingRequest->request_date = $request_date;
+                                $parkingRequest->approval_date = Carbon::now()->toDateTimeString();
+                                
+                                if($parkingRequest->save()){
+                                    
+                                    $message  = "Your request has been submitted and approved successfully.";
+                                    $customerData = Helper::getCustomerData($customer_id);
+                                    $data = array(
+                                        'customer_id' => $customer_id,
+                                        'order_no' => $orderNo,
+                                        'telephone_no' => $telephone_no,
+                                        'status' => $status,
+                                        'request_date' => $request_date
+                                    );
+                                    return Helper::sendOkHttpResponse(["message" => $message, "data" => $customerData]);
+                                    
+                                }else{
+                                    $message = "Unable to submit request";
+                                    return Helper::sendFailedHttpResponse($message);
+                                }
                             }else{
-                                $message = "Unable to submit request";
-                                return Helper::sendFailedHttpResponse($message);
-                                
-                                
+                                $message = "You don't have sufficient wallet balance to get your request approved";
+                                return Helper::sendFailedHttpResponse($message); 
                             }
                         }else {
                             $message = "Unable to get supplied vehicle type";
