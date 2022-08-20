@@ -108,6 +108,7 @@ class FlutterwaveController extends Controller
                   if($isUpdated){
 
                     $customerIdInDB = $transaction->value('customerId');
+                    $currentBalance = Helper::getCurrentCustomerBalance($customerIdInDB);
 
                     $ledger['reference'] = $transactionId;
                     $ledger['type'] = strtoupper('deposit');
@@ -115,11 +116,11 @@ class FlutterwaveController extends Controller
                     $ledger['description'] = 'Deposited '.$charged_amount.'';
                     $ledger['credit'] = $charged_amount;
                     $ledger['debt'] = 0;
-                    $ledger['balance'] = $charged_amount;
+                    $ledger['balance'] = $currentBalance;
                     $ledger['date'] = date('Y-m-d', strtotime($payment_date));
 
                     Helper::recordLedgerTransaction($ledger);
-                    $currentBalance = Helper::getCurrentCustomerBalance($customerIdInDB);
+                  
                     $notification = [
                         'title' => 'Payment',
                         'body' => "You have successfully deposited ".$currency." ".number_format($charged_amount)." on ".date('Y-m-d H:i:s', strtotime($payment_date)).". New wallet balance: ".$currency." ".number_format($currentBalance).". ID: ".$transactionId."",
