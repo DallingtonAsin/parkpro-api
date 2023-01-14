@@ -148,7 +148,7 @@ class ParkingRequestController extends Controller
                             'status' => $status,
                             'approval_date' => $approval_date
                         );
-                        return Helper::sendOkHttpResponse(['message' => $message, 'data' => $data]);
+                        return Helper::sendOkHttpResponse(['message' => 'Request approved successfully', 'data' => $data]);
                         
                     }else{
                         $message = "Unable to approve request";
@@ -205,7 +205,7 @@ class ParkingRequestController extends Controller
                             'status' => $status,
                             'reject_date' => $reject_date
                         );
-                        return Helper::sendOkHttpResponse(['message' => $message , 'data' => $data]);
+                        return Helper::sendOkHttpResponse(['message' => 'Request has been cancelled' , 'data' => $data]);
                     }else{
                         $message = "Unable to reject request";
                         return Helper::sendFailedHttpResponse($message);
@@ -511,8 +511,8 @@ class ParkingRequestController extends Controller
             ->value('fee_per_hour');
             return $parking_fee;
             
-        }catch(Exception $ex){
-            throw $x;
+        }catch(\Exception $ex){
+            throw $ex;
         } 
     }
     

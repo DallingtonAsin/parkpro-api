@@ -146,7 +146,7 @@ class VehicleCategoryController extends Controller
                     $action = "updated vehicle type ".$vehicle_type." details";
                     Helper::logActivity($request, ['name' => $author, 'role' => $role, 'action' => $action]);
                     $message = Helper::getMessage('success', $action);
-                    return Helper::sendOkHttpResponse(['message' => $responseInfo, 'data' => $vehicleType]);
+                    return Helper::sendOkHttpResponse(['message' => $message, 'data' => $vehicleType]);
                     
                 }else{
                     $message ="Unable to update vehicle type details!";
@@ -195,7 +195,7 @@ class VehicleCategoryController extends Controller
                     $action = "".$activity." vehicle category ".$vehicle_type."";
                     Helper::logActivity($request, ['name' => $author, 'role' => $role, 'action' => $action]);
                     $message = Helper::getMessage('success', $action);
-                    return Helper::sendOkHttpMessage($responseInfo);
+                    return Helper::sendOkHttpMessage($message);
                     
                 }else{
                     $message ="Unable to delete vehicle category!";

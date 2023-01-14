@@ -4,12 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Customer;
-use App\Models\Role;
-use Illuminate\Hashing\BcryptHasher;
-use Illuminate\Support\Str;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Hash;
-use App\Mail\RegistrationMailSender;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
@@ -19,7 +14,6 @@ use App\Services\Transaction\Sms\SmsService;
 use App\Helpers\formattedApiResponse;
 use Helper;
 use Globals;
-use Mail;
 
 class CustomerController extends Controller
 {
