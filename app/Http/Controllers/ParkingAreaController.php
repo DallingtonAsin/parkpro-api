@@ -277,7 +277,7 @@ class ParkingAreaController extends Controller
                     if(!empty($parking->photo)){
                         Storage::disk('public')->delete($parking->photo);
                     }
-                    $fileName = $userId.''.time().'.'.$file_extension;
+                    $fileName = $author_id.''.time().'.'.$file_extension;
                     $filePath = $file->storeAs('images/parking-areas', $fileName, 'public');
                     $photo = $filePath;
                 }else{

@@ -31,14 +31,11 @@ class AuthServiceProvider extends ServiceProvider
         Passport::tokensCan([
             'customer' => 'Customer access',
             'user' => 'User access',
-
         ]);
 
         Passport::tokensExpireIn(now()->addDays(15));
         Passport::refreshTokensExpireIn(now()->addDays(20));
         Passport::personalAccessTokensExpireIn(now()->addMonths(6));
 
-      
-        
     }
 }

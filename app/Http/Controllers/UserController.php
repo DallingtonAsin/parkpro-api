@@ -407,7 +407,7 @@ public function store(Request $request)
                     
                 }else{
                     $message = "username ".$username." has already been taken, choose another one";
-                    return Helper::sendFailedHttpResponse($responseInfo);
+                    return Helper::sendFailedHttpResponse($message);
                     
                 }
             }
@@ -654,6 +654,10 @@ public function stores(Request $request)
                             else
                             {
                                 $message = "User registration failed!";
+                                $dataArr = array("code" => Globals::$STATUS_CODE_FAILED,
+                                "message" => $message,
+                                "method" => $method);
+
                                 Helper::LogRequest($request, $dataArr);
                                 return Helper::sendFailedHttpResponse($message);
                                 
