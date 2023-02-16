@@ -16,8 +16,8 @@ use Illuminate\Support\Facades\Storage;
 use App\Repositories\User\UserRepository;
 use App\Helpers\formattedApiResponse;
 use Validator;
-use Helper;
-use Globals;
+use App\Helpers\SharedCommon as Helper;
+use App\Helpers\Globals as Globals;
 use Mail;
 
 class UserController extends Controller

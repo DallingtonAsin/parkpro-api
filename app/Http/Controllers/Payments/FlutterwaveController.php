@@ -10,8 +10,8 @@ use App\Services\Transaction\MobileMoney\MMService;
 use App\Models\MobileMoneyTransaction;
 use App\Services\Firebase\FCMService;
 use Illuminate\Support\Facades\Log;
-use Helper;
-use Globals;
+use App\Helpers\SharedCommon as Helper;
+use App\Helpers\Globals as Globals;
 
 class FlutterwaveController extends Controller
 {

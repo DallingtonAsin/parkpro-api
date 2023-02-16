@@ -5,7 +5,7 @@ namespace App\Services\Firebase;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Http;
 use App\Models\Customer;
-use Helper;
+use App\Helpers\SharedCommon as Helper;
 
 class FCMService
 { 

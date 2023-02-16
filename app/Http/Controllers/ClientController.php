@@ -6,8 +6,8 @@ use Illuminate\Http\Request;
 use App\Helpers\formattedApiResponse;
 use App\Models\Client;
 use App\Repositories\ClientRepository;
-use Helper;
-use Globals;
+use App\Helpers\SharedCommon as Helper;
+use App\Helpers\Globals as Globals;
 use Validator;
 
 class ClientController extends Controller

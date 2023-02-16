@@ -15,8 +15,8 @@ use App\Helpers\formattedApiResponse;
 use App\Repositories\ReportRepository;
 use App\Repositories\SystemAuditRepository;
 use Carbon\Carbon;
-use Globals;
-use Helper;
+use App\Helpers\Globals as Globals;
+use App\Helpers\SharedCommon as Helper;
 
 class ReportsController extends Controller
 {

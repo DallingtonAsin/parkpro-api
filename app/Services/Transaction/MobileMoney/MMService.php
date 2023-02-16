@@ -7,9 +7,9 @@ use AfricasTalking\SDK\AfricasTalking;
 use Illuminate\Http\Request;
 use App\Models\Customer;
 use App\Models\MobileMoneyTransaction;
-use Helper;
+use App\Helpers\SharedCommon as Helper;
 use Carbon\Carbon;
-use Globals;
+use App\Helpers\Globals as Globals;
 
 class MMService{
     

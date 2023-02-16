@@ -6,8 +6,8 @@ use Illuminate\Http\Request;
 use App\Services\Firebase\FCMService;
 use Illuminate\Support\Facades\Validator;
 use App\Models\Customer;
-use Globals;
-use Helper;
+use App\Helpers\Globals as Globals;
+use App\Helpers\SharedCommon as Helper;
 
 
 class NotificationController extends Controller

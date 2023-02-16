@@ -6,8 +6,8 @@ use Illuminate\Http\Request;
 use App\Models\VehicleCategory;
 use App\Repositories\VehicleCategoryRepository;
 use App\Helpers\formattedApiResponse;
-use Helper;
-use Globals;
+use App\Helpers\SharedCommon as Helper;
+use App\Helpers\Globals as Globals;
 use Validator;
 
 class VehicleCategoryController extends Controller

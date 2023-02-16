@@ -14,8 +14,8 @@ use Illuminate\Support\Facades\DB;
 use App\Repositories\Parking\ParkingRequestRepository;
 use App\Repositories\Parking\ParkingAreaRepository;
 use Carbon\Carbon;
-use Globals;
-use Helper;
+use App\Helpers\Globals as Globals;
+use App\Helpers\SharedCommon as Helper;
 
 
 class ParkingRequestController extends Controller

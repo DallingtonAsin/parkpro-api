@@ -7,8 +7,8 @@ use App\Models\ParkingArea;
 use App\Models\Client;
 use App\Repositories\Parking\ParkingAreaRepository;
 use App\Helpers\formattedApiResponse;
-use Helper;
-use Globals;
+use App\Helpers\SharedCommon as Helper;
+use App\Helpers\Globals as Globals;
 use Validator;
 
 

@@ -3,7 +3,7 @@
 namespace App\Repositories;
 
 use App\Models\Customer;
-use Helper;
+use App\Helpers\SharedCommon as Helper;
 
 class CustomerRepository{
    

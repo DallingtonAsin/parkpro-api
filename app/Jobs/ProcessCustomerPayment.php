@@ -12,8 +12,8 @@ use Illuminate\Support\Facades\Storage;
 use App\Events\PaymentProcessed;
 use App\Models\CustomersLedger;
 use App\Models\Customer;
-use Helper;
-use Globals;
+use App\Helpers\SharedCommon as Helper;
+use App\Helpers\Globals as Globals;
 
 
 

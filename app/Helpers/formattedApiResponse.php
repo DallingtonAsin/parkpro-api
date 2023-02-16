@@ -2,7 +2,7 @@
 
 namespace App\Helpers;
 
-use Helper;
+use App\Helpers\SharedCommon as Helper;
 
 class formattedApiResponse{
  

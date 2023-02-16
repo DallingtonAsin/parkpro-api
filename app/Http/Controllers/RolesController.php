@@ -10,8 +10,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use App\Repositories\User\UserRoleRepository;
 use App\Helpers\formattedApiResponse;
-use Helper;
-use Globals;
+use App\Helpers\SharedCommon as Helper;
+use App\Helpers\Globals as Globals;
 
 class RolesController extends Controller
 {

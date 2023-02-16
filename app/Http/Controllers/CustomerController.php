@@ -12,8 +12,8 @@ use App\Http\Resources\CustomerResource;
 use App\Repositories\CustomerRepository;
 use App\Services\Transaction\Sms\SmsService;
 use App\Helpers\formattedApiResponse;
-use Helper;
-use Globals;
+use App\Helpers\SharedCommon as Helper;
+use App\Helpers\Globals as Globals;
 
 class CustomerController extends Controller
 {

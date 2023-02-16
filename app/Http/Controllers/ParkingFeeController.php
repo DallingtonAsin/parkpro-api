@@ -9,8 +9,8 @@ use App\Models\Client;
 use App\Models\VehicleCategory;
 use App\Repositories\Parking\ParkingFeeRepository;
 use App\Helpers\formattedApiResponse;
-use Helper;
-use Globals;
+use App\Helpers\SharedCommon as Helper;
+use App\Helpers\Globals as Globals;
 use Validator;
 
 class ParkingFeeController extends Controller

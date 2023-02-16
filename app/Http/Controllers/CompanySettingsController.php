@@ -7,8 +7,8 @@ use App\Models\Company;
 use App\Repositories\CompanyRepository;
 use App\Models\User;
 use App\Helpers\formattedApiResponse;
-use Helper;
-use Globals;
+use App\Helpers\SharedCommon as Helper;
+use App\Helpers\Globals as Globals;
 
 class CompanySettingsController extends Controller
 {

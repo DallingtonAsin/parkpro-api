@@ -13,7 +13,7 @@ use App\Models\ParkingArea;
 use App\Models\VehicleCategory;
 use App\Models\Customer;
 use Carbon\Carbon;
-use Globals;
+use App\Helpers\Globals as Globals;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use App\Models\CustomersLedger;
